@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Cont">
+	<!-- Alias Map Defined -->
+	<typeAlias alias="ContQuery" type="com.hj.cobar.query.ContQuery" />
+	<typeAlias alias="Cont" type="com.hj.cobar.bean.Cont" />
+	<resultMap id="cont" class="Cont">
+		<result property="id" column="id" />
+		<result property="taobaoId" column="taobaoId" />
+		<result property="name" column="name" />
+		<result property="updTime" column="upd_time" />
+	</resultMap>
+	<!-- Select SQL -->
+	<sql id="cont.selector">
+		SELECT
+		<dynamic>
+			<isNotEmpty property="fields">
+				$fields$
+			</isNotEmpty>
+			<isEmpty property="fields">
+				id , taobaoId , name , upd_time
+			</isEmpty>
+		</dynamic>
+		FROM cont
+	</sql>
+	<sql id="contList.where">
+		<dynamic prepend=" WHERE ">
+			<isNotNull property="id" prepend=" AND ">
+				id=#id#
+			</isNotNull>
+			<isNotNull property="taobaoId" prepend=" AND ">
+				taobaoId=#taobaoId#
+			</isNotNull>
+			<isNotNull property="name" prepend=" AND ">
+				<isEqual property="nameLike" compareValue="false">
+					name=#name#
+				</isEqual>
+				<isEqual property="nameLike" compareValue="true">
+					 <![CDATA[  name like '%$name$%' ]]>
+				</isEqual>
+			</isNotNull>
+		</dynamic>
+	</sql>
+
+	<!-- 用#号会导致druid连接池报错 -->
+	<sql id="contList.order">
+		<dynamic prepend=" ORDER BY ">
+			<isNotEmpty property="orderFields">
+				<iterate property="orderFields" conjunction="," open=""
+					close="">
+					$orderFields[].fieldName$ $orderFields[].order$
+				</iterate>
+			</isNotEmpty>
+		</dynamic>
+	</sql>
+
+	<sql id="contList.limit">
+		<dynamic prepend=" LIMIT  ">
+			<isNotEmpty property="startRow">
+				#startRow#,#pageSize#
+			</isNotEmpty>
+		</dynamic>
+	</sql>
+
+	<!-- 根据主键查询 -->
+	<select id="Cont.getContByKey" resultMap="cont" parameterClass="hashMap">
+		SELECT id , taobaoId , name , upd_time FROM cont
+		WHERE
+		id=#id#
+	</select>
+	<select id="Cont.getContsByKeys" resultMap="cont"
+		parameterClass="hashMap">
+		SELECT id , taobaoId , name , upd_time FROM cont
+		WHERE
+		id in
+		<iterate conjunction="," open="(" close=")" property="keys">
+			#keys[]#
+		</iterate>
+	</select>
+
+	<!-- 根据主键删除 -->
+	<delete id="Cont.deleteByKey" parameterClass="hashMap">
+		DELETE FROM cont
+		WHERE
+		id=#id#
+	</delete>
+
+	<delete id="Cont.deleteByKeys">
+		DELETE FROM cont
+		WHERE
+		id in
+		<iterate conjunction="," open="(" close=")" property="keys">
+			#keys[]#
+		</iterate>
+	</delete>
+
+	<!-- 根据主键更新 -->
+	<update id="Cont.updateContByKey" parameterClass="Cont">
+		UPDATE cont
+		<dynamic prepend="SET">
+			<isNotNull prepend="," property="id">
+				id = #id#
+			</isNotNull>
+			<isNotNull prepend="," property="taobaoId">
+				taobaoId = #taobaoId#
+			</isNotNull>
+			<isNotNull prepend="," property="name">
+				name = substring(#name#,1,20)
+			</isNotNull>
+		</dynamic>
+		WHERE
+		id=#id#
+	</update>
+	<!-- 分页 -->
+	<select id="Cont.getContListWithPage" parameterClass="ContQuery"
+		resultMap="cont">
+		<include refid="cont.selector" />
+		<include refid="contList.where" />
+		<include refid="contList.order" />
+		<include refid="contList.limit" />
+	</select>
+	<select id="Cont.getContListCount" parameterClass="ContQuery"
+		resultClass="int">
+		SELECT count(1) FROM cont
+		<include refid="contList.where" />
+	</select>
+	<select id="Cont.getContList" parameterClass="ContQuery"
+		resultMap="cont">
+		<include refid="cont.selector" />
+		<include refid="contList.where" />
+		<include refid="contList.order" />
+	</select>
+
+	<!-- 如果使用自定义字段查询,则要使用resultClass否则会出现异常 -->
+	<select id="Cont.getContListWithPageFields" parameterClass="ContQuery"
+		resultClass="Cont">
+		<include refid="cont.selector" />
+		<include refid="contList.where" />
+		<include refid="contList.order" />
+		<include refid="contList.limit" />
+	</select>
+	<select id="Cont.getContListFields" parameterClass="ContQuery"
+		resultClass="Cont">
+		<include refid="cont.selector" />
+		<include refid="contList.where" />
+		<include refid="contList.order" />
+	</select>
+	<!-- <insert id="Cont.insertCont" parameterClass="Cont"> INSERT INTO cont( 
+		id , taobaoId , name , upd_time VALUES( #id# , #taobaoId# , #name# , #updTime# 
+		) </insert> -->
+	<insert id="Cont.insertCont" parameterClass="Cont">
+		INSERT INTO cont
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="id">
+				id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="taobaoId">
+				taobaoId
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="name">
+				name
+			</isNotEmpty>
+			,upd_time
+		</dynamic>
+		VALUES
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="id">
+				#id#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="taobaoId">
+				#taobaoId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="name">
+				substring(#name#,1,20)
+			</isNotEmpty>
+			,now()
+		</dynamic>
+		<!-- <selectKey resultClass="long" keyProperty="id">
+			SELECT nextval() AS ID
+		</selectKey> -->
+	</insert>
+
+</sqlMap>
