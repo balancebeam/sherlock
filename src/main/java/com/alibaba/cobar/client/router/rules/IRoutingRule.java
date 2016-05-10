@@ -15,12 +15,12 @@
  */
  package com.alibaba.cobar.client.router.rules;
 
-import com.alibaba.cobar.client.router.ICobarRouter;
+import com.alibaba.cobar.client.router.ICobarDataSourceRouter;
 
 /**
  * a rule acts in a "when-then" behavior, in our case, when the fact
  * {@link #isDefinedAt(Object)} or matches, then we will return action result.
- * the {@link ICobarRouter} will decide how to use these action result.
+ * the {@link ICobarDataSourceRouter} will decide how to use these action result.
  * 
  * @author fujohnwang
  * @since 1.0

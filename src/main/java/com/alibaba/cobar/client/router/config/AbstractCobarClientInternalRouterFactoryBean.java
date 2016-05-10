@@ -24,7 +24,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.alibaba.cobar.client.router.DefaultCobarClientInternalRouter;
-import com.alibaba.cobar.client.router.ICobarRouter;
+import com.alibaba.cobar.client.router.ICobarDataSourceRouter;
 import com.alibaba.cobar.client.router.aspects.RoutingResultCacheAspect;
 import com.alibaba.cobar.client.router.config.support.InternalRuleLoader4DefaultInternalRouter;
 import com.alibaba.cobar.client.router.config.vo.InternalRule;
@@ -41,7 +41,7 @@ import com.alibaba.cobar.client.support.LRUMap;
  */
 public abstract class AbstractCobarClientInternalRouterFactoryBean implements FactoryBean,
         InitializingBean {
-    private ICobarRouter<IBatisRoutingFact>          router;
+    private ICobarDataSourceRouter<IBatisRoutingFact> router;
 
     private Map<String, Object>                      functionsMap = new HashMap<String, Object>();
 
@@ -56,7 +56,7 @@ public abstract class AbstractCobarClientInternalRouterFactoryBean implements Fa
 
     @SuppressWarnings("unchecked")
     public Class getObjectType() {
-        return ICobarRouter.class;
+        return ICobarDataSourceRouter.class;
     }
 
     public boolean isSingleton() {
@@ -74,13 +74,13 @@ public abstract class AbstractCobarClientInternalRouterFactoryBean implements Fa
 
         if (isEnableCache()) {
             ProxyFactory proxyFactory = new ProxyFactory(routerToUse);
-            proxyFactory.setInterfaces(new Class[] { ICobarRouter.class });
+            proxyFactory.setInterfaces(new Class[] { ICobarDataSourceRouter.class });
             RoutingResultCacheAspect advice = new RoutingResultCacheAspect();
             if (cacheSize > 0) {
                 advice.setInternalCache(new LRUMap(cacheSize));
             }
             proxyFactory.addAdvice(advice);
-            this.router = (ICobarRouter<IBatisRoutingFact>) proxyFactory.getProxy();
+            this.router = (ICobarDataSourceRouter<IBatisRoutingFact>) proxyFactory.getProxy();
         } else {
             this.router = routerToUse;
         }
@@ -88,11 +88,11 @@ public abstract class AbstractCobarClientInternalRouterFactoryBean implements Fa
 
     protected abstract List<InternalRule> loadRulesFromExternal() throws Exception;
 
-    public ICobarRouter<IBatisRoutingFact> getRouter() {
+    public ICobarDataSourceRouter<IBatisRoutingFact> getRouter() {
         return router;
     }
 
-    public void setRouter(ICobarRouter<IBatisRoutingFact> router) {
+    public void setRouter(ICobarDataSourceRouter<IBatisRoutingFact> router) {
         this.router = router;
     }
 

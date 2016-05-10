@@ -59,14 +59,13 @@ import org.springframework.util.ReflectionUtils;
 import com.alibaba.cobar.client.audit.ISqlAuditor;
 import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
 import com.alibaba.cobar.client.datasources.ICobarDataSourceService;
-import com.alibaba.cobar.client.datasources.IDataSourceDescriptorContext;
 import com.alibaba.cobar.client.exception.UncategorizedCobarClientException;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
 import com.alibaba.cobar.client.executor.IExecutorContext;
 import com.alibaba.cobar.client.executor.XSqlExecutor;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.merger.IMerger;
-import com.alibaba.cobar.client.router.ICobarRouter;
+import com.alibaba.cobar.client.router.ICobarDataSourceRouter;
 import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
 import com.alibaba.cobar.client.support.execution.ConcurrentRequest;
 import com.alibaba.cobar.client.support.execution.DefaultConcurrentRequestProcessor;
@@ -97,9 +96,9 @@ import com.ibatis.sqlmap.engine.mapping.sql.stat.StaticSql;
  * still keep the default behaviors of {@link SqlMapClientTemplate} untouched if
  * you still need them.<br> {@link CobarSqlMapClientTemplate} usually can work in 2
  * mode, if you don't provide {@link #cobarDataSourceService} and
- * {@link #router} dependencies, it will work same as
+ * {@link #dsRouter} dependencies, it will work same as
  * {@link SqlMapClientTemplate}; Only you provide at least the dependencies of
- * {@link #cobarDataSourceService} and {@link #router},
+ * {@link #cobarDataSourceService} and {@link #dsRouter},
  * {@link CobarSqlMapClientTemplate} work in a way as it is.<br>
  * In case some applications have specific SQL-execution auditing requirement,
  * we expose a {@link ISqlAuditor} interface for this. To prevent applications
@@ -147,12 +146,12 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     private ICobarDataSourceService              cobarDataSourceService;
 
     /**
-     * To enable database partitions access, an {@link ICobarRouter} is a must
+     * To enable database partitions access, an {@link ICobarDataSourceRouter} is a must
      * dependency.<br>
      * if no router is found, the CobarSqlMapClientTemplate will act with
      * behaviors like its parent, the SqlMapClientTemplate.
      */
-    private ICobarRouter<IBatisRoutingFact>      router;
+    private ICobarDataSourceRouter<IBatisRoutingFact> dbRouter;
 
     /**
      * if you want to do SQL auditing, inject an {@link ISqlAuditor} for use.<br>
@@ -880,8 +879,8 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                                                                       final Object parameterObject) {
         SortedMap<String, CobarDataSourceDescriptor> resultMap = new TreeMap<String, CobarDataSourceDescriptor>();
 
-        if (getRouter() != null && getCobarDataSourceService() != null) {
-            List<String> dsSet = getRouter().doRoute(
+        if (getDataSourceRouter() != null && getCobarDataSourceService() != null) {
+            List<String> dsSet = getDataSourceRouter().doRoute(
                     new IBatisRoutingFact(statementName, parameterObject)).getResourceIdentities();
             if (CollectionUtils.isNotEmpty(dsSet)) {
                 Collections.sort(dsSet);
@@ -1130,7 +1129,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
      * on different databases is enabled.<br>
      */
     protected boolean isPartitioningBehaviorEnabled() {
-        return ((router != null) && (getCobarDataSourceService() != null));
+        return ((dbRouter != null) && (getCobarDataSourceService() != null));
     }
 
     public void setSqlAuditor(ISqlAuditor sqlAuditor) {
@@ -1201,12 +1200,12 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         return defaultDataSourceName;
     }
 
-    public void setRouter(ICobarRouter<IBatisRoutingFact> router) {
-        this.router = router;
+    public void setDbRouter(ICobarDataSourceRouter<IBatisRoutingFact> dbRouter) {
+        this.dbRouter = dbRouter;
     }
 
-    public ICobarRouter<IBatisRoutingFact> getRouter() {
-        return router;
+    public ICobarDataSourceRouter<IBatisRoutingFact> getDataSourceRouter() {
+        return dbRouter;
     }
 
     public void setConcurrentRequestProcessor(IConcurrentRequestProcessor concurrentRequestProcessor) {

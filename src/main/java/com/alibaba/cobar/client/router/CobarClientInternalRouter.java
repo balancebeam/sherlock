@@ -31,7 +31,7 @@ import com.alibaba.cobar.client.support.utils.CollectionUtils;
 /**
  * CobarInternalRouter is the default router that will be used in cobar client,
  * but it will not be the only one.<br>
- * if it can't meet the needs, we can provide other {@link ICobarRouter} like a
+ * if it can't meet the needs, we can provide other {@link ICobarDataSourceRouter} like a
  * one that use rule engines.<br>
  * for now, CobarInternalRouter will hold 4 set of routing rules:
  * <ol>
@@ -56,7 +56,7 @@ import com.alibaba.cobar.client.support.utils.CollectionUtils;
  * @author fujohnwang
  * @since 1.0
  */
-public class CobarClientInternalRouter implements ICobarRouter<IBatisRoutingFact> {
+public class CobarClientInternalRouter implements ICobarDataSourceRouter<IBatisRoutingFact> {
 
     private transient final Logger logger      = LoggerFactory.getLogger(CobarClientInternalRouter.class);
 

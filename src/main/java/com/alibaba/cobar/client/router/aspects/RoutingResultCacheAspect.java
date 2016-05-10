@@ -21,18 +21,18 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import com.alibaba.cobar.client.router.DefaultCobarClientInternalRouter;
-import com.alibaba.cobar.client.router.ICobarRouter;
+import com.alibaba.cobar.client.router.ICobarDataSourceRouter;
 import com.alibaba.cobar.client.router.config.AbstractCobarClientInternalRouterFactoryBean;
 import com.alibaba.cobar.client.router.config.StaticCobarClientInternalRouterFactoryBean;
 import com.alibaba.cobar.client.support.LRUMap;
 
 /**
- * An advice that will provide cache service for {@link ICobarRouter} to improve
+ * An advice that will provide cache service for {@link ICobarDataSourceRouter} to improve
  * the routing performance if necessary.<br>
  * 
  * @author fujohnwang
  * @since 1.0
- * @see {@link ICobarRouter}
+ * @see {@link ICobarDataSourceRouter}
  * @see {@link AbstractCobarClientInternalRouterFactoryBean}
  * @see {@link DefaultCobarClientInternalRouter}
  * @see {@link StaticCobarClientInternalRouterFactoryBean}

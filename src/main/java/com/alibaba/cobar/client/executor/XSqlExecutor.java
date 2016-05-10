@@ -67,10 +67,10 @@ public class XSqlExecutor extends SqlExecutor {
 		String[] tableRoutedSqls= doRouteTableSql(statementScope,dataSourceDescriptor,sql,parameters);
 		//if one record or in transaction
 		if(tableRoutedSqls.length== 1 || !executorContext.isReadable()){
-			for(int i=0;i<tableRoutedSqls.length;i++){
+			for(String item: tableRoutedSqls){
 				querySqlExecutor.executeQuery(statementScope,
 						connection,
-						tableRoutedSqls[i],
+						item,
 						parameters,
 						skipResults,
 						maxResults,

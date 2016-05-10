@@ -16,8 +16,8 @@
 	    <property name="username" value="${jdbc0.username}" />
 	    <property name="password" value="${jdbc0.password}" />
 	    <property name="filters" value="config" />
-	    <property name="maxActive" value="5" />
-	    <property name="initialSize" value="5" />
+	    <property name="maxActive" value="15" />
+	    <property name="initialSize" value="10" />
 	    <property name="maxWait" value="1" />
 	    <property name="minIdle" value="5" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />

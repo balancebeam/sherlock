@@ -16,11 +16,21 @@ public class CobarDataSourceWrapper implements DataSource,IDataSourceDescriptorC
 	
 	private DataSource delegate;
 	
+	private int weight= 100;
+	
 	private CobarDataSourceDescriptor dataSourceDescriptor;
 	
 	public CobarDataSourceWrapper(CobarDataSourceDescriptor dataSourceDescriptor,DataSource delegate){
 		this.dataSourceDescriptor= dataSourceDescriptor;
 		this.delegate= delegate;
+	}
+	
+	public int getWeight(){
+		return weight;
+	}
+	
+	public void setWeight(int weight){
+		this.weight= weight;
 	}
 	
 	@Override

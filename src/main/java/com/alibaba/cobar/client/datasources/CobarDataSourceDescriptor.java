@@ -18,6 +18,7 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import javax.naming.Context;
@@ -147,18 +148,34 @@ public class CobarDataSourceDescriptor {
     }
     
     public DataSource getReadDataSource(){
-    	if(readDataSources.isEmpty() ){
+    	if(CollectionUtils.isEmpty(readDataSources)){
     		return writeDataSource;
     	}
     	else if(readWriteStrategy== 1){
-	    	int idx= (int)Math.floor(readDataSources.size()*Math.random());
-	    	return readDataSources.get(idx);
+    		return getDataSourceByWeight(0);
     	}
     	else if(readWriteStrategy== 2){
-	    	int idx= (int)Math.floor((1+readDataSources.size())*Math.random());
-	    	return idx<readDataSources.size()? readDataSources.get(idx): writeDataSource;
+    		return getDataSourceByWeight(((CobarDataSourceWrapper)writeDataSource).getWeight());
     	}
     	return writeDataSource;
+    }
+    
+    private DataSource getDataSourceByWeight(int writeWeight){
+    	int total= 0;
+		for(DataSource ds: readDataSources){
+			total+= ((CobarDataSourceWrapper)ds).getWeight();
+		}
+		Random rand = new Random();
+		int weight= 0,rdm= rand.nextInt(total+ writeWeight);
+		if(rdm< total){
+			for(DataSource ds: readDataSources){
+    			weight+= ((CobarDataSourceWrapper)ds).getWeight();
+    			if(weight> rdm){
+    				return ds;
+    			}
+    		}
+		}
+		return writeDataSource;
     }
     
     public void setReadDataSources(List<DataSource> readDataSources){

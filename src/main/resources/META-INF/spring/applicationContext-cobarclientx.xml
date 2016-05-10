@@ -10,7 +10,7 @@
        default-lazy-init="false">
 
 	<!-- 配置数据源开始 -->
-    <bean id="shardingDataSources" class="com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService">
+     <bean id="shardingDataSources" class="com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService">
     	<!-- 数据源定义 -->
 		<property name="dataSourceDescriptors">
 			<set>
@@ -54,7 +54,7 @@
 			</bean>
 		</property>
 	</bean>
-	<bean id="internalRouter"
+	<bean id="dbRouter"
 		class="com.alibaba.cobar.client.router.config.CobarInteralRouterXmlFactoryBean">
 		<!-- functionsMap是在使用自定义路由规则函数的时候使用 -->
 		<property name="functionsMap">
@@ -75,7 +75,7 @@
         <property name="cobarDataSourceService" ref="shardingDataSources"/>
     </bean>
     <!-- 使用annotation定义事务 -->
-    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/> 
     
     <!--  iBatis SQL map定义。                                                    -->
     <bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
@@ -97,7 +97,7 @@
  	<bean id="sqlMapClientTemplate" class="com.alibaba.cobar.client.CobarSqlMapClientTemplate">
 		<property name="sqlMapClient" ref="sqlMapClient" />
 		<property name="cobarDataSourceService" ref="shardingDataSources" />
-		<property name="router" ref="internalRouter" />
+		<property name="dbRouter" ref="dbRouter" />
 		<property name="sqlAuditor">
 			<bean class="com.alibaba.cobar.client.audit.SimpleSqlAuditor" />
 		</property>
@@ -106,5 +106,9 @@
 		<property name="sqlExecutor" ref="sqlExecutor"/>
 	</bean>
     
+    <bean id="sequence" class="com.alibaba.cobar.client.sequence.support.DefaultConcurrentSequence">
+    	<property name="incrStep" value="10"></property>
+    	<property name="dataSource" ref="dataSource0"></property>
+    </bean>
     
 </beans>

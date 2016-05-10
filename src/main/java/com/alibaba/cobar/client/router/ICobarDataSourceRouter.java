@@ -27,6 +27,6 @@ import com.alibaba.cobar.client.router.support.RoutingResult;
  * @since  1.0
  * @see    IBatisRoutingFact
  */
-public interface ICobarRouter<T> {
+public interface ICobarDataSourceRouter<T> {
 	RoutingResult doRoute(T routingFact) throws RoutingException;
 }

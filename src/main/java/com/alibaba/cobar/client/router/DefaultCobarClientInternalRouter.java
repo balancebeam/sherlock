@@ -45,7 +45,7 @@ import com.alibaba.cobar.client.support.utils.CollectionUtils;
  * @since 1.0
  * @see DefaultCobarClientInternalRouterXmlFactoryBean
  */
-public class DefaultCobarClientInternalRouter implements ICobarRouter<IBatisRoutingFact> {
+public class DefaultCobarClientInternalRouter implements ICobarDataSourceRouter<IBatisRoutingFact> {
 
     private transient final Logger                                                logger                 = LoggerFactory
                                                                                                                  .getLogger(DefaultCobarClientInternalRouter.class);

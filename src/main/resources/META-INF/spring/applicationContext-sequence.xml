@@ -9,20 +9,11 @@
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd"
        default-lazy-init="false">
 
-    <description>Spring公共配置</description>
-    <import resource="applicationContext-datasource.xml"/>
-    <import resource="applicationContext-cobarclientx.xml"/>
-    <import resource="applicationContext-sequence.xml"/>
-    
-    <context:component-scan base-package="com.hj.cobar"></context:component-scan>
-    
-    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-	   <property name="location">
-	     <value>config.properties</value>
-	   </property>
-	</bean>
-	
-	<!-- 配置路由规则开始 -->
-    <bean id="hashFunction" class="com.hj.cobar.dao.router.HashFunction"/>
+    <bean id="sequence" class="com.alibaba.cobar.client.sequence.support.PostgreSQLPartitionSequenceGenerator">
+    	<property name="incrStep" value="1000"></property>
+    	<property name="dataSource" ref="dataSource0"></property>
+    </bean>
+    <bean id="testSequence" class="com.alibaba.cobar.client.sequence.support.LocalTestSequenceGenerator">
+    </bean>
     
 </beans>
