@@ -65,7 +65,7 @@ import com.alibaba.cobar.client.executor.IExecutorContext;
 import com.alibaba.cobar.client.executor.XSqlExecutor;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.merger.IMerger;
-import com.alibaba.cobar.client.router.ICobarDataSourceRouter;
+import com.alibaba.cobar.client.router.ICobarDatabaseRouter;
 import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
 import com.alibaba.cobar.client.support.execution.ConcurrentRequest;
 import com.alibaba.cobar.client.support.execution.DefaultConcurrentRequestProcessor;
@@ -146,12 +146,12 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     private ICobarDataSourceService              cobarDataSourceService;
 
     /**
-     * To enable database partitions access, an {@link ICobarDataSourceRouter} is a must
+     * To enable database partitions access, an {@link ICobarDatabaseRouter} is a must
      * dependency.<br>
      * if no router is found, the CobarSqlMapClientTemplate will act with
      * behaviors like its parent, the SqlMapClientTemplate.
      */
-    private ICobarDataSourceRouter<IBatisRoutingFact> dbRouter;
+    private ICobarDatabaseRouter<IBatisRoutingFact> dbRouter;
 
     /**
      * if you want to do SQL auditing, inject an {@link ISqlAuditor} for use.<br>
@@ -1200,11 +1200,11 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         return defaultDataSourceName;
     }
 
-    public void setDbRouter(ICobarDataSourceRouter<IBatisRoutingFact> dbRouter) {
+    public void setDbRouter(ICobarDatabaseRouter<IBatisRoutingFact> dbRouter) {
         this.dbRouter = dbRouter;
     }
 
-    public ICobarDataSourceRouter<IBatisRoutingFact> getDataSourceRouter() {
+    public ICobarDatabaseRouter<IBatisRoutingFact> getDataSourceRouter() {
         return dbRouter;
     }
 

@@ -24,7 +24,7 @@ import com.alibaba.cobar.client.router.support.RoutingResult;
  * @author fujohnwang
  *
  */
-public class DroolsBasedCobarRouter implements ICobarDataSourceRouter<IBatisRoutingFact> {
+public class DroolsBasedCobarRouter implements ICobarDatabaseRouter<IBatisRoutingFact> {
 
 	public RoutingResult doRoute(IBatisRoutingFact routingFact)
 			throws RoutingException {
