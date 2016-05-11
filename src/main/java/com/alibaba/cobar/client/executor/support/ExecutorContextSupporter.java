@@ -34,16 +34,12 @@ public class ExecutorContextSupporter implements IExecutorContext{
 
 	@Override
 	public boolean isReadable() {
-		return (operationType & OP_READ) == OP_READ;
+		return operationType == OP_READ;
 	}
 
 	@Override
 	public boolean isWritable() {
 		return (operationType & OP_WRITE) != 0;
-	}
-	
-	public boolean isOnlyWritable(){
-		return (operationType & OP_WRITE) == OP_WRITE;
 	}
 
 	@Override
