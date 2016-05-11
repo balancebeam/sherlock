@@ -15,7 +15,8 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
-import com.alibaba.cobar.client.executor.dql.QuerySqlExecutor;
+import com.alibaba.cobar.client.executor.dml.DMLExec;
+import com.alibaba.cobar.client.executor.dql.DQLExec;
 import com.alibaba.cobar.client.router.ICobarTableRouter;
 import com.ibatis.sqlmap.engine.execution.SqlExecutor;
 import com.ibatis.sqlmap.engine.mapping.statement.RowHandlerCallback;
@@ -31,7 +32,9 @@ public class XSqlExecutor extends SqlExecutor {
 	
 	final Log logger= LogFactory.getLog(XSqlExecutor.class);
 	
-	final private QuerySqlExecutor querySqlExecutor;
+	final private DQLExec dqlExec;
+	
+	final private DMLExec dmlExec;
 	
 	//table router executor for sql
 	private ICobarTableRouter tableRouter;
@@ -39,7 +42,8 @@ public class XSqlExecutor extends SqlExecutor {
 	private Map<String, ExecutorService> dataSourceExcutors;
 	
 	public XSqlExecutor(){
-		querySqlExecutor= new QuerySqlExecutor();
+		dqlExec= new DQLExec();
+		dmlExec= new DMLExec();
 	}
 	
 	public void setTableRouter(ICobarTableRouter tableRouter){
@@ -58,17 +62,19 @@ public class XSqlExecutor extends SqlExecutor {
 			final int skipResults, 
 			final int maxResults, 
 			final RowHandlerCallback callback) throws SQLException {
-		
+		//fetch the execute context from current thread local
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
+		//get the connection belonging dataSource 
 		final CobarDataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
 		//trace the query error message for more thread
 		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<>();
 		//route sql by sharding table strategy，including ER
-		String[] tableRoutedSqls= doRouteTableSql(statementScope,dataSourceDescriptor,sql,parameters);
+		String[] routerSqls= doTableRoute(statementScope,dataSourceDescriptor,sql,parameters);
 		//if one record or in transaction
-		if(tableRoutedSqls.length== 1 || !executorContext.isReadable()){
-			for(String item: tableRoutedSqls){
-				querySqlExecutor.executeQuery(statementScope,
+		if(routerSqls.length== 1 || !executorContext.isReadable()){
+			for(String item: routerSqls){
+				dqlExec.executeQuery(statementScope,
+						dataSourceDescriptor,
 						connection,
 						item,
 						parameters,
@@ -80,11 +86,12 @@ public class XSqlExecutor extends SqlExecutor {
 		}
 		else{
 			//main thread will wait until all job have been completed
-			final CountDownLatch latchs= new CountDownLatch(tableRoutedSqls.length- 1);
+			final CountDownLatch latchs= new CountDownLatch(routerSqls.length- 1);
 			//main tread execute the first query job
-			querySqlExecutor.executeQuery(statementScope,
+			dqlExec.executeQuery(statementScope,
+					dataSourceDescriptor,
 					connection,
-					tableRoutedSqls[0],
+					routerSqls[0],
 					parameters,
 					skipResults,
 					maxResults,
@@ -92,8 +99,8 @@ public class XSqlExecutor extends SqlExecutor {
 					errorContextList);
 			ExecutorService executorService= dataSourceExcutors.get(dataSourceDescriptor.getIdentity());
 			//use new thread pool execute other query job
-			for(int i=1;i<tableRoutedSqls.length;i++){
-				final String tableRoutedSql= tableRoutedSqls[i];
+			for(int i=1;i<routerSqls.length;i++){
+				final String tableRoutedSql= routerSqls[i];
 				executorService.execute(new Runnable(){
 					@Override
 					public void run() {
@@ -101,7 +108,8 @@ public class XSqlExecutor extends SqlExecutor {
 						Connection conn= null;
 						try{
 							conn= DataSourceUtils.getConnection(dataSource);
-							querySqlExecutor.executeQuery(statementScope,
+							dqlExec.executeQuery(statementScope,
+									dataSourceDescriptor,
 									conn,
 									tableRoutedSql,
 									parameters,
@@ -158,17 +166,30 @@ public class XSqlExecutor extends SqlExecutor {
 		}
 	}
 	
-	private String[] doRouteTableSql(StatementScope statementScope,CobarDataSourceDescriptor dataSourceDescriptor,String sql,Object[] parameters){
+	@Override
+	public int executeUpdate(final StatementScope statementScope,
+			final Connection conn, 
+			final String sql, 
+			final Object[] parameters) throws SQLException {
+		
+		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
+		CobarDataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
+		
+	    String[] routerSqls= doTableRoute(statementScope,dataSourceDescriptor,sql,parameters);
+	    int rows = 0;
+	    //dml operation always use the same connection,whether or not including the transaction
+	    for(String rSql: routerSqls){
+	    	rows+= dmlExec.executeUpdate(statementScope,dataSourceDescriptor,conn, rSql, parameters);
+	    }
+	    return rows;
+	}
+	
+	private String[] doTableRoute(StatementScope statementScope,CobarDataSourceDescriptor dataSourceDescriptor,String sql,Object[] parameters){
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
 		return tableRouter.doRoute(statementScope,dataSourceDescriptor,sql,parameters);
 	}
-	
-//	@Override
-//	public int executeUpdate(StatementScope statementScope, Connection conn, String sql, Object[] parameters) throws SQLException {
-//		return super.executeUpdate(statementScope, conn, sql, parameters);
-//	}
 //	
 //	@Override
 //	public void addBatch(StatementScope statementScope, Connection conn, String sql, Object[] parameters) throws SQLException {

@@ -7,7 +7,7 @@ public class DefaultCobarTableRouter implements ICobarTableRouter{
 
 	@Override
 	public String[] doRoute(StatementScope statementScope, CobarDataSourceDescriptor dataSourceDescriptor, String sql, Object[] parameters) {
-		return new String[]{sql,sql};
+		return new String[]{sql};
 	}
 
 }

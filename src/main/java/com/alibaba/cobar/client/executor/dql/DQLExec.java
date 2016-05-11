@@ -9,64 +9,63 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.executor.util.SqlExecutorUtils;
 import com.ibatis.sqlmap.engine.execution.SqlExecutor;
 import com.ibatis.sqlmap.engine.impl.SqlMapClientImpl;
 import com.ibatis.sqlmap.engine.mapping.result.ResultMap;
-import com.ibatis.sqlmap.engine.mapping.result.ResultObjectFactoryUtil;
 import com.ibatis.sqlmap.engine.mapping.statement.DefaultRowHandler;
 import com.ibatis.sqlmap.engine.mapping.statement.MappedStatement;
 import com.ibatis.sqlmap.engine.mapping.statement.RowHandlerCallback;
 import com.ibatis.sqlmap.engine.scope.ErrorContext;
 import com.ibatis.sqlmap.engine.scope.StatementScope;
 
-public class QuerySqlExecutor {
-
-	public void executeQuery(
-			StatementScope statementScope, 
+public class DQLExec {
+	
+	public void executeQuery(StatementScope statementScope,
+			CobarDataSourceDescriptor dataSourceDescriptor,
 			Connection conn, 
-			String sql,
-			Object[] parameters, 
-			int skipResults, 
-			int maxResults, 
+			String sql, 
+			Object[] parameters,
+			int skipResults, int maxResults, 
 			RowHandlerCallback callback,
-			CopyOnWriteArrayList<ErrorContext> errorContextList){
+			CopyOnWriteArrayList<ErrorContext> errorContextList) {
 
 		// ErrorContext errorContext = statementScope.getErrorContext();
-		ErrorContext errorContext= new ErrorContext();
+		ErrorContext errorContext = new ErrorContext();
 		errorContext.setActivity("executing query");
 		errorContext.setObjectId(sql);
-		
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		// 设置上下文的内容ThreadLocal
-		setupResultObjectFactory(statementScope);
+		//set statement ThreadLocal
+		SqlExecutorUtils.setupResultObjectFactory(statementScope);
 
 		try {
 			errorContext.setMoreInfo("Check the SQL Statement (preparation failed).");
-			
+
 			Integer rsType = statementScope.getStatement().getResultSetType();
 			if (rsType != null) {
-				ps = conn.prepareStatement(sql, rsType.intValue(), ResultSet.CONCUR_READ_ONLY);
+				ps = SqlExecutorUtils.prepareStatement(statementScope.getSession(), conn, sql, rsType);
 			} else {
-				ps = conn.prepareStatement(sql);
+				ps = SqlExecutorUtils.prepareStatement(statementScope.getSession(), conn, sql);
 			}
-			// 设置超时
-			setStatementTimeout(statementScope.getStatement(), ps);
+			//set timeout
+			SqlExecutorUtils.setStatementTimeout(statementScope.getStatement(), ps);
 			Integer fetchSize = statementScope.getStatement().getFetchSize();
-			// 设置抓取大小
+			//set page size
 			if (fetchSize != null) {
 				ps.setFetchSize(fetchSize.intValue());
 			}
 			errorContext.setMoreInfo("Check the parameters (set parameters failed).");
-			// 设置参数
+			//set parameters
 			statementScope.getParameterMap().setParameters(statementScope, ps, parameters);
 			errorContext.setMoreInfo("Check the statement (query failed).");
 
-			//TODO 记录sql执行耗时，成功还是失败
+			//record the time before the execution of the SQL statement
 			long beginTime = System.currentTimeMillis();
 			ps.execute();
 			long endTime = System.currentTimeMillis();
-			System.out.println(endTime - beginTime);
 			errorContext.setMoreInfo("Check the results (failed to retrieve results).");
 
 			// Begin ResultSet Handling，if concurrent execution
@@ -74,50 +73,19 @@ public class QuerySqlExecutor {
 				rs = handleMultipleResults(ps, statementScope, skipResults, maxResults, callback);
 			}
 			// End ResultSet Handling
-		}catch(SQLException e){
+		} catch (SQLException e) {
 			errorContext.setCause(e);
 			errorContextList.add(errorContext);
-		}
-		finally {
+		} finally {
 			try {
-				closeResultSet(rs);
+				SqlExecutorUtils.closeResultSet(rs);
 			} finally {
-				closeStatement(ps);
+				SqlExecutorUtils.closeStatement(statementScope.getSession(), ps);
 			}
 		}
 	}
 
-	private void setupResultObjectFactory(StatementScope statementScope) {
-		SqlMapClientImpl client = (SqlMapClientImpl) statementScope.getSession().getSqlMapClient();
-		ResultObjectFactoryUtil.setResultObjectFactory(client.getResultObjectFactory());
-		ResultObjectFactoryUtil.setStatementId(statementScope.getStatement().getId());
-	}
-
-	private void setStatementTimeout(MappedStatement mappedStatement, Statement statement) throws SQLException {
-		if (mappedStatement.getTimeout() != null) {
-			statement.setQueryTimeout(mappedStatement.getTimeout().intValue());
-		}
-	}
-
-	private void closeResultSet(ResultSet rs) {
-		if (rs != null) {
-			try {
-				rs.close();
-			} catch (SQLException e) {
-			}
-		}
-	}
-
-	private void closeStatement(PreparedStatement ps) {
-		if (ps != null) {
-			try {
-				ps.close();
-			} catch (SQLException e) {
-			}
-		}
-	}
-
-	@SuppressWarnings({"rawtypes","unchecked"})
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private ResultSet handleMultipleResults(PreparedStatement ps, StatementScope statementScope, int skipResults,
 			int maxResults, RowHandlerCallback callback) throws SQLException {
 		ResultSet rs;
