@@ -62,7 +62,7 @@ import com.alibaba.cobar.client.datasources.ICobarDataSourceService;
 import com.alibaba.cobar.client.exception.UncategorizedCobarClientException;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
 import com.alibaba.cobar.client.executor.IExecutorContext;
-import com.alibaba.cobar.client.executor.XSqlExecutor;
+import com.alibaba.cobar.client.executor.CobarSqlExecutor;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.merger.IMerger;
 import com.alibaba.cobar.client.router.ICobarDatabaseRouter;
@@ -994,7 +994,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 		                createExecutorForSpecificDataSource(defaultDataSourceDescriptor));
 			}
 			this.defaultDataSourceDescriptor= defaultDataSourceDescriptor;
-			((XSqlExecutor)sqlExecutor).setDataSourceExcutors(getDataSourceSpecificExecutors());
+			((CobarSqlExecutor)sqlExecutor).setDataSourceExcutors(getDataSourceSpecificExecutors());
 			ReflectionUtils.setField(field,delegate,sqlExecutor);
         }
     }

@@ -28,9 +28,9 @@ import com.ibatis.sqlmap.engine.scope.StatementScope;
  * @author yangzz
  *
  */
-public class XSqlExecutor extends SqlExecutor {
+public class CobarSqlExecutor extends SqlExecutor {
 	
-	final Log logger= LogFactory.getLog(XSqlExecutor.class);
+	final Log logger= LogFactory.getLog(CobarSqlExecutor.class);
 	
 	final private DQLExec dqlExec;
 	
@@ -41,7 +41,7 @@ public class XSqlExecutor extends SqlExecutor {
 	
 	private Map<String, ExecutorService> dataSourceExcutors;
 	
-	public XSqlExecutor(){
+	public CobarSqlExecutor(){
 		dqlExec= new DQLExec();
 		dmlExec= new DMLExec();
 	}
