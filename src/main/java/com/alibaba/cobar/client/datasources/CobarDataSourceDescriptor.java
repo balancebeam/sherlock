@@ -16,14 +16,9 @@
  package com.alibaba.cobar.client.datasources;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.springframework.util.Assert;
@@ -142,11 +137,6 @@ public class CobarDataSourceDescriptor {
         this.writeDataSource = new CobarDataSourceWrapper(this,writeDataSource);
     }
     
-    public void setWriteJndiDataSource(String jndiName){
-    	DataSource dataSource= lookupJndiDataSource(identity,jndiName);
-    	setWriteDataSource(dataSource);
-    }
-    
     public DataSource getReadDataSource(){
     	if(CollectionUtils.isEmpty(readDataSources)){
     		return writeDataSource;
@@ -187,15 +177,6 @@ public class CobarDataSourceDescriptor {
     	for(DataSource dataSource: readDataSources){
     		this.readDataSources.add(new CobarDataSourceWrapper(this,dataSource));
     	}
-    }
-    
-    public void setReadJndiDataSources(Set<String> jndiNames){
-    	List<DataSource> readDataSources= new ArrayList<>();
-    	for(Iterator<String> item= jndiNames.iterator();item.hasNext();){
-    		DataSource dataSource= lookupJndiDataSource(identity,item.next());
-    		readDataSources.add(dataSource);
-    	}
-    	setReadDataSources(readDataSources);
     }
 
     public DataSource getTargetDetectorDataSource() {
@@ -260,20 +241,7 @@ public class CobarDataSourceDescriptor {
         return "CobarDataSourceDescriptor [identity=" + identity + ", poolSize=" + poolSize
                 + ", standbyDataSource=" + standbyDataSource + ", standbyDetectorDataSource="
                 + standbyDetectorDataSource + ", writeDataSource=" + writeDataSource
-                + ", targetDetectorDataSource=" + targetDetectorDataSource + "]";
-    }
-    
-    private static Context context;
-    
-    private static synchronized DataSource lookupJndiDataSource(String identity,String jndiName){
-    	try {
-    		if(context== null){
-    			context= new InitialContext(); 
-    		}
-			return (DataSource)context.lookup(jndiName);
-		} catch (NamingException e) {
-			throw new ShardingDataSourceException("Partition ["+identity+"] JNDI ["+jndiName+"] dataSource cannot been found");
-		}
+                + ", readDataSources=" + readDataSources + "]";
     }
     
 }

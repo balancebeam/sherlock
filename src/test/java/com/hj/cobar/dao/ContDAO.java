@@ -27,7 +27,8 @@ public class ContDAO {
 	SqlMapClientTemplate sqlMapClientTemplate;
 
 	public Long addCont(Cont cont) throws SQLException {
-		return (Long) this.sqlMapClientTemplate.insert("Cont.insertCont", cont);
+		Object obj=  this.sqlMapClientTemplate.insert("Cont.insertCont", cont);
+		return (Long)obj;
 	}
 
 	/**

@@ -2,13 +2,13 @@ package com.alibaba.cobar.client.wrapper;
 
 import javax.sql.DataSource;
 
-import org.springframework.jdbc.datasource.DelegatingDataSource;
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
 import com.alibaba.cobar.client.datasources.IDataSourceDescriptorContext;
 
 
-public class CobarDataSourceWrapper extends DelegatingDataSource implements DataSource,IDataSourceDescriptorContext{
+public class CobarDataSourceWrapper extends LazyConnectionDataSourceProxy implements DataSource,IDataSourceDescriptorContext{
 	
 	private int weight= 100;
 	

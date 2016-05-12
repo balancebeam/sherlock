@@ -37,7 +37,7 @@ public class AppTest extends TestCase{
     	Long taobaoId = new Long(new Random().nextInt(10000));
     	System.out.println("#"+taobaoId);
     	cont.setTaobaoId(taobaoId);
-    	contService.addCont(cont);
+    	System.out.println("contId: "+contService.addCont(cont));
     }
     
     /**
@@ -46,10 +46,10 @@ public class AppTest extends TestCase{
      */
     public void test3(){
     	ContQuery contQuery = new ContQuery();
-    	contQuery.setTaobaoId(0L);
+    	contQuery.setTaobaoId(1084L);
     	List<Cont> list = contService.getContList(contQuery);
     	if(list != null){
-    		System.out.println(list.get(0));
+    		System.out.println(list);
     	}
     }
 }

@@ -1,6 +1,6 @@
 package com.alibaba.cobar.client.executor;
 
-public class ExecutorContextHolder {
+public abstract class ExecutorContextHolder {
 
 	private static ThreadLocal<IExecutorContext> holder= new ThreadLocal<>();
 	

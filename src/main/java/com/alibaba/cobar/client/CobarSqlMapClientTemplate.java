@@ -96,7 +96,7 @@ import com.ibatis.sqlmap.engine.mapping.sql.stat.StaticSql;
  * still keep the default behaviors of {@link SqlMapClientTemplate} untouched if
  * you still need them.<br> {@link CobarSqlMapClientTemplate} usually can work in 2
  * mode, if you don't provide {@link #cobarDataSourceService} and
- * {@link #dsRouter} dependencies, it will work same as
+ * {@link #dbRouter} dependencies, it will work same as
  * {@link SqlMapClientTemplate}; Only you provide at least the dependencies of
  * {@link #cobarDataSourceService} and {@link #dsRouter},
  * {@link CobarSqlMapClientTemplate} work in a way as it is.<br>
@@ -268,19 +268,19 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                             return executor.delete(statementName, parameterObject);
                         }
                     };
-
-//                    if (dsMap.size() == 1) {
-//                    	//获取写库
-//                        DataSource dataSource = dsMap.get(dsMap.firstKey()).getWriteDataSource();
-//                        return (Integer) executeWith(dataSource, action);
-//                    } else {
+                    if (dsMap.size() == 1) {
+                    	String key= dsMap.firstKey();
+                        DataSource dataSource = dsMap.get(key).getWriteDataSource();
+                        ((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setDataSourceDescriptor(dsMap.get(key));
+                        return (Integer) executeWith(dataSource, action);
+                    } else {
                         List<Object> results = executeInConcurrency(action, dsMap);
                         Integer rowAffacted = 0;
                         for (Object item : results) {
                             rowAffacted += (Integer) item;
                         }
                         return rowAffacted;
-//                    }
+                    }
                 }
             } // end if for partitioning status checking
             return super.delete(statementName, parameterObject);
@@ -351,7 +351,6 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                     return batchInsertAfterReordering(statementName, parameterObject);
 
                 } else {
-//                    DataSource targetDataSource = null;
                     SqlMapClientCallback action = new SqlMapClientCallback() {
                         public Object doInSqlMapClient(SqlMapExecutor executor) throws SQLException {
                             return executor.insert(statementName, parameterObject);
@@ -360,14 +359,12 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                     SortedMap<String, CobarDataSourceDescriptor> dsMap = lookupDataSourcesByRouter(
                             statementName, parameterObject);
                     if (!MapUtils.isEmpty(dsMap) ) {
-//                        targetDataSource = getSqlMapClient().getDataSource(); // fall back to default data source.
-//                        if (resultDataSources.size() == 1) {
-//                        	String key= dsMap.firstKey();
-//                        	//get write datasource
-//                            targetDataSource = dsMap.get(key).getWriteDataSource();
-//                        }
-//                        return executeWith(dsMap, action);
-//                    } else {
+                        if (dsMap.size() == 1) {
+                        	String key= dsMap.firstKey();
+                        	DataSource dataSource= dsMap.get(key).getWriteDataSource();
+                        	((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setDataSourceDescriptor(dsMap.get(key));
+                        	return executeWith(dataSource, action);
+                        }
                         return executeInConcurrency(action, dsMap);
                     }
                 }
@@ -879,8 +876,8 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                                                                       final Object parameterObject) {
         SortedMap<String, CobarDataSourceDescriptor> resultMap = new TreeMap<String, CobarDataSourceDescriptor>();
 
-        if (getDataSourceRouter() != null && getCobarDataSourceService() != null) {
-            List<String> dsSet = getDataSourceRouter().doRoute(
+        if (getDatabaseRouter() != null && getCobarDataSourceService() != null) {
+            List<String> dsSet = getDatabaseRouter().doRoute(
                     new IBatisRoutingFact(statementName, parameterObject)).getResourceIdentities();
             if (CollectionUtils.isNotEmpty(dsSet)) {
                 Collections.sort(dsSet);
@@ -994,7 +991,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 		                createExecutorForSpecificDataSource(defaultDataSourceDescriptor));
 			}
 			this.defaultDataSourceDescriptor= defaultDataSourceDescriptor;
-			((CobarSqlExecutor)sqlExecutor).setDataSourceExcutors(getDataSourceSpecificExecutors());
+			((CobarSqlExecutor)sqlExecutor).setCobarSqlMapClientTemplate(this);
 			ReflectionUtils.setField(field,delegate,sqlExecutor);
         }
     }
@@ -1204,7 +1201,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         this.dbRouter = dbRouter;
     }
 
-    public ICobarDatabaseRouter<IBatisRoutingFact> getDataSourceRouter() {
+    public ICobarDatabaseRouter<IBatisRoutingFact> getDatabaseRouter() {
         return dbRouter;
     }
 

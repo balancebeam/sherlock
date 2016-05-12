@@ -1,6 +1,8 @@
 package com.hj.cobar;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -9,6 +11,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.alibaba.cobar.client.sequence.SequenceGenerator;
+import com.hj.cobar.bean.Cont;
+import com.hj.cobar.query.ContQuery;
+import com.hj.cobar.service.ContService;
 
 public class Tester {
 	
@@ -108,15 +113,28 @@ public class Tester {
 		
 		final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/spring/applicationContext.xml");
 		final SequenceGenerator sequence= (SequenceGenerator)context.getBean("testSequence");
-		for(int i=0;i<10;i++){
-			
-			long val= sequence.nextval("hello");
-			System.out.println(val);
-		}
-		
-		InputStream in= System.in;
-		
-		
+//		for(int i=0;i<10;i++){
+//			
+//			long val= sequence.nextval("hello");
+//			System.out.println(val);
+//		}
+//		
+//		InputStream in= System.in;
+		ContService contService = (ContService) context.getBean("contService");
+//		Cont cont = new Cont();
+//    	cont.setId(sequence.nextval("cont"));
+//    	cont.setName("gd");
+//    	Long taobaoId = new Long(new Random().nextInt(10000));
+//    	System.out.println("#"+taobaoId);
+//    	cont.setTaobaoId(taobaoId);
+//    	System.out.println(contService.addCont(cont));
+//		
+    	ContQuery contQuery = new ContQuery();
+    	contQuery.setTaobaoId(null);
+    	List<Cont> list = contService.getContList(contQuery);
+    	if(list != null){
+    		System.out.println(list);
+    	}
 		
 
 	}

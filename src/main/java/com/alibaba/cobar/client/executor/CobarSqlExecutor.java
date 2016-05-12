@@ -2,7 +2,6 @@ package com.alibaba.cobar.client.executor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +13,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
+import com.alibaba.cobar.client.CobarSqlMapClientTemplate;
 import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
 import com.alibaba.cobar.client.executor.dml.DMLExec;
 import com.alibaba.cobar.client.executor.dql.DQLExec;
@@ -24,9 +24,20 @@ import com.ibatis.sqlmap.engine.scope.ErrorContext;
 import com.ibatis.sqlmap.engine.scope.StatementScope;
 
 /**
+ * {@link CobarSqlExecutor} is an extension to ibatis's default
+ * {@link SqlExecutor}, it works as the important component of <i>Cobar
+ * ClientX</i> product.<br>
+ * We mainly override public method before executing DQL or DML SQL
+ * {@link CobarSqlExecutor} for situations when you have to partition
+ * you table to enable horizontal scalability(scale out the system). but we
+ * still keep the default behaviors of {@link SqlExecutor} untouched if
+ * you still need them.<br> {@link CobarSqlExecutor} usually can monitor and statistic
+ * SQL executing situation, including execution time、execution count、fail count
+ * {@link DQLExec} query
+ * {@link DMLExec} insert update delete batch
  * 
  * @author yangzz
- *
+ * @version 0.0.1-SNAPSHOT
  */
 public class CobarSqlExecutor extends SqlExecutor {
 	
@@ -39,7 +50,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 	//table router executor for sql
 	private ICobarTableRouter tableRouter;
 	
-	private Map<String, ExecutorService> dataSourceExcutors;
+	private CobarSqlMapClientTemplate template;
 	
 	public CobarSqlExecutor(){
 		dqlExec= new DQLExec();
@@ -50,8 +61,8 @@ public class CobarSqlExecutor extends SqlExecutor {
 		this.tableRouter= tableRouter;
 	}
 	
-	public void setDataSourceExcutors(Map<String, ExecutorService> dataSourceExcutors){
-		this.dataSourceExcutors= dataSourceExcutors;
+	public void setCobarSqlMapClientTemplate(CobarSqlMapClientTemplate template){
+		this.template= template;
 	}
 
 	@Override
@@ -97,7 +108,8 @@ public class CobarSqlExecutor extends SqlExecutor {
 					maxResults,
 					callback,
 					errorContextList);
-			ExecutorService executorService= dataSourceExcutors.get(dataSourceDescriptor.getIdentity());
+			//get ExecutorService from CobarSqlMapClientTemplate by partition id
+			ExecutorService executorService= template.getDataSourceSpecificExecutors().get(dataSourceDescriptor.getIdentity());
 			//use new thread pool execute other query job
 			for(int i=1;i<routerSqls.length;i++){
 				final String tableRoutedSql= routerSqls[i];

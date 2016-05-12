@@ -33,11 +33,11 @@ public class ContServiceImpl implements ContService {
 	 */
 	public Long addCont(Cont cont) {
 		try {
-			return contDAO.addCont(cont);
+			contDAO.addCont(cont);
 		} catch (SQLException e) {
 			log.error("dao addCont error.:" + e.getMessage(), e);
 		}
-		return 0L;
+		return cont.getId();
 	}
 
 	/**

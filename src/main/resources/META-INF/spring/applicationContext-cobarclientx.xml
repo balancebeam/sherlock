@@ -87,7 +87,7 @@
     </bean>
     
     <!-- definition extension sql executor -->
-    <bean id="sqlExecutor" class="com.alibaba.cobar.client.executor.XSqlExecutor">
+    <bean id="sqlExecutor" class="com.alibaba.cobar.client.executor.CobarSqlExecutor">
     	<property name="tableRouter">
     		<bean class="com.alibaba.cobar.client.router.DefaultCobarTableRouter"/>
     	</property>
