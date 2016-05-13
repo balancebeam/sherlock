@@ -17,8 +17,8 @@
 
 import javax.sql.DataSource;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 
 public interface IHADataSourceCreator {
-	DataSource createHADataSource(CobarDataSourceDescriptor descriptor) throws Exception;
+	DataSource createHADataSource(DataSourceDescriptor descriptor) throws Exception;
 }

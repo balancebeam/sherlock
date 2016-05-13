@@ -36,8 +36,8 @@ import org.springframework.aop.target.HotSwappableTargetSource;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
-import com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DefaultShardingDataSource;
 
 /**
  * FailoverHotSwapDataSourceCreator will create a Data Source Proxy that will
@@ -61,7 +61,7 @@ import com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService;
  * {@link #monitorPeriod}.
  * 
  * @author fujohnwang
- * @see DefaultCobarDataSourceService
+ * @see DefaultShardingDataSource
  */
 public class FailoverHotSwapDataSourceCreator implements IHADataSourceCreator, InitializingBean,
         DisposableBean {
@@ -110,7 +110,7 @@ public class FailoverHotSwapDataSourceCreator implements IHADataSourceCreator, I
 
     private int                                                         recheckTimes              = 3;
 
-    public DataSource createHADataSource(CobarDataSourceDescriptor descriptor) throws Exception {
+    public DataSource createHADataSource(DataSourceDescriptor descriptor) throws Exception {
         DataSource activeDataSource = descriptor.getWriteDataSource();
         DataSource standbyDataSource = descriptor.getStandbyDataSource();
         if (activeDataSource == null && standbyDataSource == null) {

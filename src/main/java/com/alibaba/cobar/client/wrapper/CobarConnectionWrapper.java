@@ -19,22 +19,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.datasources.IDataSourceDescriptorContext;
 
 public class CobarConnectionWrapper implements Connection,IDataSourceDescriptorContext{
 	
-	private CobarDataSourceDescriptor dataSourceDescriptor;
+	private DataSourceDescriptor dataSourceDescriptor;
 	
 	private Connection delegate;
 	
-	public CobarConnectionWrapper(CobarDataSourceDescriptor dataSourceDescriptor,Connection delegate){
+	public CobarConnectionWrapper(DataSourceDescriptor dataSourceDescriptor,Connection delegate){
 		this.dataSourceDescriptor= dataSourceDescriptor;
 		this.delegate= delegate;
 	}
 	
 	@Override
-	public CobarDataSourceDescriptor getDataSourceDescriptor(){
+	public DataSourceDescriptor getDataSourceDescriptor(){
 		return dataSourceDescriptor;
 	}
 

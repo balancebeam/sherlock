@@ -3,19 +3,19 @@ package com.alibaba.cobar.client.executor.support;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.executor.IExecutorContext;
 
 public class ExecutorContextSupporter implements IExecutorContext{
 
 	private int operationType= 0;
 	
-	private CobarDataSourceDescriptor dataSourceDescriptor;
+	private DataSourceDescriptor dataSourceDescriptor;
 	
 	private Map<String,Object> attributes;
 	
 	@Override
-	public CobarDataSourceDescriptor getDataSourceDescriptor() {
+	public DataSourceDescriptor getDataSourceDescriptor() {
 		return dataSourceDescriptor;
 	}
 
@@ -28,7 +28,7 @@ public class ExecutorContextSupporter implements IExecutorContext{
 		operationType= op;
 	}
 	
-	public void setDataSourceDescriptor(CobarDataSourceDescriptor dataSourceDescriptor){
+	public void setDataSourceDescriptor(DataSourceDescriptor dataSourceDescriptor){
 		this.dataSourceDescriptor= dataSourceDescriptor;
 	}
 
@@ -58,7 +58,7 @@ public class ExecutorContextSupporter implements IExecutorContext{
 	@Override
 	public void setAttribute(String key,Object value){
 		if(attributes== null){
-			attributes= new HashMap<>();
+			attributes= new HashMap<String,Object>();
 		}
 		attributes.put(key, value);
 	}

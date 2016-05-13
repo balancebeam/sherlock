@@ -4,7 +4,7 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.datasources.IDataSourceDescriptorContext;
 
 
@@ -12,9 +12,9 @@ public class CobarDataSourceWrapper extends LazyConnectionDataSourceProxy implem
 	
 	private int weight= 100;
 	
-	private CobarDataSourceDescriptor dataSourceDescriptor;
+	private DataSourceDescriptor dataSourceDescriptor;
 	
-	public CobarDataSourceWrapper(CobarDataSourceDescriptor dataSourceDescriptor,DataSource delegate){
+	public CobarDataSourceWrapper(DataSourceDescriptor dataSourceDescriptor,DataSource delegate){
 		super(delegate);
 		this.dataSourceDescriptor= dataSourceDescriptor;
 	}
@@ -28,7 +28,7 @@ public class CobarDataSourceWrapper extends LazyConnectionDataSourceProxy implem
 	}
 	
 	@Override
-	public CobarDataSourceDescriptor getDataSourceDescriptor() {
+	public DataSourceDescriptor getDataSourceDescriptor() {
 		return dataSourceDescriptor;
 	}
 

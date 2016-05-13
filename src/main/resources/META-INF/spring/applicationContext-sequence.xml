@@ -10,7 +10,7 @@
        default-lazy-init="false">
 
     <bean id="sequence" class="com.alibaba.cobar.client.sequence.support.PostgreSQLPartitionSequenceGenerator">
-    	<property name="incrStep" value="1000"></property>
+    	<property name="incrStep" value="10"></property>
     	<property name="dataSource" ref="dataSource0"></property>
     </bean>
     <bean id="testSequence" class="com.alibaba.cobar.client.sequence.support.LocalTestSequenceGenerator">

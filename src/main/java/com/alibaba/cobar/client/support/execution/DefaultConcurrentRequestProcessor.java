@@ -36,7 +36,7 @@ import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.orm.ibatis.SqlMapClientCallback;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.support.utils.CollectionUtils;
@@ -157,7 +157,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
         List<RequestDepository> depos = new ArrayList<RequestDepository>();
         for (ConcurrentRequest request : requests) {
         	boolean readable= ExecutorContextHolder.getExecutorContext().isReadable();
-        	CobarDataSourceDescriptor dataSourceDescriptor= request.getDataSourceDescriptor();
+        	DataSourceDescriptor dataSourceDescriptor= request.getDataSourceDescriptor();
         	DataSource dataSource = readable? dataSourceDescriptor.getReadDataSource(): dataSourceDescriptor.getWriteDataSource();
         	request.setDataSource(dataSource);
 

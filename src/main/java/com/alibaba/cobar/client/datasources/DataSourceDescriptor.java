@@ -28,7 +28,7 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
 import com.alibaba.cobar.client.wrapper.CobarDataSourceWrapper;
 
 /**
- * {@link CobarDataSourceDescriptor} describe a data base deployment structure
+ * {@link DataSourceDescriptor} describe a data base deployment structure
  * with 2 databases as HA group.<br>
  * it looks like:<br>
  * 
@@ -56,7 +56,7 @@ import com.alibaba.cobar.client.wrapper.CobarDataSourceWrapper;
  * @author fujohnwang
  * @since 1.0
  */
-public class CobarDataSourceDescriptor {
+public class DataSourceDescriptor {
     /**
      * the identity of to-be-exposed DataSource.
      */
@@ -227,7 +227,7 @@ public class CobarDataSourceDescriptor {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        CobarDataSourceDescriptor other = (CobarDataSourceDescriptor) obj;
+        DataSourceDescriptor other = (DataSourceDescriptor) obj;
         if (identity == null) {
             if (other.identity != null)
                 return false;
