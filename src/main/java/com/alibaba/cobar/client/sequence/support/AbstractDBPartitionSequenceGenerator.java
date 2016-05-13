@@ -6,30 +6,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import com.alibaba.cobar.client.exception.ShardingException;
-import com.alibaba.cobar.client.sequence.SequenceGenerator;
-
-public abstract class AbstractDBPartitionSequenceGenerator implements SequenceGenerator{
+public abstract class AbstractDBPartitionSequenceGenerator extends AbstractPartitionSequenceGenerator{
 	
-	protected Log logger = LogFactory.getLog(getClass());
-
-	protected ConcurrentHashMap<String, Future<AtomicLong>> sequenceRepository = new ConcurrentHashMap<>();
-
-	protected volatile long boundaryMaxValue = 0;
-
-	protected long incrStep = 1000;
-
 	protected DataSource dataSource;
 	
 	protected String sequenceTable= "sequence_table";
@@ -46,10 +30,6 @@ public abstract class AbstractDBPartitionSequenceGenerator implements SequenceGe
 		this.dataSource = dataSource;
 	}
 
-	public void setIncrStep(long incrStep) {
-		this.incrStep = incrStep;
-	}
-	
 //	public void setSequenceTableName(String sequenceTableName){
 //		this.sequenceTableName= sequenceTableName;
 //	}
@@ -63,47 +43,8 @@ public abstract class AbstractDBPartitionSequenceGenerator implements SequenceGe
 //	}
 	
 	@Override
-	public long nextval(final String name) {
-		Future<AtomicLong> future = sequenceRepository.get(name);
-		AtomicLong nextval = null;
-		if (future == null) {
-			FutureTask<AtomicLong> newFuture = new FutureTask<>(new DBSequenceBuilderTask(name));
-			if (sequenceRepository.putIfAbsent(name, newFuture) == null) {
-				newFuture.run();
-			}
-			if((future= sequenceRepository.get(name))== null){
-				return nextval(name);
-			}
-		}
-		try {
-			nextval = future.get();
-		} catch (Exception e) {
-			sequenceRepository.remove(name);
-			throw new ShardingException(e);
-		}
-
-		long val = nextval.incrementAndGet();
-		if(val< boundaryMaxValue){
-			return val;
-		}
-		else if(val== boundaryMaxValue){
-			sequenceRepository.remove(name);
-			return val;
-		}
-		
-		//out boundary
-		for(;;){
-//			try {
-//				Thread.sleep(1);
-//			} catch (InterruptedException e) {}
-			if(logger.isDebugEnabled()){
-				logger.debug("sequence ["+name+"] outboundary, val="+val+",boundaryMaxValue="+boundaryMaxValue);
-			}
-			Future<AtomicLong> nFuture= sequenceRepository.get(name);
-			if(nFuture!= future){
-				return nextval(name);
-			}
-		}
+	public Callable<AtomicLong> takeNewBatchSequence(String name){
+		return new DBSequenceBuilderTask(name);
 	}
 
 	private class DBSequenceBuilderTask implements Callable<AtomicLong> {
