@@ -32,12 +32,12 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
  * 
  * @author fujohnwang
  */
-public class DefaultCobarDataSourceService implements ICobarDataSourceService, InitializingBean {
-    private Set<CobarDataSourceDescriptor> dataSourceDescriptors   = new HashSet<>();
-    private LinkedHashMap<String,CobarDataSourceDescriptor> dataSourceMapping= new LinkedHashMap<>();
+public class DefaultShardingDataSource implements IShardingDataSource, InitializingBean {
+    private Set<DataSourceDescriptor> dataSourceDescriptors   = new HashSet<>();
+    private LinkedHashMap<String,DataSourceDescriptor> dataSourceMapping= new LinkedHashMap<>();
     //private List<IDataSourcePostProcessor> dataSourcePostProcessor = new ArrayList<IDataSourcePostProcessor>();
     private IHADataSourceCreator           haDataSourceCreator;
-    private CobarDataSourceDescriptor defaultDataSourceDescriptor;
+    private DataSourceDescriptor defaultDataSourceDescriptor;
     
 	public Set<String> getDataSourceNames(){
 		return dataSourceMapping.keySet();
@@ -51,8 +51,8 @@ public class DefaultCobarDataSourceService implements ICobarDataSourceService, I
         	throw new ShardingDataSourceException("do not configure any sharding datasource.");
         }
         
-        for(Iterator<CobarDataSourceDescriptor> item= dataSourceDescriptors.iterator();item.hasNext();){
-        	CobarDataSourceDescriptor dataSourceDescriptor= item.next();
+        for(Iterator<DataSourceDescriptor> item= dataSourceDescriptors.iterator();item.hasNext();){
+        	DataSourceDescriptor dataSourceDescriptor= item.next();
         	String partition= dataSourceDescriptor.getIdentity();
         	dataSourceMapping.put(partition,dataSourceDescriptor);
         	if(dataSourceDescriptor.isDefaultDataSource()){
@@ -88,11 +88,11 @@ public class DefaultCobarDataSourceService implements ICobarDataSourceService, I
 //        }
     }
 
-    public void setDataSourceDescriptors(Set<CobarDataSourceDescriptor> dataSourceDescriptors) {
+    public void setDataSourceDescriptors(Set<DataSourceDescriptor> dataSourceDescriptors) {
         this.dataSourceDescriptors = dataSourceDescriptors;
     }
 
-    public CobarDataSourceDescriptor getDataSourceDescriptor(String partition) {
+    public DataSourceDescriptor getDataSourceDescriptor(String partition) {
         return dataSourceMapping.get(partition);
     }
 
@@ -105,7 +105,7 @@ public class DefaultCobarDataSourceService implements ICobarDataSourceService, I
     }
 
 	@Override
-	public CobarDataSourceDescriptor getDefaultDataSourceDescriptor() {
+	public DataSourceDescriptor getDefaultDataSourceDescriptor() {
 		return defaultDataSourceDescriptor;
 	}
 

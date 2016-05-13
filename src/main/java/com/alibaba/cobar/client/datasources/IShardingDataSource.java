@@ -29,8 +29,8 @@ import com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManage
  * @author fujohnwang
  * @since  1.0 
  */
-public interface ICobarDataSourceService {
+public interface IShardingDataSource {
 	Set<String> getDataSourceNames();
-	CobarDataSourceDescriptor getDefaultDataSourceDescriptor();
-	CobarDataSourceDescriptor getDataSourceDescriptor(String name);
+	DataSourceDescriptor getDefaultDataSourceDescriptor();
+	DataSourceDescriptor getDataSourceDescriptor(String name);
 }

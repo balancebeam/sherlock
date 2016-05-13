@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.executor.util.SqlExecutorUtils;
 import com.ibatis.sqlmap.engine.scope.ErrorContext;
 import com.ibatis.sqlmap.engine.scope.StatementScope;
@@ -12,7 +12,7 @@ import com.ibatis.sqlmap.engine.scope.StatementScope;
 public class DMLExec {
 
 	public int executeUpdate(StatementScope statementScope, 
-			CobarDataSourceDescriptor dataSourceDescriptor,
+			DataSourceDescriptor dataSourceDescriptor,
 			Connection conn, 
 			String sql,
 			Object[] parameters) throws SQLException {

@@ -32,8 +32,8 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
 
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
-import com.alibaba.cobar.client.datasources.ICobarDataSourceService;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.IShardingDataSource;
 
 /**
  * use {@link org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy} to wrap all of the data sources we
@@ -55,7 +55,8 @@ AbstractPlatformTransactionManager implements InitializingBean {
 
 	private static final long serialVersionUID = 4712923770419532385L;
 
-	private ICobarDataSourceService cobarDataSourceService;
+	private IShardingDataSource shardingDataSource;
+	
 	private List<PlatformTransactionManager> transactionManagers = new ArrayList<PlatformTransactionManager>();
 
 	@Override
@@ -146,19 +147,19 @@ AbstractPlatformTransactionManager implements InitializingBean {
 		}
 	}
 
-	public void setCobarDataSourceService(
-			ICobarDataSourceService cobarDataSourceService) {
-		this.cobarDataSourceService = cobarDataSourceService;
+	public void setShardingDataSource(
+			IShardingDataSource shardingDataSource) {
+		this.shardingDataSource = shardingDataSource;
 	}
 
-	public ICobarDataSourceService getCobarDataSourceService() {
-		return cobarDataSourceService;
+	public IShardingDataSource getShardingDataSource() {
+		return shardingDataSource;
 	}
 
 	public void afterPropertiesSet() throws Exception {
-		Validate.notNull(cobarDataSourceService);
-		for(Iterator<String> item= cobarDataSourceService.getDataSourceNames().iterator();item.hasNext();){
-			CobarDataSourceDescriptor dataSourceDescriptor= cobarDataSourceService.getDataSourceDescriptor(item.next());
+		Validate.notNull(shardingDataSource);
+		for(Iterator<String> item= shardingDataSource.getDataSourceNames().iterator();item.hasNext();){
+			DataSourceDescriptor dataSourceDescriptor= shardingDataSource.getDataSourceDescriptor(item.next());
 			PlatformTransactionManager txManager = this.createTransactionManager(dataSourceDescriptor.getWriteDataSource());
 			getTransactionManagers().add(txManager);
 		}

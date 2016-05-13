@@ -17,14 +17,14 @@
 
 import javax.sql.DataSource;
 
-import com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService;
+import com.alibaba.cobar.client.datasources.DefaultShardingDataSource;
 
 /**
  * A Callback Interface that can be used to hook in custom cross-cutting concerns for your DataSource.<br>
  * currently, there is no need to use it yet.
  * 
  * @author fujohnwang
- * @see    DefaultCobarDataSourceService
+ * @see    DefaultShardingDataSource
  */
 public interface IDataSourcePostProcessor {
 	DataSource postProcess(DataSource dataSource);

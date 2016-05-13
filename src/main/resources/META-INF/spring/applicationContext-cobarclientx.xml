@@ -10,11 +10,11 @@
        default-lazy-init="false">
 
 	<!-- 配置数据源开始 -->
-     <bean id="shardingDataSources" class="com.alibaba.cobar.client.datasources.DefaultCobarDataSourceService">
+     <bean id="shardingDataSource" class="com.alibaba.cobar.client.datasources.DefaultShardingDataSource">
     	<!-- 数据源定义 -->
 		<property name="dataSourceDescriptors">
 			<set>
-				<bean class="com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
 					<property name="identity" value="partition0"/>
 			    	<!-- 读写分离策略 -->
     				<property name="readWriteStrategy" value="1"></property>
@@ -26,34 +26,18 @@
 						</list>
 					</property>
 				</bean>
-				<bean class="com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
 					<property name="identity" value="partition1"/>
 					<property name="writeDataSource" ref="dataSource1"/>
-					<property name="readDataSources">
-						<list>
-							<ref bean="dataSource1"/>
-							<ref bean="dataSource1"/>
-						</list>
-					</property>
 				</bean>
-				<bean class="com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
 					<property name="identity" value="partition2"/>
 					<property name="writeDataSource" ref="dataSource2"/>
-					<property name="readDataSources">
-						<list>
-							<ref bean="dataSource2"/>
-							<ref bean="dataSource2"/>
-						</list>
-					</property>
 				</bean>
 			</set>
 		</property>
-		<property name="haDataSourceCreator">
-			<bean class="com.alibaba.cobar.client.datasources.ha.FailoverHotSwapDataSourceCreator">
-				<property name="detectingSql" value="update cobarha set timeflag=CURRENT_TIMESTAMP()"/>
-			</bean>
-		</property>
 	</bean>
+	
 	<bean id="dbRouter"
 		class="com.alibaba.cobar.client.router.config.CobarInteralRouterXmlFactoryBean">
 		<!-- functionsMap是在使用自定义路由规则函数的时候使用 -->
@@ -72,7 +56,7 @@
   
   	<!-- 事务配置 -->
     <bean id="transactionManager" class="com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager">
-        <property name="cobarDataSourceService" ref="shardingDataSources"/>
+        <property name="shardingDataSource" ref="shardingDataSource"/>
     </bean>
     <!-- 使用annotation定义事务 -->
     <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/> 
@@ -96,7 +80,7 @@
     <!-- 工程里一定要使用此工程模板，不能再使用ibatis原生的api，不然有的情况会不经过cobar的过滤 -->
  	<bean id="sqlMapClientTemplate" class="com.alibaba.cobar.client.CobarSqlMapClientTemplate">
 		<property name="sqlMapClient" ref="sqlMapClient" />
-		<property name="cobarDataSourceService" ref="shardingDataSources" />
+		<property name="shardingDataSource" ref="shardingDataSource" />
 		<property name="dbRouter" ref="dbRouter" />
 		<property name="sqlAuditor">
 			<bean class="com.alibaba.cobar.client.audit.SimpleSqlAuditor" />
@@ -105,10 +89,5 @@
 		<property name="longTimeRunningSqlIntervalThreshold" value="3600000" />
 		<property name="sqlExecutor" ref="sqlExecutor"/>
 	</bean>
-    
-    <bean id="sequence" class="com.alibaba.cobar.client.sequence.support.DefaultConcurrentSequence">
-    	<property name="incrStep" value="10"></property>
-    	<property name="dataSource" ref="dataSource0"></property>
-    </bean>
     
 </beans>

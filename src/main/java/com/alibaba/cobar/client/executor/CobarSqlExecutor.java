@@ -14,7 +14,7 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import com.alibaba.cobar.client.CobarSqlMapClientTemplate;
-import com.alibaba.cobar.client.datasources.CobarDataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.executor.dml.DMLExec;
 import com.alibaba.cobar.client.executor.dql.DQLExec;
 import com.alibaba.cobar.client.router.ICobarTableRouter;
@@ -76,7 +76,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		//fetch the execute context from current thread local
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
 		//get the connection belonging dataSource 
-		final CobarDataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
+		final DataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
 		//trace the query error message for more thread
 		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<>();
 		//route sql by sharding table strategy，including ER
@@ -185,7 +185,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 			final Object[] parameters) throws SQLException {
 		
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
-		CobarDataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
+		DataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
 		
 	    String[] routerSqls= doTableRoute(statementScope,dataSourceDescriptor,sql,parameters);
 	    int rows = 0;
@@ -196,7 +196,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 	    return rows;
 	}
 	
-	private String[] doTableRoute(StatementScope statementScope,CobarDataSourceDescriptor dataSourceDescriptor,String sql,Object[] parameters){
+	private String[] doTableRoute(StatementScope statementScope,DataSourceDescriptor dataSourceDescriptor,String sql,Object[] parameters){
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
