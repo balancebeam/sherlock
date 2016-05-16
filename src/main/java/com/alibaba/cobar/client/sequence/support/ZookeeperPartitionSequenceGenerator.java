@@ -100,7 +100,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 			this.name = name;
 		}
 
-		private AtomicLong getStartIndex() throws Exception {
+		private AtomicLong getCurrentMaxIndex() throws Exception {
 			String data = new String(client.getData().forPath("/seq/" + name), Charset.forName("UTF-8"));
 			long max = Long.parseLong(data);
 
@@ -120,7 +120,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 				try {
 					if (null != client.checkExists().forPath("/seq/" + name)) {// 已经存在
 						lock.acquire();
-						return getStartIndex();
+						return getCurrentMaxIndex();
 					} else {// 不存在
 						lock.acquire();
 						if (null == client.checkExists().forPath("/seq/" + name)) {
@@ -130,7 +130,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 							boundaryMaxValue = incrStep;
 							return new AtomicLong(0);
 						} else {
-							return getStartIndex();
+							return getCurrentMaxIndex();
 						}
 					}
 				} catch(Exception e){
