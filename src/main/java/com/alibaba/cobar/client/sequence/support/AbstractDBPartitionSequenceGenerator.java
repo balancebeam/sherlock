@@ -2,6 +2,7 @@ package com.alibaba.cobar.client.sequence.support;
 
 import java.net.InetAddress;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -79,7 +80,7 @@ public abstract class AbstractDBPartitionSequenceGenerator extends AbstractParti
 								"=? where "+sequenceColumn+"=? and "+maxValueColumn+"= ?";
 						ups = conn.prepareStatement(sql);
 						ups.setLong(1, newMaxValue);
-						ups.setLong(2, System.currentTimeMillis());
+						ups.setDate(2, new Date(System.currentTimeMillis()));
 						ups.setString(3, ip);
 						ups.setString(4, name);
 						ups.setLong(5, oldMaxValue);
@@ -98,7 +99,8 @@ public abstract class AbstractDBPartitionSequenceGenerator extends AbstractParti
 						ups = conn.prepareStatement(sql);
 						ups.setString(1, name);
 						ups.setLong(2, incrStep);
-						ups.setLong(3, System.currentTimeMillis());
+						//ups.setLong(3, System.currentTimeMillis());
+						ups.setDate(3, new Date(System.currentTimeMillis()));
 						ups.setString(4, ip);
 						int result = ups.executeUpdate();
 						conn.commit();
