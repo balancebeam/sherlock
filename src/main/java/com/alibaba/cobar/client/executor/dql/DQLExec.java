@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.util.SqlExecutorUtils;
 import com.ibatis.sqlmap.engine.execution.SqlExecutor;
 import com.ibatis.sqlmap.engine.impl.SqlMapClientImpl;
@@ -23,7 +23,7 @@ import com.ibatis.sqlmap.engine.scope.StatementScope;
 public class DQLExec {
 	
 	public void executeQuery(StatementScope statementScope,
-			DataSourceDescriptor dataSourceDescriptor,
+			PartitionDataSource partitionDataSource,
 			Connection conn, 
 			String sql, 
 			Object[] parameters,

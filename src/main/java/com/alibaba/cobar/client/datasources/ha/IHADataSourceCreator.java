@@ -17,8 +17,8 @@
 
 import javax.sql.DataSource;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 
 public interface IHADataSourceCreator {
-	DataSource createHADataSource(DataSourceDescriptor descriptor) throws Exception;
+	DataSource createHADataSource(PartitionDataSource partition) throws Exception;
 }

@@ -8,6 +8,8 @@ import javax.annotation.Resource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.hj.cobar.bean.Cont;
 import com.hj.cobar.common.Result;
 import com.hj.cobar.dao.ContDAO;
@@ -113,6 +115,13 @@ public class ContServiceImpl implements ContService {
 			log.error("get Cont list error." + e.getMessage(), e);
 		}
 		return Collections.emptyList();
+	}
+	
+	@Transactional
+	public void addBatchCont(List<Cont> conts){
+		for(Cont cont: conts){
+			addCont(cont);
+		}
 	}
 
 }

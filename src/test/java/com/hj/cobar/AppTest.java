@@ -1,8 +1,9 @@
 package com.hj.cobar;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import junit.framework.TestCase;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -10,6 +11,8 @@ import com.alibaba.cobar.client.sequence.SequenceGenerator;
 import com.hj.cobar.bean.Cont;
 import com.hj.cobar.query.ContQuery;
 import com.hj.cobar.service.ContService;
+
+import junit.framework.TestCase;
 
 /**
  * 
@@ -46,10 +49,30 @@ public class AppTest extends TestCase{
      */
     public void test3(){
     	ContQuery contQuery = new ContQuery();
-    	contQuery.setTaobaoId(1084L);
+    	contQuery.setTaobaoId(0L);
     	List<Cont> list = contService.getContList(contQuery);
     	if(list != null){
     		System.out.println(list);
     	}
+    }
+    
+    public void test4(){
+		Cont c1= new Cont();
+		c1.setId(sequence.nextval("cont"));
+		c1.setTaobaoId(new Long(new Random().nextInt(10000)));
+		c1.setName("xxx");
+		Cont c2= new Cont();
+		c2.setId(sequence.nextval("cont"));
+		c2.setTaobaoId(new Long(new Random().nextInt(10000)));
+		c2.setName("yyy");
+		Cont c3= new Cont();
+		c3.setId(sequence.nextval("cont"));
+		c3.setTaobaoId(new Long(new Random().nextInt(10000)));
+		c3.setName("zzz");
+		List<Cont> list= new ArrayList<Cont>();
+		list.add(c1);
+		list.add(c2);
+		list.add(c3);
+		contService.addBatchCont(list);
     }
 }

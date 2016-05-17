@@ -32,7 +32,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.datasources.IShardingDataSource;
 
 /**
@@ -88,7 +88,7 @@ AbstractPlatformTransactionManager implements InitializingBean {
 			list.add(element);
 		}
 	}
-
+	
 	@Override
 	protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
 		@SuppressWarnings("unchecked")
@@ -159,8 +159,8 @@ AbstractPlatformTransactionManager implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		Validate.notNull(shardingDataSource);
 		for(Iterator<String> item= shardingDataSource.getDataSourceNames().iterator();item.hasNext();){
-			DataSourceDescriptor dataSourceDescriptor= shardingDataSource.getDataSourceDescriptor(item.next());
-			PlatformTransactionManager txManager = this.createTransactionManager(dataSourceDescriptor.getWriteDataSource());
+			PartitionDataSource partitionDataSource= shardingDataSource.getPartitionDataSource(item.next());
+			PlatformTransactionManager txManager = this.createTransactionManager(partitionDataSource.getWriteDataSource());
 			getTransactionManagers().add(txManager);
 		}
 		//Collections.reverse(getTransactionManagers());

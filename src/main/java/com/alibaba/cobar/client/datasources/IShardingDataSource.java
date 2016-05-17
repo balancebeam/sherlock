@@ -31,6 +31,6 @@ import com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManage
  */
 public interface IShardingDataSource {
 	Set<String> getDataSourceNames();
-	DataSourceDescriptor getDefaultDataSourceDescriptor();
-	DataSourceDescriptor getDataSourceDescriptor(String name);
+	PartitionDataSource getDefaultPartitionDataSource();
+	PartitionDataSource getPartitionDataSource(String name);
 }

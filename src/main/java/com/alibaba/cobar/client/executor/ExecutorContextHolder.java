@@ -2,7 +2,7 @@ package com.alibaba.cobar.client.executor;
 
 public abstract class ExecutorContextHolder {
 
-	private static ThreadLocal<IExecutorContext> holder= new ThreadLocal<>();
+	private static ThreadLocal<IExecutorContext> holder= new ThreadLocal<IExecutorContext>();
 	
 	public static IExecutorContext getExecutorContext(){
 		return holder.get();

@@ -33,11 +33,11 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
  * @author fujohnwang
  */
 public class DefaultShardingDataSource implements IShardingDataSource, InitializingBean {
-    private Set<DataSourceDescriptor> dataSourceDescriptors   = new HashSet<>();
-    private LinkedHashMap<String,DataSourceDescriptor> dataSourceMapping= new LinkedHashMap<>();
+    private Set<PartitionDataSource> partitionDataSources   = new HashSet<PartitionDataSource>();
+    private LinkedHashMap<String,PartitionDataSource> dataSourceMapping= new LinkedHashMap<String,PartitionDataSource>();
     //private List<IDataSourcePostProcessor> dataSourcePostProcessor = new ArrayList<IDataSourcePostProcessor>();
     private IHADataSourceCreator           haDataSourceCreator;
-    private DataSourceDescriptor defaultDataSourceDescriptor;
+    private PartitionDataSource defaultPartitionDataSource;
     
 	public Set<String> getDataSourceNames(){
 		return dataSourceMapping.keySet();
@@ -47,52 +47,33 @@ public class DefaultShardingDataSource implements IShardingDataSource, Initializ
         if (getHaDataSourceCreator() == null) {
             setHaDataSourceCreator(new NonHADataSourceCreator());
         }
-        if (dataSourceDescriptors.isEmpty()) {
+        if (partitionDataSources.isEmpty()) {
         	throw new ShardingDataSourceException("do not configure any sharding datasource.");
         }
         
-        for(Iterator<DataSourceDescriptor> item= dataSourceDescriptors.iterator();item.hasNext();){
-        	DataSourceDescriptor dataSourceDescriptor= item.next();
-        	String partition= dataSourceDescriptor.getIdentity();
-        	dataSourceMapping.put(partition,dataSourceDescriptor);
-        	if(dataSourceDescriptor.isDefaultDataSource()){
-        		if(defaultDataSourceDescriptor!= null){
+        for(Iterator<PartitionDataSource> item= partitionDataSources.iterator();item.hasNext();){
+        	PartitionDataSource partitionDataSource= item.next();
+        	String partition= partitionDataSource.getName();
+        	dataSourceMapping.put(partition,partitionDataSource);
+        	if(partitionDataSource.isDefaultDataSource()){
+        		if(defaultPartitionDataSource!= null){
         			throw new ShardingDataSourceException("default datasource setting was duplicated");
         		}
-        		defaultDataSourceDescriptor= dataSourceDescriptor;
+        		defaultPartitionDataSource= partitionDataSource;
         	}
         }
-        if(defaultDataSourceDescriptor==null){
-        	defaultDataSourceDescriptor= dataSourceDescriptors.iterator().next();
+        if(defaultPartitionDataSource==null){
+        	defaultPartitionDataSource= partitionDataSources.iterator().next();
         }
         
         //TODO HA standby datasource
-
-//        for (CobarDataSourceDescriptor descriptor : getDataSourceDescriptors()) {
-//            Validate.notEmpty(descriptor.getIdentity());
-//            Validate.notNull(descriptor.getTargetDataSource());
-//
-//            DataSource dataSourceToUse = descriptor.getTargetDataSource();
-//
-//            if (descriptor.getStandbyDataSource() != null) {
-//                dataSourceToUse = getHaDataSourceCreator().createHADataSource(descriptor);
-//                if (CollectionUtils.isNotEmpty(dataSourcePostProcessor)) {
-//                    for (IDataSourcePostProcessor pp : dataSourcePostProcessor) {
-//                        dataSourceToUse = pp.postProcess(dataSourceToUse);
-//                    }
-//                }
-//            }
-//
-//            dataSources.put(descriptor.getIdentity(), new LazyConnectionDataSourceProxy(
-//                    dataSourceToUse));
-//        }
     }
 
-    public void setDataSourceDescriptors(Set<DataSourceDescriptor> dataSourceDescriptors) {
-        this.dataSourceDescriptors = dataSourceDescriptors;
+    public void setPartitionDataSources(Set<PartitionDataSource> partitionDataSources) {
+        this.partitionDataSources = partitionDataSources;
     }
 
-    public DataSourceDescriptor getDataSourceDescriptor(String partition) {
+    public PartitionDataSource getPartitionDataSource(String partition) {
         return dataSourceMapping.get(partition);
     }
 
@@ -105,8 +86,8 @@ public class DefaultShardingDataSource implements IShardingDataSource, Initializ
     }
 
 	@Override
-	public DataSourceDescriptor getDefaultDataSourceDescriptor() {
-		return defaultDataSourceDescriptor;
+	public PartitionDataSource getDefaultPartitionDataSource() {
+		return defaultPartitionDataSource;
 	}
 
 }

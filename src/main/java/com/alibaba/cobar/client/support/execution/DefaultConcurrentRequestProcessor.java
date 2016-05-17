@@ -36,7 +36,7 @@ import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.orm.ibatis.SqlMapClientCallback;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.support.utils.CollectionUtils;
@@ -77,7 +77,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
                     public Object call() throws Exception {
                         try {
                         	ExecutorContextSupporter context= new ExecutorContextSupporter();
-                    		context.setDataSourceDescriptor(request.getDataSourceDescriptor());
+                    		context.setPartitioinDataSource(request.getPartitionDataSource());
                     		context.setOperationType(op);
                     		ExecutorContextHolder.setExecutorContext(context);
                             return executeWith(connection, action);
@@ -157,8 +157,8 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
         List<RequestDepository> depos = new ArrayList<RequestDepository>();
         for (ConcurrentRequest request : requests) {
         	boolean readable= ExecutorContextHolder.getExecutorContext().isReadable();
-        	DataSourceDescriptor dataSourceDescriptor= request.getDataSourceDescriptor();
-        	DataSource dataSource = readable? dataSourceDescriptor.getReadDataSource(): dataSourceDescriptor.getWriteDataSource();
+        	PartitionDataSource partitionDataSource= request.getPartitionDataSource();
+        	DataSource dataSource = readable? partitionDataSource.getReadDataSource(): partitionDataSource.getWriteDataSource();
         	request.setDataSource(dataSource);
 
             Connection springCon = null;

@@ -21,7 +21,7 @@ import javax.sql.DataSource;
 
 import org.springframework.orm.ibatis.SqlMapClientCallback;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 /**
  * {@link #action} will be executed on {@link #dataSource} with {@link #executor} asynchronously.<br>
  * 
@@ -30,7 +30,7 @@ import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
  */
 public class ConcurrentRequest {
     private SqlMapClientCallback action;
-    private DataSourceDescriptor           dataSourceDescriptor;
+    private PartitionDataSource           partitionDataSource;
     private ExecutorService      executor;
 //    private boolean writable;
     private DataSource dataSource;
@@ -43,12 +43,12 @@ public class ConcurrentRequest {
         this.action = action;
     }
 
-    public DataSourceDescriptor getDataSourceDescriptor() {
-        return dataSourceDescriptor;
+    public PartitionDataSource getPartitionDataSource() {
+        return partitionDataSource;
     }
 
-    public void setDataSourceDescriptor(DataSourceDescriptor dataSourceDescriptor) {
-        this.dataSourceDescriptor = dataSourceDescriptor;
+    public void setPartitionDataSource(PartitionDataSource partitionDataSource) {
+        this.partitionDataSource = partitionDataSource;
     }
 
     public ExecutorService getExecutor() {

@@ -14,7 +14,7 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import com.alibaba.cobar.client.CobarSqlMapClientTemplate;
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.dml.DMLExec;
 import com.alibaba.cobar.client.executor.dql.DQLExec;
 import com.alibaba.cobar.client.router.ICobarTableRouter;
@@ -76,16 +76,16 @@ public class CobarSqlExecutor extends SqlExecutor {
 		//fetch the execute context from current thread local
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
 		//get the connection belonging dataSource 
-		final DataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
+		final PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		//trace the query error message for more thread
-		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<>();
+		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<ErrorContext>();
 		//route sql by sharding table strategy，including ER
-		String[] routerSqls= doTableRoute(statementScope,dataSourceDescriptor,sql,parameters);
+		String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
 		//if one record or in transaction
 		if(routerSqls.length== 1 || !executorContext.isReadable()){
 			for(String item: routerSqls){
 				dqlExec.executeQuery(statementScope,
-						dataSourceDescriptor,
+						partitionDataSource,
 						connection,
 						item,
 						parameters,
@@ -100,7 +100,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 			final CountDownLatch latchs= new CountDownLatch(routerSqls.length- 1);
 			//main tread execute the first query job
 			dqlExec.executeQuery(statementScope,
-					dataSourceDescriptor,
+					partitionDataSource,
 					connection,
 					routerSqls[0],
 					parameters,
@@ -109,19 +109,19 @@ public class CobarSqlExecutor extends SqlExecutor {
 					callback,
 					errorContextList);
 			//get ExecutorService from CobarSqlMapClientTemplate by partition id
-			ExecutorService executorService= template.getDataSourceSpecificExecutors().get(dataSourceDescriptor.getIdentity());
+			ExecutorService executorService= template.getDataSourceSpecificExecutors().get(partitionDataSource.getName());
 			//use new thread pool execute other query job
 			for(int i=1;i<routerSqls.length;i++){
 				final String tableRoutedSql= routerSqls[i];
 				executorService.execute(new Runnable(){
 					@Override
 					public void run() {
-						DataSource dataSource= dataSourceDescriptor.getReadDataSource();
+						DataSource dataSource= partitionDataSource.getReadDataSource();
 						Connection conn= null;
 						try{
 							conn= DataSourceUtils.getConnection(dataSource);
 							dqlExec.executeQuery(statementScope,
-									dataSourceDescriptor,
+									partitionDataSource,
 									conn,
 									tableRoutedSql,
 									parameters,
@@ -143,7 +143,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 							try {
 								DataSourceUtils.doReleaseConnection(conn,dataSource);
 							} catch (SQLException e) {
-								logger.error("Close connection error for "+dataSourceDescriptor.getIdentity()+" DataSource",e);
+								logger.error("Close connection error for "+partitionDataSource.getName()+" DataSource",e);
 							}
 							latchs.countDown();
 						}
@@ -185,22 +185,22 @@ public class CobarSqlExecutor extends SqlExecutor {
 			final Object[] parameters) throws SQLException {
 		
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
-		DataSourceDescriptor dataSourceDescriptor= executorContext.getDataSourceDescriptor();
+		PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		
-	    String[] routerSqls= doTableRoute(statementScope,dataSourceDescriptor,sql,parameters);
+	    String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
 	    int rows = 0;
 	    //dml operation always use the same connection,whether or not including the transaction
 	    for(String rSql: routerSqls){
-	    	rows+= dmlExec.executeUpdate(statementScope,dataSourceDescriptor,conn, rSql, parameters);
+	    	rows+= dmlExec.executeUpdate(statementScope,partitionDataSource,conn, rSql, parameters);
 	    }
 	    return rows;
 	}
 	
-	private String[] doTableRoute(StatementScope statementScope,DataSourceDescriptor dataSourceDescriptor,String sql,Object[] parameters){
+	private String[] doTableRoute(StatementScope statementScope,PartitionDataSource partitionDataSource,String sql,Object[] parameters){
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
-		return tableRouter.doRoute(statementScope,dataSourceDescriptor,sql,parameters);
+		return tableRouter.doRoute(statementScope,partitionDataSource,sql,parameters);
 	}
 //	
 //	@Override

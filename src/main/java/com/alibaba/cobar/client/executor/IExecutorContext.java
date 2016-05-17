@@ -1,8 +1,8 @@
 package com.alibaba.cobar.client.executor;
 
-import com.alibaba.cobar.client.datasources.IDataSourceDescriptorContext;
+import com.alibaba.cobar.client.datasources.IPartitionDataSourceContext;
 
-public interface IExecutorContext extends IDataSourceDescriptorContext{
+public interface IExecutorContext extends IPartitionDataSourceContext{
 
 	final public static int OP_READ = 1 << 0;
 	final public static int OP_WRITE = 1 << 1;
