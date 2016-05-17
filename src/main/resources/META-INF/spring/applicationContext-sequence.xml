@@ -8,12 +8,23 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd"
        default-lazy-init="false">
-
+<!-- 
     <bean id="sequence" class="com.alibaba.cobar.client.sequence.support.PostgreSQLPartitionSequenceGenerator">
     	<property name="incrStep" value="10"></property>
     	<property name="dataSource" ref="dataSource0"></property>
     </bean>
+ -->
     <bean id="testSequence" class="com.alibaba.cobar.client.sequence.support.LocalTestSequenceGenerator">
+    </bean>
+    
+    <bean id="mysqlsequence" class="com.alibaba.cobar.client.sequence.support.MYSQLPartitionSequenceGenerator">
+    	<property name="incrStep" value="10"></property>
+    	<property name="dataSource" ref="dataSource3"></property>
+    </bean>
+    
+    <bean id="zksequence" class="com.alibaba.cobar.client.sequence.support.ZookeeperPartitionSequenceGenerator">
+    	<property name="incrStep" value="10"></property>
+    	<property name="zkAddr" value="localhost:2181"></property>
     </bean>
     
 </beans>

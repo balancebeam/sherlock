@@ -18,21 +18,21 @@
 					<property name="identity" value="partition0"/>
 			    	<!-- 读写分离策略 -->
     				<property name="readWriteStrategy" value="1"></property>
-					<property name="writeDataSource" ref="dataSource0"/>
+					<property name="writeDataSource" ref="dataSource3"/>
 					<property name="readDataSources">
 						<list>
-							<ref bean="dataSource0"/>
-							<ref bean="dataSource0"/>
+							<ref bean="dataSource3"/>
+							<ref bean="dataSource3"/>
 						</list>
 					</property>
 				</bean>
 				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
 					<property name="identity" value="partition1"/>
-					<property name="writeDataSource" ref="dataSource1"/>
+					<property name="writeDataSource" ref="dataSource3"/>
 				</bean>
 				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
 					<property name="identity" value="partition2"/>
-					<property name="writeDataSource" ref="dataSource2"/>
+					<property name="writeDataSource" ref="dataSource3"/>
 				</bean>
 			</set>
 		</property>
@@ -64,7 +64,7 @@
     <!--  iBatis SQL map定义。                                                    -->
     <bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
     	<!-- 这里配置的dataSource0为默认的数据源,如果找不到数据库的话则到该数据源中查找 -->
-   	 	<property name="dataSource" ref="dataSource0" />  
+   	 	<property name="dataSource" ref="dataSource3" />  
         <property name="configLocation">
             <value>classpath:/ibatis/sqlmap-config.xml</value>
         </property>
