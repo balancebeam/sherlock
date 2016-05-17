@@ -37,7 +37,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 
 	private int retry = 3;
 
-	public void setZKAddr(String zkAddr) {
+	public void setZkAddr(String zkAddr) {
 		this.zkAddr = zkAddr;
 	}
 
@@ -100,15 +100,13 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 			this.name = name;
 		}
 
-		private AtomicLong getStartIndex() throws Exception {
+		private AtomicLong getCurrentMaxIndex() throws Exception {
 			String data = new String(client.getData().forPath("/seq/" + name), Charset.forName("UTF-8"));
 			long max = Long.parseLong(data);
-
+			
+			client.inTransaction().check().forPath("/seq/" + name).and().setData().forPath("/seq/" + name, String.valueOf(max + incrStep).getBytes(Charset.forName("UTF-8"))).and().commit();
+			
 			boundaryMaxValue = max + incrStep;
-
-			client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath("/seq/" + name,
-					String.valueOf(boundaryMaxValue).getBytes(Charset.forName("UTF-8")));
-
 			return new AtomicLong(max);
 		}
 
@@ -120,7 +118,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 				try {
 					if (null != client.checkExists().forPath("/seq/" + name)) {// 已经存在
 						lock.acquire();
-						return getStartIndex();
+						return getCurrentMaxIndex();
 					} else {// 不存在
 						lock.acquire();
 						if (null == client.checkExists().forPath("/seq/" + name)) {
@@ -130,7 +128,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 							boundaryMaxValue = incrStep;
 							return new AtomicLong(0);
 						} else {
-							return getStartIndex();
+							return getCurrentMaxIndex();
 						}
 					}
 				} catch(Exception e){
