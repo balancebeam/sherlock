@@ -15,6 +15,10 @@ public class ShardingException extends RuntimeException{
         super(cause);
     }
 	
+    public ShardingException(final String errorMessage, final Object... args) {
+        super(String.format(errorMessage, args));
+    }
+	
 	public void handle(){}
 	
 }
