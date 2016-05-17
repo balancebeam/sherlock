@@ -36,7 +36,7 @@ import org.springframework.aop.target.HotSwappableTargetSource;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.datasources.DefaultShardingDataSource;
 
 /**
@@ -110,9 +110,9 @@ public class FailoverHotSwapDataSourceCreator implements IHADataSourceCreator, I
 
     private int                                                         recheckTimes              = 3;
 
-    public DataSource createHADataSource(DataSourceDescriptor descriptor) throws Exception {
-        DataSource activeDataSource = descriptor.getWriteDataSource();
-        DataSource standbyDataSource = descriptor.getStandbyDataSource();
+    public DataSource createHADataSource(PartitionDataSource partition) throws Exception {
+        DataSource activeDataSource = partition.getWriteDataSource();
+        DataSource standbyDataSource = partition.getStandbyDataSource();
         if (activeDataSource == null && standbyDataSource == null) {
             throw new IllegalArgumentException("must have at least one data source active.");
         }
@@ -131,8 +131,8 @@ public class FailoverHotSwapDataSourceCreator implements IHADataSourceCreator, I
         
         
         if (isPositiveFailoverEnable()) {
-            DataSource targetDetectorDataSource = descriptor.getTargetDetectorDataSource();
-            DataSource standbyDetectorDataSource = descriptor.getStandbyDetectorDataSource();
+            DataSource targetDetectorDataSource = partition.getTargetDetectorDataSource();
+            DataSource standbyDetectorDataSource = partition.getStandbyDetectorDataSource();
             if (targetDetectorDataSource == null || standbyDetectorDataSource == null) {
                 throw new IllegalArgumentException(
                         "targetDetectorDataSource or standbyDetectorDataSource can't be null if positive failover is enabled.");

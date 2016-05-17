@@ -1,11 +1,9 @@
 package com.hj.cobar;
 
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -113,6 +111,7 @@ public class Tester {
 		
 		final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/spring/applicationContext.xml");
 		final SequenceGenerator sequence= (SequenceGenerator)context.getBean("testSequence");
+		ContService service= context.getBean(ContService.class);
 //		for(int i=0;i<10;i++){
 //			
 //			long val= sequence.nextval("hello");
@@ -120,7 +119,7 @@ public class Tester {
 //		}
 //		
 //		InputStream in= System.in;
-		ContService contService = (ContService) context.getBean("contService");
+//		ContService contService = (ContService) context.getBean("contService");
 //		Cont cont = new Cont();
 //    	cont.setId(sequence.nextval("cont"));
 //    	cont.setName("gd");
@@ -129,13 +128,34 @@ public class Tester {
 //    	cont.setTaobaoId(taobaoId);
 //    	System.out.println(contService.addCont(cont));
 //		
-    	ContQuery contQuery = new ContQuery();
-    	contQuery.setTaobaoId(null);
-    	List<Cont> list = contService.getContList(contQuery);
+//    	ContQuery contQuery = new ContQuery();
+//    	contQuery.setTaobaoId(963L);
+//    	List<Cont> list = contService.getContList(contQuery);
+//    	if(list != null){
+//    		System.out.println(list);
+//    	}
+//		Cont c1= new Cont();
+//		c1.setId(sequence.nextval("cont"));
+//		c1.setTaobaoId(new Long(new Random().nextInt(10000)));
+//		c1.setName("xxx");
+//		Cont c2= new Cont();
+//		c2.setId(sequence.nextval("cont"));
+//		c2.setTaobaoId(new Long(new Random().nextInt(10000)));
+//		c2.setName("yyy");
+//		Cont c3= new Cont();
+//		c3.setId(sequence.nextval("cont"));
+//		c3.setTaobaoId(new Long(new Random().nextInt(10000)));
+//		c3.setName("zzz");
+//		List<Cont> list= new ArrayList<>();
+//		list.add(c1);
+//		list.add(c2);
+//		list.add(c3);
+//		service.addBatchCont(list);
+		ContQuery contQuery = new ContQuery();
+    	contQuery.setTaobaoId(0L);
+    	List<Cont> list = service.getContList(contQuery);
     	if(list != null){
     		System.out.println(list);
     	}
-		
-
 	}
 }

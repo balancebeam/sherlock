@@ -3,20 +3,20 @@ package com.alibaba.cobar.client.executor.support;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.IExecutorContext;
 
 public class ExecutorContextSupporter implements IExecutorContext{
 
 	private int operationType= 0;
 	
-	private DataSourceDescriptor dataSourceDescriptor;
+	private PartitionDataSource partitionDataSource;
 	
 	private Map<String,Object> attributes;
 	
 	@Override
-	public DataSourceDescriptor getDataSourceDescriptor() {
-		return dataSourceDescriptor;
+	public PartitionDataSource getPartitionDataSource() {
+		return partitionDataSource;
 	}
 
 	@Override
@@ -28,8 +28,8 @@ public class ExecutorContextSupporter implements IExecutorContext{
 		operationType= op;
 	}
 	
-	public void setDataSourceDescriptor(DataSourceDescriptor dataSourceDescriptor){
-		this.dataSourceDescriptor= dataSourceDescriptor;
+	public void setPartitioinDataSource(PartitionDataSource partitionDataSource){
+		this.partitionDataSource= partitionDataSource;
 	}
 
 	@Override

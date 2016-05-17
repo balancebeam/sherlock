@@ -12,25 +12,32 @@
 	<!-- 配置数据源开始 -->
      <bean id="shardingDataSource" class="com.alibaba.cobar.client.datasources.DefaultShardingDataSource">
     	<!-- 数据源定义 -->
-		<property name="dataSourceDescriptors">
+		<property name="partitionDataSources">
 			<set>
-				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.PartitionDataSource">
 					<property name="identity" value="partition0"/>
 			    	<!-- 读写分离策略 -->
     				<property name="readWriteStrategy" value="1"></property>
 					<property name="writeDataSource" ref="dataSource0"/>
 					<property name="readDataSources">
 						<list>
-							<ref bean="dataSource0"/>
+							<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+								<property name="dataSource" ref="dataSource0"></property>
+								<property name="weight" value="200"></property>
+							</bean>
+							<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+								<property name="dataSource" ref="dataSource0"></property>
+								<property name="weight" value="300"></property>
+							</bean>
 							<ref bean="dataSource0"/>
 						</list>
 					</property>
 				</bean>
-				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.PartitionDataSource">
 					<property name="identity" value="partition1"/>
 					<property name="writeDataSource" ref="dataSource1"/>
 				</bean>
-				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+				<bean class="com.alibaba.cobar.client.datasources.PartitionDataSource">
 					<property name="identity" value="partition2"/>
 					<property name="writeDataSource" ref="dataSource2"/>
 				</bean>
@@ -57,6 +64,7 @@
   	<!-- 事务配置 -->
     <bean id="transactionManager" class="com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager">
         <property name="shardingDataSource" ref="shardingDataSource"/>
+        <property name="transactionSynchronization" value="2" />
     </bean>
     <!-- 使用annotation定义事务 -->
     <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/> 

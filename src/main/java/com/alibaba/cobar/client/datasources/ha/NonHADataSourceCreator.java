@@ -17,12 +17,12 @@
 
 import javax.sql.DataSource;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 
 public class NonHADataSourceCreator implements IHADataSourceCreator {
 
-    public DataSource createHADataSource(DataSourceDescriptor descriptor) throws Exception {
-        return descriptor.getWriteDataSource();
+    public DataSource createHADataSource(PartitionDataSource partition) throws Exception {
+        return partition.getWriteDataSource();
     }
 
 }

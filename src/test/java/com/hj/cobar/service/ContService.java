@@ -66,4 +66,10 @@ public interface ContService {
 	 * @return
 	 */
 	public List<Cont> getContList(ContQuery contQuery);
+	
+	/**
+	 * 批量增加
+	 * @param conts
+	 */
+	void addBatchCont(List<Cont> conts);
 }
