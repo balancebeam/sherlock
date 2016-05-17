@@ -119,7 +119,7 @@ public class PartitionDataSource {
         return name;
     }
 
-    public void setIdentity(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 

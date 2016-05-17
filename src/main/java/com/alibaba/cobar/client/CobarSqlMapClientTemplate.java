@@ -984,7 +984,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 			}
 			else{
 				defaultPartitionDataSource= new PartitionDataSource();
-				defaultPartitionDataSource.setIdentity("__ibatis_default_datasource__");
+				defaultPartitionDataSource.setName("__ibatis_default_datasource__");
 				defaultPartitionDataSource.setWriteDataSource(super.getDataSource());
 				defaultPartitionDataSource.setPoolSize(Runtime.getRuntime().availableProcessors() * 5);
 		        getDataSourceSpecificExecutors().put(defaultPartitionDataSource.getName(),
@@ -1104,7 +1104,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     private void addDefaultSingleThreadExecutorIfNecessary() {
         String identity = getDefaultDataSourceName();
         PartitionDataSource partition = new PartitionDataSource();
-        partition.setIdentity(identity);
+        partition.setName(identity);
         partition.setPoolSize(Runtime.getRuntime().availableProcessors() * 5);
         getDataSourceSpecificExecutors().put(identity,
                 createExecutorForSpecificDataSource(partition));
