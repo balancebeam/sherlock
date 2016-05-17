@@ -25,7 +25,7 @@ public class ZookeeperPartitionSequenceGenerator implements SequenceGenerator, I
 
 	private Log logger = LogFactory.getLog(ZookeeperPartitionSequenceGenerator.class);
 
-	private ConcurrentHashMap<String, Future<AtomicLong>> sequenceRepository = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, Future<AtomicLong>> sequenceRepository = new ConcurrentHashMap<String, Future<AtomicLong>>();
 
 	private CuratorFramework client;
 

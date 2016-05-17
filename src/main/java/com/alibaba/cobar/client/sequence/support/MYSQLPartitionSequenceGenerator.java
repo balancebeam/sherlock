@@ -10,18 +10,17 @@ public class MYSQLPartitionSequenceGenerator extends AbstractDBPartitionSequence
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String sql = "select count(1) from INFORMATION_SCHEMA.TABLES where TABLE_NAME='"+sequenceTable+"'";
+		String sql = "select count(1) from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + sequenceTable + "'";
 
-		try (Connection conn = dataSource.getConnection();
-				Statement st = conn.createStatement();
-				ResultSet rs = st.executeQuery(sql);) {
+		try {
+			Connection conn = dataSource.getConnection();
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(sql);
 			if (rs.next() && 0 == rs.getInt(1)) {
 				sql = "CREATE TABLE " + sequenceTable + "(" 
-							+ sequenceColumn + " varchar(128) NOT NULL,"
-							+ maxValueColumn + " decimal(10,0) DEFAULT NULL," 
-							+ modifyTimeColumn + " datetime DEFAULT NULL,"
-							+ nodeNameColumn + " varchar(128) DEFAULT NULL,"
-							+ "PRIMARY KEY (name)" + ")";
+						+ sequenceColumn + " varchar(128) NOT NULL,"
+						+ maxValueColumn + " decimal(10,0) DEFAULT NULL," + modifyTimeColumn + " datetime DEFAULT NULL,"
+						+ nodeNameColumn + " varchar(128) DEFAULT NULL," + "PRIMARY KEY (name)" + ")";
 				boolean result = st.execute(sql);
 				logger.info("create " + sequenceTable + " result:" + result);
 			}
