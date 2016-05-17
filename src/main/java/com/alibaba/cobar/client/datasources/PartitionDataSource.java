@@ -57,9 +57,9 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
  */
 public class PartitionDataSource {
     /**
-     * the identity of to-be-exposed DataSource.
+     * the name of to-be-exposed DataSource.
      */
-    private String identity;
+    private String name;
     /**
      * active data source
      */
@@ -115,12 +115,12 @@ public class PartitionDataSource {
 		return defaultDataSource;
 	}
 
-    public String getIdentity() {
-        return identity;
+    public String getName() {
+        return name;
     }
 
-    public void setIdentity(String identity) {
-        this.identity = identity;
+    public void setIdentity(String name) {
+        this.name = name;
     }
 
     public DataSource getWriteDataSource() {
@@ -130,7 +130,7 @@ public class PartitionDataSource {
     public void setWriteDataSource(DataSource writeDataSource) {
     	Assert.notNull(writeDataSource);
     	if(this.writeDataSource!= null){
-    		throw new ShardingDataSourceException("Partition ["+identity+"] write dataSource setting is duplicated");
+    		throw new ShardingDataSourceException("Partition ["+name+"] write dataSource setting is duplicated");
     	}
     	this.writeDataSource = writeDataSource instanceof CobarDataSourceProxy? writeDataSource: new CobarDataSourceProxy(writeDataSource);
     	((CobarDataSourceProxy)this.writeDataSource).setPartitionDataSource(this);
@@ -170,9 +170,9 @@ public class PartitionDataSource {
     public void setReadDataSources(List<DataSource> readDataSources){
     	Assert.notEmpty(readDataSources);
     	if(!CollectionUtils.isEmpty(this.readDataSources)){
-    		throw new ShardingDataSourceException("Partition ["+identity+"] read dataSources setting is duplicated");
+    		throw new ShardingDataSourceException("Partition ["+name+"] read dataSources setting is duplicated");
     	}
-    	this.readDataSources= new ArrayList<>();
+    	this.readDataSources= new ArrayList<DataSource>();
     	for(DataSource dataSource: readDataSources){
     		DataSource ds = dataSource instanceof CobarDataSourceProxy? dataSource: new CobarDataSourceProxy(dataSource);
         	((CobarDataSourceProxy)ds).setPartitionDataSource(this);
@@ -216,7 +216,7 @@ public class PartitionDataSource {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((identity == null) ? 0 : identity.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
 
@@ -229,17 +229,17 @@ public class PartitionDataSource {
         if (getClass() != obj.getClass())
             return false;
         PartitionDataSource other = (PartitionDataSource) obj;
-        if (identity == null) {
-            if (other.identity != null)
+        if (name == null) {
+            if (other.name != null)
                 return false;
-        } else if (!identity.equals(other.identity))
+        } else if (!name.equals(other.name))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "PartitionDataSource [identity=" + identity + ", poolSize=" + poolSize
+        return "PartitionDataSource [name=" + name + ", poolSize=" + poolSize
                 + ", standbyDataSource=" + standbyDataSource + ", standbyDetectorDataSource="
                 + standbyDetectorDataSource + ", writeDataSource=" + writeDataSource
                 + ", readDataSources=" + readDataSources + "]";

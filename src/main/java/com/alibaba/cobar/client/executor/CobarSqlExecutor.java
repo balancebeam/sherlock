@@ -78,7 +78,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		//get the connection belonging dataSource 
 		final PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		//trace the query error message for more thread
-		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<>();
+		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<ErrorContext>();
 		//route sql by sharding table strategy，including ER
 		String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
 		//if one record or in transaction
@@ -109,7 +109,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 					callback,
 					errorContextList);
 			//get ExecutorService from CobarSqlMapClientTemplate by partition id
-			ExecutorService executorService= template.getDataSourceSpecificExecutors().get(partitionDataSource.getIdentity());
+			ExecutorService executorService= template.getDataSourceSpecificExecutors().get(partitionDataSource.getName());
 			//use new thread pool execute other query job
 			for(int i=1;i<routerSqls.length;i++){
 				final String tableRoutedSql= routerSqls[i];
@@ -143,7 +143,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 							try {
 								DataSourceUtils.doReleaseConnection(conn,dataSource);
 							} catch (SQLException e) {
-								logger.error("Close connection error for "+partitionDataSource.getIdentity()+" DataSource",e);
+								logger.error("Close connection error for "+partitionDataSource.getName()+" DataSource",e);
 							}
 							latchs.countDown();
 						}

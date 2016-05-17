@@ -987,7 +987,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 				defaultPartitionDataSource.setIdentity("__ibatis_default_datasource__");
 				defaultPartitionDataSource.setWriteDataSource(super.getDataSource());
 				defaultPartitionDataSource.setPoolSize(Runtime.getRuntime().availableProcessors() * 5);
-		        getDataSourceSpecificExecutors().put(defaultPartitionDataSource.getIdentity(),
+		        getDataSourceSpecificExecutors().put(defaultPartitionDataSource.getName(),
 		                createExecutorForSpecificDataSource(defaultPartitionDataSource));
 			}
 			this.defaultPartitionDataSource= defaultPartitionDataSource;
@@ -1068,7 +1068,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
             	for(Iterator<String> item= getShardingDataSource().getDataSourceNames().iterator();item.hasNext();){
             		PartitionDataSource partition= getShardingDataSource().getPartitionDataSource(item.next());
                     ExecutorService executor = createExecutorForSpecificDataSource(partition);
-                    getDataSourceSpecificExecutors().put(partition.getIdentity(), executor);
+                    getDataSourceSpecificExecutors().put(partition.getName(), executor);
             	}
             }
 
@@ -1077,7 +1077,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     }
 
     private ExecutorService createExecutorForSpecificDataSource(PartitionDataSource partitionDataSource) {
-        final String identity = partitionDataSource.getIdentity();
+        final String identity = partitionDataSource.getName();
         final ExecutorService executor = createCustomExecutorService(partitionDataSource.getPoolSize(),
                 "createExecutorForSpecificDataSource-" + identity + " data source");
         // 1. register executor for disposing explicitly

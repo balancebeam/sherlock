@@ -1,13 +1,7 @@
-<ddl:ds-sharding id="shardingDataSource">
-	<ddl:ds-partitions>
-		<ddl:ds-partition name="partition0">
-			<ddl:ds-write>
-				<ddl:ds-descriptor ref="dataSource0" weight="100" wait=100/>
-			</ddl:ds-write>
-			<ddl:ds-read>
-				<ddl:ds-descriptor ref="dataSource0" weight="100" wait=100/>
-				<ddl:ds-descriptor ref="dataSource0" weight="100" wait=100/>
-			</ddl:ds-read>
-		</ddl:ds-partition>
-	</ddl:ds-partitions>
-</ddl:ds-sharding>
+<ddl:db-sharding id="shardingDataSource">
+	<ddl:db-partition name="partition0">
+		<ddl:ds-write ref="dataSource0" weight="100"/>
+		<ddl:ds-read ref="dataSource0" weight="100"/>
+		<ddl:ds-read ref="dataSource0" weight="200"/>	
+	</ddl:db-partition>
+</ddl:db-sharding>

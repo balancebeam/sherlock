@@ -33,8 +33,8 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
  * @author fujohnwang
  */
 public class DefaultShardingDataSource implements IShardingDataSource, InitializingBean {
-    private Set<PartitionDataSource> partitionDataSources   = new HashSet<>();
-    private LinkedHashMap<String,PartitionDataSource> dataSourceMapping= new LinkedHashMap<>();
+    private Set<PartitionDataSource> partitionDataSources   = new HashSet<PartitionDataSource>();
+    private LinkedHashMap<String,PartitionDataSource> dataSourceMapping= new LinkedHashMap<String,PartitionDataSource>();
     //private List<IDataSourcePostProcessor> dataSourcePostProcessor = new ArrayList<IDataSourcePostProcessor>();
     private IHADataSourceCreator           haDataSourceCreator;
     private PartitionDataSource defaultPartitionDataSource;
@@ -53,7 +53,7 @@ public class DefaultShardingDataSource implements IShardingDataSource, Initializ
         
         for(Iterator<PartitionDataSource> item= partitionDataSources.iterator();item.hasNext();){
         	PartitionDataSource partitionDataSource= item.next();
-        	String partition= partitionDataSource.getIdentity();
+        	String partition= partitionDataSource.getName();
         	dataSourceMapping.put(partition,partitionDataSource);
         	if(partitionDataSource.isDefaultDataSource()){
         		if(defaultPartitionDataSource!= null){

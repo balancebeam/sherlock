@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.alibaba.com/schema/ddl"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:beans="http://www.springframework.org/schema/beans"
+            targetNamespace="http://www.alibaba.com/schema/ddl"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+    <xsd:import namespace="http://www.springframework.org/schema/beans" schemaLocation="http://www.springframework.org/schema/beans/spring-beans.xsd"/>
+    <xsd:element name="db-sharding">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="db-partition" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="db-partition">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="ds-write" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="ds-read" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="readWriteStrategy" type="xsd:int" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="ds-write">
+        <xsd:complexType>
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="weight" type="xsd:int" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+     <xsd:element name="ds-read">
+        <xsd:complexType>
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="weight" type="xsd:int" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    
+</xsd:schema>

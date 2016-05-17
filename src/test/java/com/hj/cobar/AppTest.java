@@ -69,7 +69,7 @@ public class AppTest extends TestCase{
 		c3.setId(sequence.nextval("cont"));
 		c3.setTaobaoId(new Long(new Random().nextInt(10000)));
 		c3.setName("zzz");
-		List<Cont> list= new ArrayList<>();
+		List<Cont> list= new ArrayList<Cont>();
 		list.add(c1);
 		list.add(c2);
 		list.add(c3);
