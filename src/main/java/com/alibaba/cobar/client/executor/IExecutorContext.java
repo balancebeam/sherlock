@@ -4,15 +4,15 @@ import com.alibaba.cobar.client.datasources.IPartitionDataSourceContext;
 
 public interface IExecutorContext extends IPartitionDataSourceContext{
 
-	final public static int OP_READ = 1 << 0;
-	final public static int OP_WRITE = 1 << 1;
+	final public static int OP_SELECT = 1 << 0;
+	final public static int OP_PERSISTENCE = 1 << 1;
 	final public static int OP_TRANSACTION = 1 << 2;
 	
 	int getOperationType();
 	
-	boolean isReadable();
+	boolean isSelectable();
 	
-	boolean isWritable();
+	boolean isPersistent();
 	
 	boolean isTransactional();
 	

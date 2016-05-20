@@ -33,13 +33,13 @@ public class ExecutorContextSupporter implements IExecutorContext{
 	}
 
 	@Override
-	public boolean isReadable() {
-		return operationType == OP_READ;
+	public boolean isSelectable() {
+		return operationType == OP_SELECT;
 	}
 
 	@Override
-	public boolean isWritable() {
-		return (operationType & OP_WRITE) != 0;
+	public boolean isPersistent() {
+		return (operationType & OP_PERSISTENCE) != 0;
 	}
 
 	@Override

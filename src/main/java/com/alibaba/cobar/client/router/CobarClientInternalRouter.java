@@ -16,7 +16,9 @@
  package com.alibaba.cobar.client.router;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -27,6 +29,19 @@ import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
 import com.alibaba.cobar.client.router.support.RoutingResult;
 import com.alibaba.cobar.client.support.LRUMap;
 import com.alibaba.cobar.client.support.utils.CollectionUtils;
+import com.alibaba.cobar.client.support.utils.MapUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGDeleteStatement;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGInsertStatement;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGUpdateStatement;
+import com.alibaba.druid.sql.dialect.postgresql.parser.PGSQLStatementParser;
+import com.alibaba.druid.sql.parser.SQLStatementParser;
+import com.ibatis.sqlmap.engine.impl.SqlMapClientImpl;
+import com.ibatis.sqlmap.engine.mapping.sql.Sql;
+import com.ibatis.sqlmap.engine.mapping.sql.stat.StaticSql;
+import com.ibatis.sqlmap.engine.mapping.statement.MappedStatement;
+import com.ibatis.sqlmap.engine.scope.SessionScope;
+import com.ibatis.sqlmap.engine.scope.StatementScope;
 
 /**
  * CobarInternalRouter is the default router that will be used in cobar client,
@@ -62,6 +77,10 @@ public class CobarClientInternalRouter implements ICobarDatabaseRouter<IBatisRou
 
     private LRUMap                 localCache;
     private boolean                enableCache = false;
+    
+    private Map<String,String[]>   globalTableMap;
+    
+    private IDMLSQLParser parser;
 
     public CobarClientInternalRouter(boolean enableCache) {
         this(enableCache, 10000);
@@ -70,6 +89,7 @@ public class CobarClientInternalRouter implements ICobarDatabaseRouter<IBatisRou
     public CobarClientInternalRouter(int cacheSize) {
         this(true, cacheSize);
     }
+    
 
     public CobarClientInternalRouter(boolean enableCache, int cacheSize) {
         this.enableCache = enableCache;
@@ -79,6 +99,14 @@ public class CobarClientInternalRouter implements ICobarDatabaseRouter<IBatisRou
     }
 
     private List<Set<IRoutingRule<IBatisRoutingFact, List<String>>>> ruleSequences          = new ArrayList<Set<IRoutingRule<IBatisRoutingFact, List<String>>>>();
+   
+    public void setGlobalTableMap(Map<String,String[]> globalTableMap){
+    	this.globalTableMap= globalTableMap;
+    } 
+    
+    public void setDMLSQLParser(IDMLSQLParser parser){
+    	this.parser= parser;
+    }
 
     public RoutingResult doRoute(IBatisRoutingFact routingFact) throws RoutingException {
         if (enableCache) {
@@ -154,4 +182,42 @@ public class CobarClientInternalRouter implements ICobarDatabaseRouter<IBatisRou
         return ruleSequences;
     }
 
+	@Override
+	public RoutingResult doGlobalTableRoute(IBatisRoutingFact routingFact) throws RoutingException {
+		if(MapUtils.isEmpty(globalTableMap) || parser== null){
+			return null;
+		}
+		if (enableCache) {
+			if(localCache.containsKey(routingFact.getAction())){
+				return (RoutingResult)localCache.get(routingFact.getAction());
+			}
+		}
+		
+		SqlMapClientImpl sqlMapClient= (SqlMapClientImpl)routingFact.getSqlMapClient();
+		MappedStatement mstate= sqlMapClient.getMappedStatement(routingFact.getAction());
+		String sql= "";
+		RoutingResult result= null;
+		if (mstate.getSql() instanceof StaticSql) {
+			sql= mstate.getSql().getSql(null, routingFact.getArgument());
+        } else {
+        	StatementScope scope= new StatementScope(new SessionScope());
+        	scope.setStatement(mstate);
+        	sql= mstate.getSql().getSql(scope, routingFact.getArgument());
+        }
+		
+		String tableName= parser.getTableName(sql);
+		
+		if(tableName!= null && globalTableMap.containsKey(tableName)){
+			result = new RoutingResult();
+			result.setResourceIdentities(Arrays.asList(globalTableMap.get(tableName)));
+		}
+		
+		if (enableCache) {
+			synchronized (localCache) {
+				localCache.put(routingFact.getAction(), result);
+	        }
+		}
+		return result;
+	}
+	
 }

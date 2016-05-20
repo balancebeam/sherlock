@@ -9,9 +9,22 @@
     <xsd:element name="db-sharding">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="db-partition" minOccurs="1" maxOccurs="unbounded"/>
+                <xsd:element ref="db-partitions" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="read-strategy" minOccurs="0" maxOccurs="1"/>
             </xsd:sequence>
             <xsd:attribute name="id" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="db-partitions">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="db-partition" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="read-strategy">
+        <xsd:complexType>
+            <xsd:attribute name="repository" type="xsd:string" use="required"/>
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="db-partition">
@@ -20,10 +33,22 @@
                 <xsd:element ref="ds-write" minOccurs="1" maxOccurs="1"/>
                 <xsd:element ref="ds-read" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
-            <xsd:attribute name="name" type="xsd:string" use="required" />
-            <xsd:attribute name="readWriteStrategy" type="xsd:int" use="optional" />
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="pooSize" type="xsd:int" use="optional"/>
+            <xsd:attribute name="readStrategy" type="readStrategyEnumType" use="optional"/>
         </xsd:complexType>
     </xsd:element>
+    <xsd:simpleType name="readStrategyEnumType">
+    	<xsd:restriction base="xsd:string">
+		  <xsd:enumeration value="only-write"/>
+		  <xsd:enumeration value="polling"/>	
+		  <xsd:enumeration value="polling-w"/>
+		  <xsd:enumeration value="power"/>
+		  <xsd:enumeration value="power-w"/>
+		  <xsd:enumeration value="weight"/>
+		  <xsd:enumeration value="weight-w"/>
+    	</xsd:restriction>
+    </xsd:simpleType>
     <xsd:element name="ds-write">
         <xsd:complexType>
             <xsd:attribute name="ref" type="xsd:string" use="required" />

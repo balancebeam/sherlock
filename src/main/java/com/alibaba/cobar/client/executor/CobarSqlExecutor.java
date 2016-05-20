@@ -82,7 +82,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		//route sql by sharding table strategy，including ER
 		String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
 		//if one record or in transaction
-		if(routerSqls.length== 1 || !executorContext.isReadable()){
+		if(routerSqls.length== 1 || !connection.getAutoCommit()){
 			for(String item: routerSqls){
 				dqlExec.executeQuery(statementScope,
 						partitionDataSource,

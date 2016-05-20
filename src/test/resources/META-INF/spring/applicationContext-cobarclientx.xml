@@ -13,19 +13,49 @@
 
 	<!-- 配置数据源开始 -->
 	<ddl:db-sharding id="shardingDataSource">
-		<ddl:db-partition name="partition0"
-			readWriteStrategy="1">
-			<ddl:ds-write ref="dataSource0" weight="200" />
-			<ddl:ds-read ref="dataSource0" weight="200" />
-			<ddl:ds-read ref="dataSource0" weight="400" />
-		</ddl:db-partition>
-		<ddl:db-partition name="partition1">
-			<ddl:ds-write ref="dataSource1" />
-		</ddl:db-partition>
-		<ddl:db-partition name="partition2">
-			<ddl:ds-write ref="dataSource2" />
-		</ddl:db-partition>
+		<ddl:db-partitions>
+			<ddl:db-partition name="partition0" readStrategy="polling" >
+				<ddl:ds-write ref="dataSource0" weight="200" />
+				<ddl:ds-read ref="dataSource0" weight="200" />
+				<ddl:ds-read ref="dataSource0" weight="400" />
+			</ddl:db-partition>
+			<ddl:db-partition name="partition1">
+				<ddl:ds-write ref="dataSource1" />
+			</ddl:db-partition>
+			<ddl:db-partition name="partition2">
+				<ddl:ds-write ref="dataSource2" />
+			</ddl:db-partition>
+		</ddl:db-partitions>
+		<ddl:read-strategy repository="readStrategyRepository"/>
 	</ddl:db-sharding>
+	
+	<bean id="readStrategyRepository" class="com.alibaba.cobar.client.datasources.PartitionReadStrategyRepository">
+		<property name="readStrategies">
+			<map>
+				<entry key="only-write">
+					<bean class="com.alibaba.cobar.client.datasources.support.OnlyWriteReadStrategySupport"/>
+				</entry>
+				<entry key="polling">
+					<bean class="com.alibaba.cobar.client.datasources.support.PollingReadStrategySupport"/>
+				</entry>
+				<entry key="polling-w">
+					<bean class="com.alibaba.cobar.client.datasources.support.PollingReadStrategyWithWriteSupport"/>
+				</entry>
+				<entry key="power">
+					<bean class="com.alibaba.cobar.client.datasources.support.PowerReadStrategySupport"/>
+				</entry>
+				<entry key="power-w">
+					<bean class="com.alibaba.cobar.client.datasources.support.PowerReadStrategyWithWriteSupport"/>
+				</entry>
+				<entry key="weight">
+					<bean class="com.alibaba.cobar.client.datasources.support.WeightReadStrategySupport"/>
+				</entry>
+				<entry key="weight-w">
+					<bean class="com.alibaba.cobar.client.datasources.support.WeightReadStrategyWithWriteSupport"/>
+				</entry>
+			</map>
+		</property>
+	</bean>
 
 	<!-- <bean id="shardingDataSource" class="com.alibaba.cobar.client.datasources.DefaultShardingDataSource"> 
 		<property name="partitionDataSources"> <set> <bean class="com.alibaba.cobar.client.datasources.PartitionDataSource"> 
@@ -55,6 +85,15 @@
 				<value>classpath:/dbRule/sharding-rules-on-namespace.xml</value>
 			</list>
 		</property>
+		<!-- global table definition properties -->
+		<property name="globalTableLocation">
+			<value>classpath:/dbRule/sharding-global-table.properties</value>
+		</property>
+		<!-- parse the sql to fetch table name -->
+		<property name="dmlSqlParser">
+			<bean class="com.alibaba.cobar.client.router.support.PGDMLSQLParser"></bean>
+		</property>
+		
 	</bean>
 	<!-- 配置路由规则结束 -->
 

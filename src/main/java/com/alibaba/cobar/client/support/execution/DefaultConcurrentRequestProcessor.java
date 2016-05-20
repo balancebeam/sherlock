@@ -156,7 +156,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
     private List<RequestDepository> fetchConnectionsAndDepositForLaterUse(List<ConcurrentRequest> requests) {
         List<RequestDepository> depos = new ArrayList<RequestDepository>();
         for (ConcurrentRequest request : requests) {
-        	boolean readable= ExecutorContextHolder.getExecutorContext().isReadable();
+        	boolean readable= ExecutorContextHolder.getExecutorContext().isSelectable();
         	PartitionDataSource partitionDataSource= request.getPartitionDataSource();
         	DataSource dataSource = readable? partitionDataSource.getReadDataSource(): partitionDataSource.getWriteDataSource();
         	request.setDataSource(dataSource);

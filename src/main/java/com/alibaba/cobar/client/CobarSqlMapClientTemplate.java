@@ -57,16 +57,17 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.ReflectionUtils;
 
 import com.alibaba.cobar.client.audit.ISqlAuditor;
-import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.datasources.IShardingDataSource;
+import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.exception.UncategorizedCobarClientException;
+import com.alibaba.cobar.client.executor.CobarSqlExecutor;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
 import com.alibaba.cobar.client.executor.IExecutorContext;
-import com.alibaba.cobar.client.executor.CobarSqlExecutor;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.merger.IMerger;
 import com.alibaba.cobar.client.router.ICobarDatabaseRouter;
 import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
+import com.alibaba.cobar.client.router.support.RoutingResult;
 import com.alibaba.cobar.client.support.execution.ConcurrentRequest;
 import com.alibaba.cobar.client.support.execution.DefaultConcurrentRequestProcessor;
 import com.alibaba.cobar.client.support.execution.IConcurrentRequestProcessor;
@@ -76,7 +77,6 @@ import com.alibaba.cobar.client.support.utils.Predicate;
 import com.alibaba.cobar.client.support.vo.BatchInsertTask;
 import com.alibaba.cobar.client.support.vo.CobarMRBase;
 import com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager;
-import com.ibatis.common.util.PaginatedList;
 import com.ibatis.sqlmap.client.SqlMapExecutor;
 import com.ibatis.sqlmap.client.SqlMapSession;
 import com.ibatis.sqlmap.client.event.RowHandler;
@@ -196,7 +196,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     private Map<String, IMerger<Object, Object>> mergers                         = new HashMap<String, IMerger<Object, Object>>();
     
     private PartitionDataSource defaultPartitionDataSource;
-
+    
     /**
      * NOTE: don't use this method for distributed data access.<br>
      * If you are sure that the data access operations will be distributed in a
@@ -257,7 +257,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_WRITE);
+        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -331,7 +331,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_WRITE);
+        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 /**
                  * sometimes, client will submit batch insert request like
@@ -460,7 +460,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
             executor.shutdown();
         }
         try{
-	        beginExecutorContext(IExecutorContext.OP_WRITE);
+	        beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
 	        List<ConcurrentRequest> requests = new ArrayList<ConcurrentRequest>();
 	        for (Map.Entry<String, List<Object>> entity : mrbase.getResources().entrySet()) {
 	            final List<Object> paramList = entity.getValue();
@@ -508,7 +508,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_READ);
+        	beginExecutorContext(IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -596,7 +596,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_READ);
+        	beginExecutorContext(IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -663,7 +663,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_READ);
+        	beginExecutorContext(IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -759,7 +759,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_READ);
+        	beginExecutorContext(IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -831,7 +831,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_WRITE);
+        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -875,20 +875,29 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     protected SortedMap<String, PartitionDataSource> lookupDataSourcesByRouter(final String statementName,
                                                                       final Object parameterObject) {
         SortedMap<String, PartitionDataSource> resultMap = new TreeMap<String, PartitionDataSource>();
-
+        IBatisRoutingFact routingFact= new IBatisRoutingFact(statementName, parameterObject,getSqlMapClient());
         if (getDatabaseRouter() != null && getShardingDataSource() != null) {
-            List<String> dsSet = getDatabaseRouter().doRoute(
-                    new IBatisRoutingFact(statementName, parameterObject)).getResourceIdentities();
+            List<String> dsSet = getDatabaseRouter().doRoute(routingFact).getResourceIdentities();
             if (CollectionUtils.isNotEmpty(dsSet)) {
                 Collections.sort(dsSet);
                 for (String dsName : dsSet) {
                     resultMap.put(dsName, getShardingDataSource().getPartitionDataSource(dsName));
                 }
             }
+            //if dml operation
+            if(ExecutorContextHolder.getExecutorContext().isPersistent()){
+            	RoutingResult result= getDatabaseRouter().doGlobalTableRoute(routingFact);
+            	if (result!=null && CollectionUtils.isNotEmpty(dsSet= result.getResourceIdentities())) {
+                    Collections.sort(dsSet);
+                    for (String dsName : dsSet) {
+                        resultMap.put(dsName, getShardingDataSource().getPartitionDataSource(dsName));
+                    }
+                }
+            }
         }
         return resultMap;
     }
-
+    
     protected String getSqlByStatementName(String statementName, Object parameterObject) {
         SqlMapClientImpl sqlMapClientImpl = (SqlMapClientImpl) getSqlMapClient();
         Sql sql = sqlMapClientImpl.getMappedStatement(statementName).getSql();
@@ -1204,7 +1213,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     public ICobarDatabaseRouter<IBatisRoutingFact> getDatabaseRouter() {
         return dbRouter;
     }
-
+    
     public void setConcurrentRequestProcessor(IConcurrentRequestProcessor concurrentRequestProcessor) {
         this.concurrentRequestProcessor = concurrentRequestProcessor;
     }

@@ -106,4 +106,9 @@ public class DefaultCobarClientInternalRouter implements ICobarDatabaseRouter<IB
         return rulesGroupByNamespaces;
     }
 
+	@Override
+	public RoutingResult doGlobalTableRoute(IBatisRoutingFact routingFact) throws RoutingException {
+		return null;
+	}
+
 }

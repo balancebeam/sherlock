@@ -15,6 +15,8 @@
  */
  package com.alibaba.cobar.client.router.support;
 
+import com.ibatis.sqlmap.client.SqlMapClient;
+
 /**
  * A Wrapper for ibatis-based routing fact.
  * 
@@ -27,10 +29,13 @@ public class IBatisRoutingFact {
 	// the argument of SQL action
 	private Object argument;
 	
+	private SqlMapClient sqlMapClient;
+	
 	public IBatisRoutingFact(){}
-	public IBatisRoutingFact(String sql, Object arg){
-		this.action   = sql;
+	public IBatisRoutingFact(String action, Object arg,SqlMapClient sqlMapClient){
+		this.action   = action;
 		this.argument = arg;
+		this.sqlMapClient= sqlMapClient;
 	}
 	
 	public String getAction() {
@@ -44,6 +49,13 @@ public class IBatisRoutingFact {
 	}
 	public void setArgument(Object argument) {
 		this.argument = argument;
+	}
+	
+	public void setSqlMapClient(SqlMapClient sqlMapClient){
+		this.sqlMapClient= sqlMapClient;
+	}
+	public SqlMapClient getSqlMapClient(){
+		return sqlMapClient;
 	}
 	@Override
 	public int hashCode() {

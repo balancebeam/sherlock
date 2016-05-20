@@ -1,7 +1,0 @@
-<ddl:db-sharding id="shardingDataSource">
-	<ddl:db-partition name="partition0">
-		<ddl:ds-write ref="dataSource0" weight="100"/>
-		<ddl:ds-read ref="dataSource0" weight="100"/>
-		<ddl:ds-read ref="dataSource0" weight="200"/>	
-	</ddl:db-partition>
-</ddl:db-sharding>

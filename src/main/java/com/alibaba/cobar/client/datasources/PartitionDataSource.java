@@ -17,7 +17,6 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.sql.DataSource;
 
@@ -25,6 +24,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.cobar.client.exception.ShardingDataSourceException;
+import com.alibaba.cobar.client.exception.ShardingException;
 
 /**
  * {@link PartitionDataSource} describe a data base deployment structure
@@ -55,7 +55,7 @@ import com.alibaba.cobar.client.exception.ShardingDataSourceException;
  * @author fujohnwang
  * @since 1.0
  */
-public class PartitionDataSource {
+public class PartitionDataSource{
     /**
      * the name of to-be-exposed DataSource.
      */
@@ -92,19 +92,22 @@ public class PartitionDataSource {
     private int poolSize = Runtime.getRuntime().availableProcessors() * 2;
     
     /**
-     * 0 only use write dataSource to execute DML SQL and DQL SQL
-     * 1 default, use write dataSource to execute DML SQL, use read dataSource to execute DQL SQL
-     * 2 use write dataSource to execute DML SQL, user read and write dataSource to execute DQL SQL
+     * only-write: use write dataSource only to execute DQL SQL ,default read strategy.
+     * polling: use read dataSource only to execute DQL SQL with polling read strategy.
+     * polling-w: use read and write dataSource to execute DQL SQL with polling read strategy.
+     * power: use read dataSource only to execute DQL SQL with power read strategy.
+     * power-w: use read and write dataSource to execute DQL SQL with power read strategy.
+     * weight: use read dataSource only to execute DQL SQL with weight read strategy.
+     * weight-w: use read and write dataSource to execute DQL SQL with weight read strategy.
      */
-    private int readWriteStrategy= 1;
+    private String readStrategy= "only-write";
+    
+    private PartitionReadStrategyRepository readStrategyRepository;
     
     private boolean defaultDataSource= false;
     
-	public void setReadWriteStrategy(int readWriteStrategy){
-		if(readWriteStrategy< 0 ||readWriteStrategy> 2){
-			readWriteStrategy= 0;
-		}
-		this.readWriteStrategy= readWriteStrategy;
+	public void setReadStrategy(String readStrategy){
+		this.readStrategy= readStrategy;
 	}
 	
 	public void setDefaultDataSource(boolean defaultDataSource){
@@ -126,6 +129,10 @@ public class PartitionDataSource {
     public DataSource getWriteDataSource() {
         return writeDataSource;
     }
+    
+    void setReadStrategyRepository(PartitionReadStrategyRepository readStrategyRepository){
+    	this.readStrategyRepository= readStrategyRepository;
+    }
 
     public void setWriteDataSource(DataSource writeDataSource) {
     	Assert.notNull(writeDataSource);
@@ -137,34 +144,14 @@ public class PartitionDataSource {
     }
     
     public DataSource getReadDataSource(){
-    	if(CollectionUtils.isEmpty(readDataSources)){
+    	if(readStrategyRepository== null){
     		return writeDataSource;
     	}
-    	else if(readWriteStrategy== 1){
-    		return getDataSourceByWeight(0);
+    	IPartitionReadStrategy readStrategySupport= readStrategyRepository.getReadStrategy(readStrategy);
+    	if(readStrategySupport== null){
+    		throw new ShardingException("not support ["+readStrategy+"] read strategy ");
     	}
-    	else if(readWriteStrategy== 2){
-    		return getDataSourceByWeight(((CobarDataSourceProxy)writeDataSource).getWeight());
-    	}
-    	return writeDataSource;
-    }
-    
-    private DataSource getDataSourceByWeight(int writeWeight){
-    	int total= 0;
-		for(DataSource ds: readDataSources){
-			total+= ((CobarDataSourceProxy)ds).getWeight();
-		}
-		Random rand = new Random();
-		int weight= 0,rdm= rand.nextInt(total+ writeWeight);
-		if(rdm< total){
-			for(DataSource ds: readDataSources){
-    			weight+= ((CobarDataSourceProxy)ds).getWeight();
-    			if(weight> rdm){
-    				return ds;
-    			}
-    		}
-		}
-		return writeDataSource;
+    	return readStrategySupport.getReadDataSource(this);
     }
     
     public void setReadDataSources(List<DataSource> readDataSources){
@@ -178,6 +165,10 @@ public class PartitionDataSource {
         	((CobarDataSourceProxy)ds).setPartitionDataSource(this);
     		this.readDataSources.add(ds);
     	}
+    }
+    
+    public List<DataSource> getReadDataSources(){
+    	return readDataSources;
     }
 
     public DataSource getTargetDetectorDataSource() {

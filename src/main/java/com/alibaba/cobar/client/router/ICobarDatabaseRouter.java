@@ -17,6 +17,7 @@
 
 import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
 import com.alibaba.cobar.client.router.support.RoutingResult;
+import com.ibatis.sqlmap.engine.mapping.sql.Sql;
 
 /**
  * the routing fact can be any type, for our current ibatis-based solution, 
@@ -29,4 +30,7 @@ import com.alibaba.cobar.client.router.support.RoutingResult;
  */
 public interface ICobarDatabaseRouter<T> {
 	RoutingResult doRoute(T routingFact) throws RoutingException;
+	
+	RoutingResult doGlobalTableRoute(T routingFact) throws RoutingException;
+	
 }

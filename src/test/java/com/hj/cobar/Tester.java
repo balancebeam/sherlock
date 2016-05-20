@@ -119,14 +119,14 @@ public class Tester {
 //		}
 //		
 //		InputStream in= System.in;
-//		ContService contService = (ContService) context.getBean("contService");
-//		Cont cont = new Cont();
-//    	cont.setId(sequence.nextval("cont"));
-//    	cont.setName("gd");
-//    	Long taobaoId = new Long(new Random().nextInt(10000));
-//    	System.out.println("#"+taobaoId);
-//    	cont.setTaobaoId(taobaoId);
-//    	System.out.println(contService.addCont(cont));
+		ContService contService = (ContService) context.getBean("contService");
+		Cont cont = new Cont();
+    	cont.setId(sequence.nextval("cont"));
+    	cont.setName("gd");
+    	Long taobaoId = new Long(new Random().nextInt(10000));
+    	System.out.println("#"+taobaoId);
+    	cont.setTaobaoId(taobaoId);
+    	System.out.println(contService.addCont(cont));
 //		
 //    	ContQuery contQuery = new ContQuery();
 //    	contQuery.setTaobaoId(963L);
@@ -151,11 +151,11 @@ public class Tester {
 //		list.add(c2);
 //		list.add(c3);
 //		service.addBatchCont(list);
-		ContQuery contQuery = new ContQuery();
-    	contQuery.setTaobaoId(0L);
-    	List<Cont> list = service.getContList(contQuery);
-    	if(list != null){
-    		System.out.println(list);
-    	}
+//		ContQuery contQuery = new ContQuery();
+//    	contQuery.setTaobaoId(0L);
+//    	List<Cont> list = service.getContList(contQuery);
+//    	if(list != null){
+//    		System.out.println(list);
+//    	}
 	}
 }

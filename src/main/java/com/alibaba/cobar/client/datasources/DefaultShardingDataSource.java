@@ -39,9 +39,16 @@ public class DefaultShardingDataSource implements IShardingDataSource, Initializ
     private IHADataSourceCreator           haDataSourceCreator;
     private PartitionDataSource defaultPartitionDataSource;
     
+    private PartitionReadStrategyRepository readStrategyRepository;
+    
 	public Set<String> getDataSourceNames(){
 		return dataSourceMapping.keySet();
 	}
+	
+
+    public void setReadStrategyRepository(PartitionReadStrategyRepository readStrategyRepository){
+    	this.readStrategyRepository= readStrategyRepository;
+    }
 
     public void afterPropertiesSet() throws Exception {
         if (getHaDataSourceCreator() == null) {
@@ -54,6 +61,10 @@ public class DefaultShardingDataSource implements IShardingDataSource, Initializ
         for(Iterator<PartitionDataSource> item= partitionDataSources.iterator();item.hasNext();){
         	PartitionDataSource partitionDataSource= item.next();
         	String partition= partitionDataSource.getName();
+        	if(readStrategyRepository!= null){
+        		partitionDataSource.setReadStrategyRepository(readStrategyRepository);
+        	}
+        	
         	dataSourceMapping.put(partition,partitionDataSource);
         	if(partitionDataSource.isDefaultDataSource()){
         		if(defaultPartitionDataSource!= null){

@@ -16,19 +16,26 @@
  package com.alibaba.cobar.client.router.config;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.ObjectUtils;
 
 import com.alibaba.cobar.client.router.CobarClientInternalRouter;
+import com.alibaba.cobar.client.router.IDMLSQLParser;
 import com.alibaba.cobar.client.router.rules.IRoutingRule;
 import com.alibaba.cobar.client.router.support.IBatisRoutingFact;
 
@@ -41,9 +48,13 @@ public abstract class AbstractCobarInternalRouterConfigurationFactoryBean implem
 
     private Resource                  configLocation;
     private Resource[]                configLocations;
-
+    private Resource 				  globalTableLocation;
+    private IDMLSQLParser 			  dmlSqlParser; 
+    
     private Map<String, Object>       functionsMap = new HashMap<String, Object>();
 
+    private Map<String,String[]>	  globalTableMap = new HashMap<String,String[]>();
+    
     public Object getObject() throws Exception {
         return this.router;
     }
@@ -51,6 +62,14 @@ public abstract class AbstractCobarInternalRouterConfigurationFactoryBean implem
     @SuppressWarnings("unchecked")
     public Class getObjectType() {
         return CobarClientInternalRouter.class;
+    }
+    
+    public void setGlobalTableLocation(Resource globalTableLocation){
+    	this.globalTableLocation= globalTableLocation;
+    }
+    
+    public void setDmlSqlParser(IDMLSQLParser dmlSqlParser){
+    	this.dmlSqlParser= dmlSqlParser;
     }
 
     public boolean isSingleton() {
@@ -93,6 +112,26 @@ public abstract class AbstractCobarInternalRouterConfigurationFactoryBean implem
         };
 
         router.setRuleSequences(ruleSequences);
+        router.setDMLSQLParser(dmlSqlParser);
+        
+        if(globalTableLocation!=null){
+        	Properties props= new Properties();
+        	InputStream in = globalTableLocation.getInputStream();
+        	try{
+        		props.load(in);
+        		for(Iterator<Entry<Object,Object>> it= props.entrySet().iterator();it.hasNext();){
+        			Entry<Object,Object> entry= it.next();
+        			String tableName= (String)entry.getKey();
+        			String partitions= (String)entry.getValue();
+        			globalTableMap.put(tableName, partitions.split(","));
+        		}
+        	}catch(IOException e){}
+        	finally{
+        		IOUtils.closeQuietly(in);
+        	}
+        	router.setGlobalTableMap(globalTableMap);
+        }
+        
     }
 
     /**

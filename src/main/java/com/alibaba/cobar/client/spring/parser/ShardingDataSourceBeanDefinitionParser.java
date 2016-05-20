@@ -17,33 +17,41 @@ import org.w3c.dom.Element;
 import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
 import com.alibaba.cobar.client.datasources.DefaultShardingDataSource;
 import com.alibaba.cobar.client.datasources.PartitionDataSource;
-import com.alibaba.cobar.client.exception.ShardingException;
 
 public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser{
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultShardingDataSource.class);
-		List<Element> partitions= DomUtils.getChildElementsByTagName(element, "db-partition");
+		Element partitionsElement= DomUtils.getChildElementByTagName(element, "db-partitions");
+		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, "db-partition");
 		ManagedSet<BeanDefinition> partitionDataSources  = new ManagedSet<BeanDefinition>();
 		for(Element partition: partitions){
 			partitionDataSources.add(parsePartitionDataSource(partition,parserContext));
 		}
 		factory.addPropertyValue("partitionDataSources", partitionDataSources);
+		
+		Element readStrategyElement= DomUtils.getChildElementByTagName(element, "read-strategy");
+		if(readStrategyElement!= null){
+			String repository= readStrategyElement.getAttribute("repository");
+			factory.addPropertyReference("readStrategyRepository", repository);
+		}
+		
 		return factory.getBeanDefinition();
 	}
 	
 	private BeanDefinition parsePartitionDataSource(Element element, ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(PartitionDataSource.class);
-		String name= element.getAttribute("name");
-		if(StringUtils.isEmpty(name)){
-			throw new ShardingException("partition name should not empty.");
-		}
 		factory.addPropertyValue("name", element.getAttribute("name"));
-		String readWriteStrategy= element.getAttribute("readWriteStrategy");
-		if(!StringUtils.isEmpty(readWriteStrategy)){
-			factory.addPropertyValue("readWriteStrategy", Integer.parseInt(readWriteStrategy));
+		String poolSize= element.getAttribute("poolSize");
+		if(!StringUtils.isEmpty(poolSize)){
+			factory.addPropertyValue("poolSize", Integer.parseInt(poolSize));
 		}
+		String readStrategy= element.getAttribute("readStrategy");
+		if(!StringUtils.isEmpty(readStrategy)){
+			factory.addPropertyValue("readStrategy", readStrategy);
+		}
+		
 		Element write= DomUtils.getChildElementByTagName(element, "ds-write");
 		factory.addPropertyValue("writeDataSource", parseDataSourceDescriptor(write,parserContext));
 		
@@ -68,5 +76,5 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		}
 		return factory.getBeanDefinition();
 	}
-
+	
 }
