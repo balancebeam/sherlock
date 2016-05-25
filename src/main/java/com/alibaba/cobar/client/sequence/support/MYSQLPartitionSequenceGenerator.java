@@ -10,7 +10,9 @@ public class MYSQLPartitionSequenceGenerator extends AbstractDBPartitionSequence
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String sql = "select count(1) from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + sequenceTable + "' and TABLE_SCHEMA='"+dataSource.getConnection().getSchema()+"'";
+		//String sql = "select count(1) from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + sequenceTable + "' and TABLE_SCHEMA='"+dataSource.getConnection().getSchema()+"'";
+		String sql = "select count(1) from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + sequenceTable + "'";
+
 
 		try {
 			Connection conn = dataSource.getConnection();
