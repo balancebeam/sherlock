@@ -1,10 +1,10 @@
 package com.hj.cobar.testcase;
 
-import com.alibaba.cobar.client.sqlparser.DatabaseType;
 import com.alibaba.cobar.client.sqlparser.SQLParseEngine;
 import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
-import com.alibaba.cobar.client.sqlparser.Table;
+import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
+import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.google.common.collect.Lists;
 
 public class sqlmain {

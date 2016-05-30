@@ -6,6 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.alibaba.cobar.client.exception.SQLParserException;
+import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
 import com.alibaba.cobar.client.util.ClassUtil;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
@@ -43,7 +44,7 @@ public final class SQLParserFactory {
 
             case MySQL: 
                 return new MySqlStatementParser(sql);
-            case PG:
+            case POSTGRESQL:
             	return new PGSQLStatementParser(sql);
             default: 
                 throw new UnsupportedOperationException(String.format("Cannot support database type [%s]", databaseType));

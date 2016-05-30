@@ -1,4 +1,7 @@
 package com.alibaba.cobar.client.sqlparser;
+
+import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
+
 public interface SQLVisitor {
     
     /**

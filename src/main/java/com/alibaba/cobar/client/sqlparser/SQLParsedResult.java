@@ -1,8 +1,8 @@
 package com.alibaba.cobar.client.sqlparser;
 
-import java.util.List;
 import java.util.Set;
 
+import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.google.common.collect.Sets;
 
 public class SQLParsedResult {

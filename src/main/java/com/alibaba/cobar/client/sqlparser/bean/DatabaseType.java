@@ -1,10 +1,10 @@
-package com.alibaba.cobar.client.sqlparser;
+package com.alibaba.cobar.client.sqlparser.bean;
 
 import com.alibaba.cobar.client.exception.DatabaseTypeUnsupportedException;
 
 public enum DatabaseType {
     
-    PG, MySQL;
+	POSTGRESQL, MySQL;
     
     /**
      * 获取数据库类型枚举.

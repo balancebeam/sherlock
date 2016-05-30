@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser;
+package com.alibaba.cobar.client.sqlparser.bean;
 
 import com.google.common.base.Optional;
 

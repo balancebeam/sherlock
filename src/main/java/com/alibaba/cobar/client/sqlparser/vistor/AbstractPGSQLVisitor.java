@@ -1,14 +1,16 @@
 package com.alibaba.cobar.client.sqlparser.vistor;
 
-import com.alibaba.cobar.client.sqlparser.DatabaseType;
 import com.alibaba.cobar.client.sqlparser.SQLBuilder;
 import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 import com.alibaba.cobar.client.sqlparser.SQLVisitor;
-import com.alibaba.cobar.client.sqlparser.Table;
+import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
+import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLHint;
+import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
+import com.alibaba.druid.sql.ast.expr.SQLInListExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLVariantRefExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
@@ -28,7 +30,7 @@ public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQ
     
     @Override
     public final DatabaseType getDatabaseType() {
-        return DatabaseType.PG;
+        return DatabaseType.POSTGRESQL;
     }
     
     protected void setCurrentTable(final String currentTableName, final Optional<String> currentAlias) {
@@ -134,4 +136,24 @@ public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQ
         return Optional.absent();
     }
     
+    @Override
+    public boolean visit(final SQLBinaryOpExpr x) {
+    	System.out.println("----------");
+    	System.out.println(x);
+    	System.out.println("----------");
+    	return super.visit(x);
+    }
+    
+    @Override
+    public boolean visit(final SQLInListExpr x) {
+    	
+    	return super.visit(x);
+    }
+    
+    @Override
+    public boolean visit(final SQLBetweenExpr x) {
+    	
+    	return super.visit(x);
+    }
+
 }
