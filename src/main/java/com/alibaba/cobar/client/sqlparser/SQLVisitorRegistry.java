@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.alibaba.cobar.client.exception.DatabaseTypeUnsupportedException;
 import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
+import com.alibaba.cobar.client.sqlparser.vistor.PGSQLDeleteVisitor;
+import com.alibaba.cobar.client.sqlparser.vistor.PGSQLInsertVisitor;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLSelectVisitor;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLUpdateVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
@@ -36,6 +38,7 @@ public final class SQLVisitorRegistry {
         
         //INSERT_REGISTRY.put(DatabaseType.MySQL, MySQLInsertVisitor.class);
         // TODO 其他数据库
+    	SELECT_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLInsertVisitor.class);
     }
     
     private static void registerUpdateVistor() {
@@ -49,6 +52,7 @@ public final class SQLVisitorRegistry {
         
         //DELETE_REGISTRY.put(DatabaseType.MySQL, MySQLDeleteVisitor.class);
         // TODO 其他数据库
+    	SELECT_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLDeleteVisitor.class);
     }
     
     /**
