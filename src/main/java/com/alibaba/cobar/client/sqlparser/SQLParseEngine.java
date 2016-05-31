@@ -1,6 +1,5 @@
 package com.alibaba.cobar.client.sqlparser;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
