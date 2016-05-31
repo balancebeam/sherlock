@@ -31,6 +31,17 @@ public class Table {
     }
     
     @Override
+    public boolean equals(Object other){
+    	if(other instanceof Table){
+    		Table t = (Table) other;
+    		if(name.equalsIgnoreCase(t.name)){
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    @Override
     public String toString(){
     	return name+":"+(alias.isPresent()?alias.get():name);
     }
