@@ -1,1 +1,1 @@
-http\://www.alibaba.com/schema/ddl=com.alibaba.cobar.client.spring.handler.ShardingNamespaceHandler
+http\://www.pddl.io/schema/pddl=io.pddl.spring.handler.ShardingNamespaceHandler

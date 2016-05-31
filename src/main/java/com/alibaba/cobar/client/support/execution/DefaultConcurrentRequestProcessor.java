@@ -38,6 +38,7 @@ import org.springframework.orm.ibatis.SqlMapClientCallback;
 
 import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.ExecutorContextHolder;
+import com.alibaba.cobar.client.executor.IExecutorContext;
 import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
 import com.alibaba.cobar.client.support.utils.CollectionUtils;
 import com.ibatis.sqlmap.client.SqlMapClient;
@@ -67,7 +68,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
         final CountDownLatch latch = new CountDownLatch(requestsDepo.size());
         List<Future<Object>> futures = new ArrayList<Future<Object>>();
         try {
-        	final int op= ExecutorContextHolder.getExecutorContext().getOperationType();
+        	final IExecutorContext mainCtx= ExecutorContextHolder.getExecutorContext();
             for (RequestDepository rdepo : requestsDepo) {
                 final ConcurrentRequest request = rdepo.getOriginalRequest();
                 final SqlMapClientCallback action = request.getAction();
@@ -76,9 +77,8 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
                 futures.add(request.getExecutor().submit(new Callable<Object>() {
                     public Object call() throws Exception {
                         try {
-                        	ExecutorContextSupporter context= new ExecutorContextSupporter();
-                    		context.setPartitioinDataSource(request.getPartitionDataSource());
-                    		context.setOperationType(op);
+                        	IExecutorContext context= ((ExecutorContextSupporter)mainCtx).clone();
+                    		((ExecutorContextSupporter)context).setPartitionDataSource(request.getPartitionDataSource());
                     		ExecutorContextHolder.setExecutorContext(context);
                             return executeWith(connection, action);
                         } finally {

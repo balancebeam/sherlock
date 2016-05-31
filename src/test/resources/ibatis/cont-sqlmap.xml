@@ -145,9 +145,6 @@
 		<include refid="contList.where" />
 		<include refid="contList.order" />
 	</select>
-	<!-- <insert id="Cont.insertCont" parameterClass="Cont"> INSERT INTO cont( 
-		id , taobaoId , name , upd_time VALUES( #id# , #taobaoId# , #name# , #updTime# 
-		) </insert> -->
 	<insert id="Cont.insertCont" parameterClass="Cont">
 		INSERT INTO cont
 		<dynamic prepend="(" close=")">

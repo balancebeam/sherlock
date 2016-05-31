@@ -1,0 +1,7 @@
+<tables>
+	<table name="stock" db="ds1,ds2,ds3"/>
+	<table name="t_order" actual-tables="t_order_${0..3}" >
+		<table name="t_order_item" actual-tables="t_order_item_${0..3}"></table>
+	</table>
+	
+</tables>

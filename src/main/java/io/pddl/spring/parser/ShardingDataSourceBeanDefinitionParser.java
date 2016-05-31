@@ -1,4 +1,6 @@
-package com.alibaba.cobar.client.spring.parser;
+package io.pddl.spring.parser;
+
+import static io.pddl.spring.Constants.*;
 
 import java.util.List;
 
@@ -23,19 +25,19 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultShardingDataSource.class);
-		Element partitionsElement= DomUtils.getChildElementByTagName(element, "db-partitions");
-		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, "db-partition");
+		Element partitionsElement= DomUtils.getChildElementByTagName(element, DB_PARTITIONS);
+		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, DB_PARTITION);
 		ManagedSet<BeanDefinition> partitionDataSources  = new ManagedSet<BeanDefinition>();
 		for(Element partition: partitions){
 			partitionDataSources.add(parsePartitionDataSource(partition,parserContext));
 		}
 		factory.addPropertyValue("partitionDataSources", partitionDataSources);
 		
-		Element readStrategyElement= DomUtils.getChildElementByTagName(element, "read-strategy");
-		if(readStrategyElement!= null){
-			String repository= readStrategyElement.getAttribute("repository");
-			factory.addPropertyReference("readStrategyRepository", repository);
-		}
+//		Element readStrategyElement= DomUtils.getChildElementByTagName(element, "read-strategy");
+//		if(readStrategyElement!= null){
+//			String repository= readStrategyElement.getAttribute("repository");
+//			factory.addPropertyReference("readStrategyRepository", repository);
+//		}
 		
 		return factory.getBeanDefinition();
 	}
@@ -43,19 +45,19 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	private BeanDefinition parsePartitionDataSource(Element element, ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(PartitionDataSource.class);
 		factory.addPropertyValue("name", element.getAttribute("name"));
-		String poolSize= element.getAttribute("poolSize");
+		String poolSize= element.getAttribute("pool-size");
 		if(!StringUtils.isEmpty(poolSize)){
 			factory.addPropertyValue("poolSize", Integer.parseInt(poolSize));
 		}
-		String readStrategy= element.getAttribute("readStrategy");
+		String readStrategy= element.getAttribute("read-strategy");
 		if(!StringUtils.isEmpty(readStrategy)){
 			factory.addPropertyValue("readStrategy", readStrategy);
 		}
 		
-		Element write= DomUtils.getChildElementByTagName(element, "ds-write");
+		Element write= DomUtils.getChildElementByTagName(element, DB_MASTER);
 		factory.addPropertyValue("writeDataSource", parseDataSourceDescriptor(write,parserContext));
 		
-		List<Element> reads= DomUtils.getChildElementsByTagName(element, "ds-read");
+		List<Element> reads= DomUtils.getChildElementsByTagName(element, DB_READONLY);
 		if(!CollectionUtils.isEmpty(reads)){
 			ManagedList<BeanDefinition> readDataSources= new ManagedList<BeanDefinition>(reads.size());
 			for(Element read: reads){

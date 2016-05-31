@@ -20,6 +20,7 @@
 	   <property name="location">
 	     <value>config.properties</value>
 	   </property>
+	   <property name="ignoreUnresolvablePlaceholders" value="true"></property>
 	</bean>
 	
 	<!-- 配置路由规则开始 -->

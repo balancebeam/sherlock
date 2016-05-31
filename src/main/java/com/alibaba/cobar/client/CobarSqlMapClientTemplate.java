@@ -257,7 +257,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -271,7 +271,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                     if (dsMap.size() == 1) {
                     	String key= dsMap.firstKey();
                         DataSource dataSource = dsMap.get(key).getWriteDataSource();
-                        ((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitioinDataSource(dsMap.get(key));
+                        ((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitionDataSource(dsMap.get(key));
                         return (Integer) executeWith(dataSource, action);
                     } else {
                         List<Object> results = executeInConcurrency(action, dsMap);
@@ -331,7 +331,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 /**
                  * sometimes, client will submit batch insert request like
@@ -362,7 +362,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                         if (dsMap.size() == 1) {
                         	String key= dsMap.firstKey();
                         	DataSource dataSource= dsMap.get(key).getWriteDataSource();
-                        	((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitioinDataSource(dsMap.get(key));
+                        	((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitionDataSource(dsMap.get(key));
                         	return executeWith(dataSource, action);
                         }
                         return executeInConcurrency(action, dsMap);
@@ -460,7 +460,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
             executor.shutdown();
         }
         try{
-	        beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
+	        beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_PERSISTENCE);
 	        List<ConcurrentRequest> requests = new ArrayList<ConcurrentRequest>();
 	        for (Map.Entry<String, List<Object>> entity : mrbase.getResources().entrySet()) {
 	            final List<Object> paramList = entity.getValue();
@@ -508,7 +508,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_SELECT);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -596,7 +596,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_SELECT);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -663,7 +663,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
         auditSqlIfNecessary(statementName, parameterObject);
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_SELECT);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -759,7 +759,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_SELECT);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_SELECT);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -831,7 +831,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 
         long startTimestamp = System.currentTimeMillis();
         try {
-        	beginExecutorContext(IExecutorContext.OP_PERSISTENCE);
+        	beginExecutorContext(statementName,parameterObject,IExecutorContext.OP_PERSISTENCE);
             if (isPartitioningBehaviorEnabled()) {
                 SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
                         parameterObject);
@@ -1259,9 +1259,11 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
     	return super.getDataSource();
     }
     
-    private void beginExecutorContext(int op){
+    private void beginExecutorContext(String statementName,Object parameterObject,int op){
 		ExecutorContextSupporter context= new ExecutorContextSupporter();
-		context.setPartitioinDataSource(getDefaultPartitionDataSource());
+		context.setSatementName(statementName);
+		context.setParameterObject(parameterObject);
+		context.setPartitionDataSource(getDefaultPartitionDataSource());
 		if(TransactionSynchronizationManager.isActualTransactionActive()){
 			op= op | IExecutorContext.OP_TRANSACTION;
 		}

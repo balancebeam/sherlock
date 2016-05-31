@@ -111,7 +111,7 @@ public class Tester {
 		
 		final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/spring/applicationContext.xml");
 		final SequenceGenerator sequence= (SequenceGenerator)context.getBean("testSequence");
-		ContService service= context.getBean(ContService.class);
+		ContService contService= context.getBean(ContService.class);
 //		for(int i=0;i<10;i++){
 //			
 //			long val= sequence.nextval("hello");
@@ -119,21 +119,21 @@ public class Tester {
 //		}
 //		
 //		InputStream in= System.in;
-		ContService contService = (ContService) context.getBean("contService");
-		Cont cont = new Cont();
-    	cont.setId(sequence.nextval("cont"));
-    	cont.setName("gd");
-    	Long taobaoId = new Long(new Random().nextInt(10000));
-    	System.out.println("#"+taobaoId);
-    	cont.setTaobaoId(taobaoId);
-    	System.out.println(contService.addCont(cont));
+//		ContService contService = (ContService) context.getBean("contService");
+//		Cont cont = new Cont();
+//    	cont.setId(sequence.nextval("cont"));
+//    	cont.setName("gd");
+//    	Long taobaoId = new Long(new Random().nextInt(10000));
+//    	System.out.println("#"+taobaoId);
+//    	cont.setTaobaoId(taobaoId);
+//    	System.out.println(contService.addCont(cont));
 //		
-//    	ContQuery contQuery = new ContQuery();
-//    	contQuery.setTaobaoId(963L);
-//    	List<Cont> list = contService.getContList(contQuery);
-//    	if(list != null){
-//    		System.out.println(list);
-//    	}
+    	ContQuery contQuery = new ContQuery();
+    	contQuery.setTaobaoId(963L);
+    	List<Cont> list = contService.getContList(contQuery);
+    	if(list != null){
+    		System.out.println(list);
+    	}
 //		Cont c1= new Cont();
 //		c1.setId(sequence.nextval("cont"));
 //		c1.setTaobaoId(new Long(new Random().nextInt(10000)));

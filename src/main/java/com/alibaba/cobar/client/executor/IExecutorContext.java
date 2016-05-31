@@ -2,7 +2,7 @@ package com.alibaba.cobar.client.executor;
 
 import com.alibaba.cobar.client.datasources.IPartitionDataSourceContext;
 
-public interface IExecutorContext extends IPartitionDataSourceContext{
+public interface IExecutorContext extends IPartitionDataSourceContext,Cloneable{
 
 	final public static int OP_SELECT = 1 << 0;
 	final public static int OP_PERSISTENCE = 1 << 1;
@@ -16,7 +16,10 @@ public interface IExecutorContext extends IPartitionDataSourceContext{
 	
 	boolean isTransactional();
 	
+	String getStatementName();
+	
+	Object getParameterObject();
+	
 	Object getAttribute(String key);
 	
-	void setAttribute(String key,Object value);
 }

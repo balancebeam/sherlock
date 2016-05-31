@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.IExecutorContext;
+import com.alibaba.cobar.client.support.utils.MapUtils;
 
 public class ExecutorContextSupporter implements IExecutorContext{
 
@@ -13,6 +14,10 @@ public class ExecutorContextSupporter implements IExecutorContext{
 	private PartitionDataSource partitionDataSource;
 	
 	private Map<String,Object> attributes;
+	
+	private String statementName;
+	
+	private Object parameterObject;
 	
 	@Override
 	public PartitionDataSource getPartitionDataSource() {
@@ -28,7 +33,7 @@ public class ExecutorContextSupporter implements IExecutorContext{
 		operationType= op;
 	}
 	
-	public void setPartitioinDataSource(PartitionDataSource partitionDataSource){
+	public void setPartitionDataSource(PartitionDataSource partitionDataSource){
 		this.partitionDataSource= partitionDataSource;
 	}
 
@@ -48,6 +53,24 @@ public class ExecutorContextSupporter implements IExecutorContext{
 	}
 
 	@Override
+	public String getStatementName() {
+		return statementName;
+	}
+	
+	public void setSatementName(String statementName){
+		this.statementName= statementName;
+	}
+
+	@Override
+	public Object getParameterObject() {
+		return parameterObject;
+	}
+	
+	public void setParameterObject(Object parameterObject){
+		this.parameterObject= parameterObject;
+	}
+
+	@Override
 	public Object getAttribute(String key) {
 		if(attributes== null){
 			return null;
@@ -55,12 +78,23 @@ public class ExecutorContextSupporter implements IExecutorContext{
 		return attributes.get(key);
 	}
 	
-	@Override
-	public void setAttribute(String key,Object value){
+	public synchronized void setAttribute(String key,Object value){
 		if(attributes== null){
 			attributes= new HashMap<String,Object>();
 		}
 		attributes.put(key, value);
 	}
-
+	
+	@Override
+	public IExecutorContext clone(){
+		ExecutorContextSupporter ctx= new ExecutorContextSupporter();
+		ctx.statementName= this.statementName;
+		ctx.parameterObject= this.parameterObject;
+		ctx.operationType= this.operationType;
+		ctx.partitionDataSource= this.partitionDataSource;
+		if(!MapUtils.isEmpty(this.attributes)){
+			(ctx.attributes= new HashMap<String,Object>()).putAll(this.attributes);
+		}
+		return ctx;
+	}
 }

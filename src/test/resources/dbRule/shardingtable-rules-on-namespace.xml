@@ -1,0 +1,18 @@
+<rules>
+
+	<rule>
+		<namespace>Cont</namespace>
+		<shardingExpression table="t_order">t_order_${user_id %3}</shardingExpression>
+	</rule>
+	
+	<rule>
+		<namespace>Cont</namespace>
+		<shardingExpression table="t_user">t_user_${hash.apply(taobaoId)}</shardingExpression>
+	</rule>
+	
+	<rule>
+		<namespace>Cont</namespace>
+		<shardingExpression table="t_order_item">t_order_item_${hash.apply(taobaoId)}</shardingExpression>
+	</rule>
+	
+</rules>

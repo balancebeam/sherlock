@@ -17,11 +17,12 @@ import com.alibaba.cobar.client.CobarSqlMapClientTemplate;
 import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.dml.DMLExec;
 import com.alibaba.cobar.client.executor.dql.DQLExec;
-import com.alibaba.cobar.client.router.ICobarTableRouter;
 import com.ibatis.sqlmap.engine.execution.SqlExecutor;
 import com.ibatis.sqlmap.engine.mapping.statement.RowHandlerCallback;
 import com.ibatis.sqlmap.engine.scope.ErrorContext;
 import com.ibatis.sqlmap.engine.scope.StatementScope;
+
+import io.pddl.table.LogicTableRouter;
 
 /**
  * {@link CobarSqlExecutor} is an extension to ibatis's default
@@ -48,7 +49,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 	final private DMLExec dmlExec;
 	
 	//table router executor for sql
-	private ICobarTableRouter tableRouter;
+	private LogicTableRouter tableRouter;
 	
 	private CobarSqlMapClientTemplate template;
 	
@@ -57,7 +58,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		dmlExec= new DMLExec();
 	}
 	
-	public void setTableRouter(ICobarTableRouter tableRouter){
+	public void setTableRouter(LogicTableRouter tableRouter){
 		this.tableRouter= tableRouter;
 	}
 	
@@ -80,7 +81,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		//trace the query error message for more thread
 		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<ErrorContext>();
 		//route sql by sharding table strategy，including ER
-		String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
+		String[] routerSqls= doTableRoute(sql,parameters);
 		//if one record or in transaction
 		if(routerSqls.length== 1 || !connection.getAutoCommit()){
 			for(String item: routerSqls){
@@ -187,7 +188,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
 		PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		
-	    String[] routerSqls= doTableRoute(statementScope,partitionDataSource,sql,parameters);
+	    String[] routerSqls= doTableRoute(sql,parameters);
 	    int rows = 0;
 	    //dml operation always use the same connection,whether or not including the transaction
 	    for(String rSql: routerSqls){
@@ -196,11 +197,11 @@ public class CobarSqlExecutor extends SqlExecutor {
 	    return rows;
 	}
 	
-	private String[] doTableRoute(StatementScope statementScope,PartitionDataSource partitionDataSource,String sql,Object[] parameters){
+	private String[] doTableRoute(String sql,Object[] parameters){
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
-		return tableRouter.doRoute(statementScope,partitionDataSource,sql,parameters);
+		return tableRouter.doRoute(sql,parameters);
 	}
 //	
 //	@Override
