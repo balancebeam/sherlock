@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,12 +17,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.cobar.client.audit.SimpleSqlAuditor;
+import com.alibaba.cobar.client.sqlparser.SQLParseEngine;
+import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
+import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
+import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
 import com.alibaba.druid.stat.TableStat.Condition;
 
 import io.pddl.table.LogicChildTable;
@@ -46,10 +48,13 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 	}
 
 	@Override
-	public String[] doRoute(String sql, Object[] parameters) {
+	public Collection<String> doRoute(String sql, Object[] parameters) {
 		if (logicTableRepository.isLogicTableEmpty()) {
-			return new String[] { sql };
+			return Collections.singleton(sql);
 		}
+		
+		SQLParseEngine sqlParseEngine= SQLParserFactory.create(DatabaseType.POSTGRESQL, sql, Arrays.asList(parameters));
+		SQLParsedResult sqlParsedResult = sqlParseEngine.parse();
 		return null;
 	}
 

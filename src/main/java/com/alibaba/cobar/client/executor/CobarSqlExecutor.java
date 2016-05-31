@@ -201,7 +201,7 @@ public class CobarSqlExecutor extends SqlExecutor {
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
-		return tableRouter.doRoute(sql,parameters);
+		return tableRouter.doRoute(sql,parameters).toArray(new String[]{});
 	}
 //	
 //	@Override

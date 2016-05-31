@@ -75,7 +75,7 @@
     <xsd:element name="table-global">
         <xsd:complexType>
             <xsd:attribute name="name" type="xsd:string" use="required" />
-            <xsd:attribute name="db-partitions" type="xsd:string" use="required" />
+            <xsd:attribute name="partitions" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="table-logic">

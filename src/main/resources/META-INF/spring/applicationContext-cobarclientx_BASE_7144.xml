@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd"
+       default-lazy-init="false">
+
+	<!-- 配置数据源开始 -->
+     <bean id="shardingDataSource" class="com.alibaba.cobar.client.datasources.DefaultShardingDataSource">
+    	<!-- 数据源定义 -->
+		<property name="dataSourceDescriptors">
+			<set>
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+					<property name="identity" value="partition0"/>
+			    	<!-- 读写分离策略 -->
+    				<property name="readWriteStrategy" value="1"></property>
+					<property name="writeDataSource" ref="dataSource0"/>
+					<property name="readDataSources">
+						<list>
+							<ref bean="dataSource0"/>
+							<ref bean="dataSource0"/>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+					<property name="identity" value="partition1"/>
+					<property name="writeDataSource" ref="dataSource1"/>
+				</bean>
+				<bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor">
+					<property name="identity" value="partition2"/>
+					<property name="writeDataSource" ref="dataSource2"/>
+				</bean>
+			</set>
+		</property>
+	</bean>
+	
+	<bean id="dbRouter"
+		class="com.alibaba.cobar.client.router.config.CobarInteralRouterXmlFactoryBean">
+		<!-- functionsMap是在使用自定义路由规则函数的时候使用 -->
+		<property name="functionsMap">
+			<map>
+				<entry key="hash" value-ref="hashFunction"></entry>
+			</map>
+	    </property>
+		<property name="configLocations">
+			<list>
+				<value>classpath:/dbRule/sharding-rules-on-namespace.xml</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 配置路由规则结束 -->  
+  
+  	<!-- 事务配置 -->
+    <bean id="transactionManager" class="com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager">
+        <property name="shardingDataSource" ref="shardingDataSource"/>
+    </bean>
+    <!-- 使用annotation定义事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/> 
+    
+    <!--  iBatis SQL map定义。                                                    -->
+    <bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+    	<!-- 这里配置的dataSource0为默认的数据源,如果找不到数据库的话则到该数据源中查找 -->
+   	 	<property name="dataSource" ref="dataSource0" />  
+        <property name="configLocation">
+            <value>classpath:/ibatis/sqlmap-config.xml</value>
+        </property>
+    </bean>
+    
+    <!-- definition extension sql executor -->
+    <bean id="sqlExecutor" class="com.alibaba.cobar.client.executor.CobarSqlExecutor">
+    	<property name="tableRouter">
+    		<bean class="com.alibaba.cobar.client.router.DefaultCobarTableRouter"/>
+    	</property>
+    </bean>
+    
+    <!-- 工程里一定要使用此工程模板，不能再使用ibatis原生的api，不然有的情况会不经过cobar的过滤 -->
+ 	<bean id="sqlMapClientTemplate" class="com.alibaba.cobar.client.CobarSqlMapClientTemplate">
+		<property name="sqlMapClient" ref="sqlMapClient" />
+		<property name="shardingDataSource" ref="shardingDataSource" />
+		<property name="dbRouter" ref="dbRouter" />
+		<property name="sqlAuditor">
+			<bean class="com.alibaba.cobar.client.audit.SimpleSqlAuditor" />
+		</property>
+		<property name="profileLongTimeRunningSql" value="true" />
+		<property name="longTimeRunningSqlIntervalThreshold" value="3600000" />
+		<property name="sqlExecutor" ref="sqlExecutor"/>
+	</bean>
+    
+</beans>

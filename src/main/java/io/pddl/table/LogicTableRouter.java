@@ -1,6 +1,8 @@
 package io.pddl.table;
 
+import java.util.Collection;
+
 public interface LogicTableRouter {
 
-	String[] doRoute(String sql, Object[] parameters);
+	Collection<String> doRoute(String sql, Object[] parameters);
 }

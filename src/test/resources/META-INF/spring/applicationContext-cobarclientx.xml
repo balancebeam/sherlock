@@ -2,7 +2,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
 	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:ddl="http://www.alibaba.com/schema/ddl" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:pddl="http://www.pddl.io/schema/pddl" xmlns:tx="http://www.springframework.org/schema/tx"
 	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
@@ -37,7 +37,8 @@
 		</pddl:table-logic>
 	</pddl:table-sharding>
 	
-	<pddl:table-strategy id="orderTableStrategy" columns="order_id" postfix-expression="_${order_id.longValue() % 4}"/>
+	<pddl:table-strategy id="orderTableStrategy" columns="order_id" expression="_${order_id.longValue() % 4}"/>
+
 	
 	<bean id="readStrategyRepository" class="com.alibaba.cobar.client.datasources.PartitionReadStrategyRepository">
 		<property name="readStrategies">
@@ -129,7 +130,9 @@
 	<!-- definition extension sql executor -->
 	<bean id="sqlExecutor" class="com.alibaba.cobar.client.executor.CobarSqlExecutor">
 		<property name="tableRouter">
-			<bean class="com.alibaba.cobar.client.router.DefaultCobarTableRouter" />
+			<bean class="io.pddl.table.router.DefaultLogicTableRouter">
+				<property name="logicTableRepository" ref="shardingTable"/>
+			</bean>
 		</property>
 	</bean>
 

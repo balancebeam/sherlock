@@ -102,7 +102,7 @@ public class ZookeeperPartitionSequenceGenerator extends AbstractPartitionSequen
 		try {
 			client.blockUntilConnected();
 		} catch (Exception e) {
-			logger.error("", e);
+			logger.error("connect zk fail!zkAddr=" + zkAddr, e);
 			throw e;
 		}
 	}

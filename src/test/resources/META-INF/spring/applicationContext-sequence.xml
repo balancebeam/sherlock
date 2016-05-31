@@ -13,10 +13,11 @@
     	<property name="incrStep" value="10"></property>
     	<property name="dataSource" ref="dataSource0"></property>
     </bean>
- -->
+    -->
     <bean id="testSequence" class="com.alibaba.cobar.client.sequence.support.LocalTestSequenceGenerator">
     </bean>
     <!-- 
+    
     <bean id="mysqlsequence" class="com.alibaba.cobar.client.sequence.support.MYSQLPartitionSequenceGenerator">
     	<property name="incrStep" value="10"></property>
     	<property name="dataSource" ref="dataSource3"></property>
@@ -26,5 +27,5 @@
     	<property name="incrStep" value="10"></property>
     	<property name="zkAddr" value="localhost:2181"></property>
     </bean>
-     -->
+    -->
 </beans>
