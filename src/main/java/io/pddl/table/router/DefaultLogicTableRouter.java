@@ -14,18 +14,27 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.cobar.client.executor.ExecutorContextHolder;
+import com.alibaba.cobar.client.executor.support.ExecutorContextSupporter;
+import com.alibaba.cobar.client.sqlparser.SQLBuilder;
 import com.alibaba.cobar.client.sqlparser.SQLParseEngine;
 import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
+import com.alibaba.cobar.client.sqlparser.bean.Condition;
 import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
-import com.alibaba.druid.stat.TableStat.Condition;
+import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
+import com.alibaba.cobar.client.sqlparser.bean.Table;
+import com.alibaba.cobar.client.support.utils.CollectionUtils;
+import com.google.common.base.Optional;
 
+import io.pddl.cache.ShardingCache;
 import io.pddl.table.LogicChildTable;
 import io.pddl.table.LogicTable;
 import io.pddl.table.LogicTableRepository;
@@ -42,59 +51,55 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 	private Logger logger = LoggerFactory.getLogger(DefaultLogicTableRouter.class);
 
 	private LogicTableRepository logicTableRepository;
+	
+	private ShardingCache shardingCache;
 
 	public void setLogicTableRepository(LogicTableRepository logicTableRepository) {
 		this.logicTableRepository = logicTableRepository;
 	}
+	
+	public void setShardingCache(ShardingCache shardingCache){
+		this.shardingCache= shardingCache;
+	}
 
 	@Override
-	public Collection<String> doRoute(String sql, Object[] parameters) {
+	public Collection<String> doRoute(String sql, Object[] parameters,Connection conn) {
 		if (logicTableRepository.isLogicTableEmpty()) {
 			return Collections.singleton(sql);
 		}
 		
 		SQLParseEngine sqlParseEngine= SQLParserFactory.create(DatabaseType.POSTGRESQL, sql, Arrays.asList(parameters));
 		SQLParsedResult sqlParsedResult = sqlParseEngine.parse();
-		return null;
-	}
-
-	private List<Map<String, String>> doSharding(List<String> logicTableNames) {
-		List<List<LogicTable>> cascadeTables = parseCascadeTables(logicTableNames);
-		List<Set<String>> cascadePostfixes = new ArrayList<Set<String>>();
-		for (List<LogicTable> list : cascadeTables) {
-			Set<String> postfixes = new HashSet<String>();
-			for (int i = 0; i < list.size(); i++) {
-				LogicTable logicTable = list.get(i);
-				String hierarchical = logicTable.getHierarchical();
-				tables: for (int j = 0; j < i; j++) {
-					if (hierarchical.startsWith(list.get(j).getHierarchical())) {
-						continue tables;
-					}
-				}
-				postfixes.addAll(doLogicTableSharding(logicTable));
-			}
-			cascadePostfixes.add(postfixes);
+		((ExecutorContextSupporter)ExecutorContextHolder.getContext()).setSQLParsedResult(sqlParsedResult);
+		List<List<LogicTable>> logicTables= parseLogicTables(sqlParsedResult.getTables());
+		if(CollectionUtils.isEmpty(logicTables)){
+			return Collections.singleton(sql);
 		}
-		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
-		doCartesianTables(cascadeTables, cascadePostfixes, 0, new HashMap<String, String>(), result);
-		return result;
+		return doMultilpleLogicTableSharding(logicTables,sqlParseEngine.getType(),conn);
 	}
-
-	private List<List<LogicTable>> parseCascadeTables(List<String> logicTableNames) {
-		Map<String, List<LogicTable>> hash = new HashMap<String, List<LogicTable>>(logicTableNames.size());
-		for (String tableName : logicTableNames) {
+	
+	private List<List<LogicTable>> parseLogicTables(Set<Table> tables) {
+		Map<String, List<LogicTable>> hash = new HashMap<String, List<LogicTable>>(tables.size());
+		for (Iterator<Table> it= tables.iterator();it.hasNext();) {
+			String tableName= it.next().getName();
 			LogicTable logicTable = logicTableRepository.getLogicTable(tableName);
+			//if not logic table
 			if (logicTable == null) {
+				continue;
+			}
+			String partition= ExecutorContextHolder.getContext().getPartitionDataSource().getName();
+			//if not match given database partition
+			if(!logicTable.matchPartition(partition)){
 				continue;
 			}
 			String key = logicTable.getHierarchical().split(",")[0];
 			List<LogicTable> list = hash.get(key);
 			if (list == null) {
-				hash.put(key, list = new ArrayList<LogicTable>());
+				hash.put(key, list= new ArrayList<LogicTable>());
 			}
 			list.add(logicTable);
 		}
-		List<List<LogicTable>> result = new ArrayList<List<LogicTable>>();
+		List<List<LogicTable>> result = new ArrayList<List<LogicTable>>(hash.size());
 		for (Iterator<List<LogicTable>> it = hash.values().iterator(); it.hasNext();) {
 			List<LogicTable> list = it.next();
 			Collections.sort(list, new Comparator<LogicTable>() {
@@ -118,71 +123,98 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 		return result;
 	}
 
-	private Collection<String> doLogicTableSharding(LogicTable logicTable) {
+	private List<String> doMultilpleLogicTableSharding(List<List<LogicTable>> logicTables,SQLStatementType sqlStatementType,Connection conn) {
+		List<Set<String>> postfixes = new ArrayList<Set<String>>();
+		for (List<LogicTable> list : logicTables) {
+			Set<String> pfixes = new HashSet<String>();
+			for (int i = 0; i < list.size(); i++) {
+				LogicTable logicTable = list.get(i);
+				String hierarchical = logicTable.getHierarchical();
+				tables: for (int j = 0; j < i; j++) {
+					if (hierarchical.startsWith(list.get(j).getHierarchical())) {
+						continue tables;
+					}
+				}
+				pfixes.addAll(doSingleLogicTableSharding(logicTable,sqlStatementType,conn));
+			}
+			postfixes.add(pfixes);
+		}
+		List<String> result = new ArrayList<String>();
+		makeupCartesian(logicTables, postfixes, 0, new HashMap<String,String>(), result);
+		return result;
+	}
+	
+	private Collection<String> doSingleLogicTableSharding(LogicTable logicTable,SQLStatementType sqlStatementType,Connection conn) {
 		LogicTableStrategyConfig strategyConfig = logicTable.getStrategyConfig();
 		List<String> columns = strategyConfig.getColumns();
 		List<ShardingValue<?>> shardingValues = new ArrayList<ShardingValue<?>>(columns.size());
 		for (String column : columns) {
 			Condition condition = getCondition(logicTable.getName(), column);
 			if (condition != null) {
-				if ("=".equals(condition.getOperator())) {
-					shardingValues.add(new ShardingSingleValue(column, condition.getValues()));
-				} else if ("in".equals(condition.getOperator())) {
-					shardingValues.add(new ShardingCollectionValue(column, condition.getValues()));
-				} else if ("between".equals(condition.getOperator())) {
-					shardingValues.add(new ShardingRangeValue(column, condition.getValues()));
-				} else {
-					throw new UnsupportedOperationException(condition.getOperator());
+				//now only support =、in、between operator
+				switch(condition.getOperator()){
+					case EQUAL:
+						shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
+						break;
+					case IN:
+						shardingValues.add(new ShardingCollectionValue<Comparable<?>>(column, condition.getValues()));
+						break;
+					case BETWEEN:
+						shardingValues.add(new ShardingRangeValue<Comparable<?>>(column, condition.getValues()));
+						break;
+					default:
+						throw new UnsupportedOperationException(condition.getOperator().toString());
 				}
 			}
 		}
-//		if ("INSERT" && shardingValues.isEmpty()) {
-//			return Collections.singletonList(lookupInsertTablePostfix(logicTable,conn));
-//		}
+		if (shardingValues.isEmpty() && SQLStatementType.INSERT== sqlStatementType) {
+			//if insert child table when it's condition not found
+			return Collections.singletonList(lookupSingleTablePostfix(logicTable,conn));
+		}
 		return strategyConfig.getStrategy().doSharding(logicTable, shardingValues);
 	}
 	
-	private void doCartesianTables(
-			List<List<LogicTable>> cascadeTables, 
-			List<Set<String>> cartesianPostfixes,
-			int index, 
-			Map<String, String> hash, 
-			List<Map<String, String>> result) {
-		if (cascadeTables.size() <= index) {
-			result.add(new HashMap<String, String>(hash));
-			return;
-		}
-		Set<String> postfixes = cartesianPostfixes.get(index);
-		for (Iterator<String> it = postfixes.iterator(); it.hasNext();) {
-			String postfix = it.next();
-			for (LogicTable table : cascadeTables.get(index)) {
-				hash.put(table.getName(), table.getName() + postfix);
-			}
-			doCartesianTables(cascadeTables, cartesianPostfixes, index + 1, hash, result);
-		}
-	}
-
+	//find Condition by tablename and column
 	private Condition getCondition(String tableName, String column) {
-		return null;
+		SQLParsedResult sqlParsedResult= ExecutorContextHolder.getContext().getSQLParsedResult();
+		Optional<Condition> option= sqlParsedResult.getCondition().find(tableName, column);
+		return option.isPresent()? option.get(): null;
 	}
-	
-	private String lookupInsertTablePostfix(LogicTable logicTable,Connection conn){
+	//get postfix from parent table
+	private String lookupSingleTablePostfix(LogicTable logicTable,Connection conn){
 		if(!logicTable.isPrimaryTable()){
+			//find parent logic table primary key value
+			Condition primaryCondtion= getCondition(logicTable.getName(),logicTable.getPrimaryKey());
+			if(primaryCondtion== null){
+				throw new IllegalArgumentException("miss primary-key value for table "+logicTable.getName());
+			}
+			
 			String foreignKey= ((LogicChildTable)logicTable).getForeignKey();
-			Condition condition= getCondition(logicTable.getName(),foreignKey);
-			if(condition!= null){
+			Condition foreignCondition= getCondition(logicTable.getName(),foreignKey);
+			if(foreignCondition!= null){
 				LogicTable parent= logicTable.getParent();
 				String primaryKey= parent.getPrimaryKey();
+				if(shardingCache!= null){
+					String postfix= shardingCache.getLogicTablePostfix(parent.getName(),parent.getPrimaryKey(),foreignCondition.getValues());
+					if(postfix!= null){
+						shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), primaryCondtion.getValues(), postfix);
+						return postfix;
+					}
+				}
+				
 				try {
 					PreparedStatement ps= null;
 					ResultSet rs= null;
 					for(String postfix: parent.getPostfixes()){
-						String sql= "select "+primaryKey+" from "+ parent.getName()+ postfix + " where "+ primaryKey + "=?";
+						String sql= "select t."+primaryKey+" from "+ parent.getName()+ postfix + " t where t."+ primaryKey + "=?";
 						try{
 							ps= conn.prepareStatement(sql);
-							ps.setObject(1, condition.getValues().get(0));
+							ps.setObject(1, foreignCondition.getValues().get(0));
 							rs= ps.executeQuery();
 							if(rs.next()){
+								if(shardingCache!= null){
+									shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), primaryCondtion.getValues(), postfix);
+								}
 								return postfix;
 							}
 						}finally{
@@ -194,9 +226,33 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 					logger.equals(e);
 				}
 			}
-			
 		}
 		throw new ShardingTableException("can't locate which insert table "+logicTable.getName());
 	}
-
+	//table cartesian
+	private void makeupCartesian(
+			List<List<LogicTable>> logicTables, 
+			List<Set<String>> postfixes,
+			int index, 
+			Map<String,String> ctx, 
+			List<String> result) {
+		if (logicTables.size() <= index) {
+			SQLBuilder sqlBuilder= ExecutorContextHolder.getContext().getSQLParsedResult().getSqlBuilder();
+			for(Iterator<Entry<String,String>> it= ctx.entrySet().iterator();it.hasNext();){
+				Entry<String,String> entry= it.next();
+				String logicTable= entry.getKey();
+				String actualTable= entry.getValue();
+				sqlBuilder.buildSQL(logicTable, actualTable);
+			}
+			result.add(sqlBuilder.toSQL());
+			return;
+		}
+		for (Iterator<String> it = postfixes.get(index).iterator(); it.hasNext();) {
+			String postfix = it.next();
+			for (LogicTable table : logicTables.get(index)) {
+				ctx.put(table.getName(), table.getName() + postfix);
+			}
+			makeupCartesian(logicTables, postfixes, index + 1, ctx, result);
+		}
+	}
 }

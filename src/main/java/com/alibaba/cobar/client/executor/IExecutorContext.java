@@ -1,6 +1,7 @@
 package com.alibaba.cobar.client.executor;
 
 import com.alibaba.cobar.client.datasources.IPartitionDataSourceContext;
+import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 
 public interface IExecutorContext extends IPartitionDataSourceContext,Cloneable{
 
@@ -21,5 +22,7 @@ public interface IExecutorContext extends IPartitionDataSourceContext,Cloneable{
 	Object getParameterObject();
 	
 	Object getAttribute(String key);
+	
+	SQLParsedResult getSQLParsedResult();
 	
 }

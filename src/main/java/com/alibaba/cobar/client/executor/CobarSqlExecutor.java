@@ -75,13 +75,13 @@ public class CobarSqlExecutor extends SqlExecutor {
 			final int maxResults, 
 			final RowHandlerCallback callback) throws SQLException {
 		//fetch the execute context from current thread local
-		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
+		IExecutorContext executorContext= ExecutorContextHolder.getContext();
 		//get the connection belonging dataSource 
 		final PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		//trace the query error message for more thread
 		final CopyOnWriteArrayList<ErrorContext> errorContextList= new CopyOnWriteArrayList<ErrorContext>();
 		//route sql by sharding table strategy，including ER
-		String[] routerSqls= doTableRoute(sql,parameters);
+		String[] routerSqls= doTableRoute(sql,parameters,connection);
 		//if one record or in transaction
 		if(routerSqls.length== 1 || !connection.getAutoCommit()){
 			for(String item: routerSqls){
@@ -185,10 +185,10 @@ public class CobarSqlExecutor extends SqlExecutor {
 			final String sql, 
 			final Object[] parameters) throws SQLException {
 		
-		IExecutorContext executorContext= ExecutorContextHolder.getExecutorContext();
+		IExecutorContext executorContext= ExecutorContextHolder.getContext();
 		PartitionDataSource partitionDataSource= executorContext.getPartitionDataSource();
 		
-	    String[] routerSqls= doTableRoute(sql,parameters);
+	    String[] routerSqls= doTableRoute(sql,parameters,conn);
 	    int rows = 0;
 	    //dml operation always use the same connection,whether or not including the transaction
 	    for(String rSql: routerSqls){
@@ -197,11 +197,11 @@ public class CobarSqlExecutor extends SqlExecutor {
 	    return rows;
 	}
 	
-	private String[] doTableRoute(String sql,Object[] parameters){
+	private String[] doTableRoute(String sql,Object[] parameters,Connection conn){
 		if(null== tableRouter){
 			return new String[]{sql};
 		}
-		return tableRouter.doRoute(sql,parameters).toArray(new String[]{});
+		return tableRouter.doRoute(sql,parameters,conn).toArray(new String[]{});
 	}
 //	
 //	@Override

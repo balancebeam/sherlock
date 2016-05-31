@@ -4,11 +4,11 @@ public abstract class ExecutorContextHolder {
 
 	private static ThreadLocal<IExecutorContext> holder= new ThreadLocal<IExecutorContext>();
 	
-	public static IExecutorContext getExecutorContext(){
+	public static IExecutorContext getContext(){
 		return holder.get();
 	}
 	
-	public static void setExecutorContext(IExecutorContext executorContext){
+	public static void setContext(IExecutorContext executorContext){
 		holder.set(executorContext);
 	}
 	

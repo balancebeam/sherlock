@@ -6,6 +6,7 @@ import static io.pddl.spring.Constants.TABLE_LOGIC;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class ShardingLogicTableBeanDefinitionParser extends AbstractBeanDefiniti
 		factory.addPropertyValue("name", element.getAttribute("name"));
 		factory.addPropertyValue("primaryKey", element.getAttribute("primaryKey"));
 		factory.addPropertyReference("strategy", element.getAttribute("strategy"));
-		factory.addPropertyValue("partitions", Arrays.asList(element.getAttribute("partitions").split(",")));
+		factory.addPropertyValue("partitions", new HashSet<String>(Arrays.asList(element.getAttribute("partitions").split(","))));
 		factory.addPropertyValue("postfixes", Arrays.asList(element.getAttribute("postfixes").split(",")));
 		List<Element> childLogicTableElements= DomUtils.getChildElementsByTagName(element, TABLE_CHILD);
 		if(!CollectionUtils.isEmpty(childLogicTableElements)){

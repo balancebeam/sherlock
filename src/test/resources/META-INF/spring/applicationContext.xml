@@ -14,7 +14,7 @@
     <import resource="applicationContext-cobarclientx.xml"/>
     <import resource="applicationContext-sequence.xml"/>
     
-    <context:component-scan base-package="com.hj.cobar"></context:component-scan>
+    <context:component-scan base-package="com.hj.cobar,io.pddl.testcase"></context:component-scan>
     
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 	   <property name="location">

@@ -24,8 +24,6 @@ public final class SQLParseEngine {
     
     private final SQLASTOutputVisitor visitor;
     
-    
-    
     public SQLParseEngine(SQLStatement sqlStatement,List<Object> parameters,SQLASTOutputVisitor visitor){
     	this.sqlStatement = sqlStatement;
     	this.parameters = parameters;
@@ -43,12 +41,12 @@ public final class SQLParseEngine {
         visitor.setParameters(parameters);       
         sqlStatement.accept(visitor);
         
-        SQLParsedResult result = sqlVisitor.getSQLResult();
+//        SQLParsedResult result = sqlVisitor.getSQLResult();
         
         return sqlVisitor.getSQLResult();
     }
     
-    private SQLStatementType getType() {
+    public SQLStatementType getType() {
         if (sqlStatement instanceof SQLSelectStatement) {
             return SQLStatementType.SELECT;
         }

@@ -55,7 +55,7 @@ public class DefaultShardingTableRepository implements GlobalTableRepository,Log
 		logicTableMapping.put(table.getName(),table);
 		((AbstractLogicTableConfig)table).setHierarchical(hierarchical);
 		List<? extends LogicTable> children= table.getChildren();
-		if(CollectionUtils.isEmpty(children)){
+		if(CollectionUtils.isNotEmpty(children)){
 			for(int i=0;i<children.size();i++){
 				((AbstractLogicTableConfig)children.get(i)).setParent(table);
 				forEachLogicTable(children.get(i),hierarchical+","+i);

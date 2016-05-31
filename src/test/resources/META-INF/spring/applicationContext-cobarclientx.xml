@@ -29,10 +29,10 @@
 	</pddl:db-sharding>
 	
 	<pddl:table-sharding id="shardingTable">
-		<pddl:table-global name="stock" partitions="dataSource0,dataSource2,dataSource2"/>
-		<pddl:table-logic name="t_order" partitions="dataSource0,dataSource2,dataSource2" primaryKey="user_id" postfixes="_0,_1" strategy="orderTableStrategy">
-			<pddl:table-child name="t_order_item" primaryKey="id" foreignKey="user_id">
-				<pddl:table-child name="t_order_item_x" primaryKey="id" foreignKey="order_item_id"/>
+		<pddl:table-global name="stock" partitions="partition0,partition1,partition2"/>
+		<pddl:table-logic name="t_order" partitions="partition0" primaryKey="order_id" postfixes="_0,_1,_2" strategy="orderTableStrategy">
+			<pddl:table-child name="t_order_item" primaryKey="item_id" foreignKey="order_id">
+				<pddl:table-child name="t_item_ext" primaryKey="ext_id" foreignKey="item_id"/>
 			</pddl:table-child>
 		</pddl:table-logic>
 	</pddl:table-sharding>

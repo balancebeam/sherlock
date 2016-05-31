@@ -7,5 +7,6 @@
               useStatementNamespaces="true"/>
               
     <sqlMap resource="ibatis/cont-sqlmap.xml"/>
+    <sqlMap resource="ibatis/order-sqlmap.xml"/>
     
 </sqlMapConfig>

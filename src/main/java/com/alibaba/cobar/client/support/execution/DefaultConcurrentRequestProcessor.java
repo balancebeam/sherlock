@@ -68,7 +68,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
         final CountDownLatch latch = new CountDownLatch(requestsDepo.size());
         List<Future<Object>> futures = new ArrayList<Future<Object>>();
         try {
-        	final IExecutorContext mainCtx= ExecutorContextHolder.getExecutorContext();
+        	final IExecutorContext mainCtx= ExecutorContextHolder.getContext();
             for (RequestDepository rdepo : requestsDepo) {
                 final ConcurrentRequest request = rdepo.getOriginalRequest();
                 final SqlMapClientCallback action = request.getAction();
@@ -79,10 +79,10 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
                         try {
                         	IExecutorContext context= ((ExecutorContextSupporter)mainCtx).clone();
                     		((ExecutorContextSupporter)context).setPartitionDataSource(request.getPartitionDataSource());
-                    		ExecutorContextHolder.setExecutorContext(context);
+                    		ExecutorContextHolder.setContext(context);
                             return executeWith(connection, action);
                         } finally {
-                        	ExecutorContextHolder.setExecutorContext(null);
+                        	ExecutorContextHolder.setContext(null);
                             latch.countDown();
                         }
                     }
@@ -156,7 +156,7 @@ public class DefaultConcurrentRequestProcessor implements IConcurrentRequestProc
     private List<RequestDepository> fetchConnectionsAndDepositForLaterUse(List<ConcurrentRequest> requests) {
         List<RequestDepository> depos = new ArrayList<RequestDepository>();
         for (ConcurrentRequest request : requests) {
-        	boolean readable= ExecutorContextHolder.getExecutorContext().isSelectable();
+        	boolean readable= ExecutorContextHolder.getContext().isSelectable();
         	PartitionDataSource partitionDataSource= request.getPartitionDataSource();
         	DataSource dataSource = readable? partitionDataSource.getReadDataSource(): partitionDataSource.getWriteDataSource();
         	request.setDataSource(dataSource);

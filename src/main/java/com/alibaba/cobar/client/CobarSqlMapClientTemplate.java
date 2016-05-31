@@ -271,7 +271,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                     if (dsMap.size() == 1) {
                     	String key= dsMap.firstKey();
                         DataSource dataSource = dsMap.get(key).getWriteDataSource();
-                        ((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitionDataSource(dsMap.get(key));
+                        ((ExecutorContextSupporter)ExecutorContextHolder.getContext()).setPartitionDataSource(dsMap.get(key));
                         return (Integer) executeWith(dataSource, action);
                     } else {
                         List<Object> results = executeInConcurrency(action, dsMap);
@@ -362,7 +362,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                         if (dsMap.size() == 1) {
                         	String key= dsMap.firstKey();
                         	DataSource dataSource= dsMap.get(key).getWriteDataSource();
-                        	((ExecutorContextSupporter)ExecutorContextHolder.getExecutorContext()).setPartitionDataSource(dsMap.get(key));
+                        	((ExecutorContextSupporter)ExecutorContextHolder.getContext()).setPartitionDataSource(dsMap.get(key));
                         	return executeWith(dataSource, action);
                         }
                         return executeInConcurrency(action, dsMap);
@@ -885,7 +885,7 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
                 }
             }
             //if dml operation
-            if(ExecutorContextHolder.getExecutorContext().isPersistent()){
+            if(ExecutorContextHolder.getContext().isPersistent()){
             	RoutingResult result= getDatabaseRouter().doGlobalTableRoute(routingFact);
             	if (result!=null && CollectionUtils.isNotEmpty(dsSet= result.getResourceIdentities())) {
                     Collections.sort(dsSet);
@@ -1268,11 +1268,11 @@ public class CobarSqlMapClientTemplate extends SqlMapClientTemplate implements D
 			op= op | IExecutorContext.OP_TRANSACTION;
 		}
 		context.setOperationType(op);
-		ExecutorContextHolder.setExecutorContext(context);
+		ExecutorContextHolder.setContext(context);
 	}
     
     private void endExecutorContext(){
-    	ExecutorContextHolder.setExecutorContext(null);
+    	ExecutorContextHolder.setContext(null);
     }
     
 }

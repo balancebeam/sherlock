@@ -1,23 +1,23 @@
 package io.pddl.table.model;
 
 import java.util.List;
+import java.util.Set;
 
 import io.pddl.table.LogicPrimaryTable;
 
 public class LogicPrimaryTableConfig extends AbstractLogicTableConfig implements LogicPrimaryTable{
 
-	private List<String> partitions;
+	private Set<String> partitions;
 	
 	private List<String> postfixies;
 	
 	private LogicTableStrategyConfig strategyConfig;
 	
-	public void setPartitions(List<String> partitions){
+	public void setPartitions(Set<String> partitions){
 		this.partitions= partitions;
 	}
 	
-	@Override
-	public List<String> getPartitions(){
+	public Set<String> getPartitions(){
 		return partitions;
 	}
 	

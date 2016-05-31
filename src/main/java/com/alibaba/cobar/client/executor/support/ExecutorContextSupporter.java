@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.alibaba.cobar.client.datasources.PartitionDataSource;
 import com.alibaba.cobar.client.executor.IExecutorContext;
+import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 import com.alibaba.cobar.client.support.utils.MapUtils;
 
 public class ExecutorContextSupporter implements IExecutorContext{
@@ -18,6 +19,8 @@ public class ExecutorContextSupporter implements IExecutorContext{
 	private String statementName;
 	
 	private Object parameterObject;
+	
+	private SQLParsedResult sqlParsedResult;
 	
 	@Override
 	public PartitionDataSource getPartitionDataSource() {
@@ -96,5 +99,14 @@ public class ExecutorContextSupporter implements IExecutorContext{
 			(ctx.attributes= new HashMap<String,Object>()).putAll(this.attributes);
 		}
 		return ctx;
+	}
+	
+	public void setSQLParsedResult(SQLParsedResult sqlParsedResult){
+		this.sqlParsedResult= sqlParsedResult;
+	}
+
+	@Override
+	public SQLParsedResult getSQLParsedResult() {
+		return sqlParsedResult;
 	}
 }

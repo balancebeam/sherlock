@@ -10,7 +10,7 @@ public interface LogicTable {
 	
 	String getPrimaryKey();
 	
-	List<String> getPartitions();
+	boolean matchPartition(String partition);
 	
 	List<String> getPostfixes();
 	
@@ -19,8 +19,6 @@ public interface LogicTable {
 	List<? extends LogicTable> getChildren();
 	
 	LogicTableStrategyConfig getStrategyConfig();
-	
-	List<String> getActualTableNames();
 	
 	boolean isPrimaryTable();
 	

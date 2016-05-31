@@ -1,7 +1,7 @@
 package io.pddl.table.model;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import io.pddl.table.LogicPrimaryTable;
 import io.pddl.table.LogicTable;
@@ -15,8 +15,6 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	private List<? extends LogicTable> children;
 	
 	private LogicTable parent;
-	
-	private List<String> actualTableNames;
 	
 	private String hierarchical;
 	
@@ -56,9 +54,13 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 		return parent;
 	}
 	
+	public Set<String> getPartitions(){
+		return ((AbstractLogicTableConfig)parent).getPartitions();
+	}
+	
 	@Override
-	public List<String> getPartitions(){
-		return parent.getPartitions();
+	public boolean matchPartition(String partition){
+		return getPartitions().contains(partition);
 	}
 	
 	@Override
@@ -69,23 +71,6 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	@Override
 	public LogicTableStrategyConfig getStrategyConfig(){
 		return parent.getStrategyConfig();
-	}
-	
-	@Override
-	public List<String> getActualTableNames(){
-		if(actualTableNames== null){
-			makeupActualTable();
-		}
-		return actualTableNames;
-	}
-	
-	private synchronized void makeupActualTable(){
-		if(actualTableNames== null){
-			actualTableNames= new ArrayList<String>();
-			for(String postfix: getPostfixes()){
-				actualTableNames.add(name+postfix);
-			}
-		}
 	}
 	
 	@Override
