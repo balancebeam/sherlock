@@ -6,8 +6,6 @@ import com.google.common.base.Optional;
 
 public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     
-
-    
     @Override
     public boolean visit(final PGSelectQueryBlock x) {
 
