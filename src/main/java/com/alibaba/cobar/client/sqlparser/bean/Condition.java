@@ -61,6 +61,22 @@ public class Condition {
 		public String getTableName() {
 			return this.tableName;
 		}
+		
+	    @Override
+	    public int hashCode(){
+	    	return (tableName+columnName).hashCode();
+	    }
+	    
+	    @Override
+	    public boolean equals(Object other){
+	    	if(other instanceof Column){
+	    		Column c = (Column)other;
+	    		if(columnName.equals(c.columnName)&&tableName.equals(c.tableName)){
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+	    }
 	}
 
 	/**
