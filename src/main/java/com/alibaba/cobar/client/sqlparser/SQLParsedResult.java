@@ -1,15 +1,16 @@
 package com.alibaba.cobar.client.sqlparser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import com.alibaba.cobar.client.sqlparser.bean.Condition;
+import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
+import com.alibaba.cobar.client.sqlparser.bean.Condition.Column;
 import com.alibaba.cobar.client.sqlparser.bean.ConditionContext;
 import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
 import com.alibaba.cobar.client.sqlparser.bean.Table;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.Column;
 import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
@@ -53,6 +54,15 @@ public class SQLParsedResult {
 		this.curTable = table;
 		return table;
 	}
+	
+    public void addCondition(final String columnName, final String tableName, final BinaryOperator operator, final SQLExpr valueExpr, final DatabaseType databaseType, final List<Object> parameters) {
+        Column column = createColumn(columnName, tableName);
+
+        Comparable<?> value = evalExpression(databaseType, valueExpr, parameters);
+        if (null != value) {
+            addCondition(column, operator, Collections.<Comparable<?>>singletonList(value));
+        }
+    }
 
 	public void addCondition(final SQLExpr expr, final BinaryOperator operator, final List<SQLExpr> valueExprList,
 			final DatabaseType databaseType, final List<Object> parameters) {
