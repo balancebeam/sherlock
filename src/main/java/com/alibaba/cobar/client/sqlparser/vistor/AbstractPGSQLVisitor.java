@@ -7,7 +7,6 @@ import com.alibaba.cobar.client.sqlparser.SQLBuilder;
 import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
 import com.alibaba.cobar.client.sqlparser.SQLVisitor;
 import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
-import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
 import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLHint;
@@ -22,6 +21,8 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
+import io.pddl.datasource.DatabaseType;
+
 public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor {
 
 	protected SQLParsedResult parseResult;
@@ -34,7 +35,7 @@ public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQ
 
 	@Override
 	public final DatabaseType getDatabaseType() {
-		return DatabaseType.POSTGRESQL;
+		return DatabaseType.PostgreSQL;
 	}
 
 	protected void setCurrentTable(final String currentTableName, final Optional<String> currentAlias) {

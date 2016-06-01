@@ -9,9 +9,9 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
-import io.pddl.table.exception.ShardingTableException;
-import io.pddl.table.model.LogicTableStrategyConfig;
-import io.pddl.table.support.DefaultLogicTableExpressionStrategy;
+import io.pddl.exception.ShardingTableException;
+import io.pddl.router.table.config.LogicTableStrategyConfig;
+import io.pddl.router.table.strategy.support.DefaultLogicTableExpressionStrategy;
 
 public class ShardingTableStrategyBeanDefinitionParser extends AbstractBeanDefinitionParser{
 

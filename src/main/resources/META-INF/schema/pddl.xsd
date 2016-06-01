@@ -11,9 +11,9 @@
         <xsd:complexType>
             <xsd:sequence>
                 <xsd:element ref="db-partitions" minOccurs="1" maxOccurs="1"/>
-                <xsd:element ref="read-strategy" minOccurs="0" maxOccurs="1"/>
             </xsd:sequence>
             <xsd:attribute name="id" type="xsd:string" use="required" />
+            <xsd:attribute name="dbType" type="dbTypeEnumType" use="required" />
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="db-partitions">
@@ -23,11 +23,6 @@
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="read-strategy">
-        <xsd:complexType>
-            <xsd:attribute name="repository" type="xsd:string" use="required"/>
-        </xsd:complexType>
-    </xsd:element>
     <xsd:element name="db-partition">
         <xsd:complexType>
             <xsd:sequence>
@@ -35,10 +30,20 @@
                 <xsd:element ref="db-readonly" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="name" type="xsd:string" use="required"/>
-            <xsd:attribute name="poo-size" type="xsd:int" use="optional"/>
-            <xsd:attribute name="read-strategy" type="readStrategyEnumType" use="optional"/>
+            <xsd:attribute name="pooSize" type="xsd:int" use="optional"/>
+            <xsd:attribute name="readStrategy" type="readStrategyEnumType" use="optional"/>
         </xsd:complexType>
     </xsd:element>
+    <xsd:simpleType name="dbTypeEnumType">
+    	<xsd:restriction base="xsd:string">
+		  <xsd:enumeration value="PostgreSQL"/>
+		  <xsd:enumeration value="MySQL"/>	
+		  <xsd:enumeration value="Oracle"/>
+		  <xsd:enumeration value="DB2"/>
+		  <xsd:enumeration value="SQLServer"/>
+		  <xsd:enumeration value="H2"/>
+    	</xsd:restriction>
+    </xsd:simpleType>
     <xsd:simpleType name="readStrategyEnumType">
     	<xsd:restriction base="xsd:string">
 		  <xsd:enumeration value="only-write"/>
@@ -52,13 +57,13 @@
     </xsd:simpleType>
     <xsd:element name="db-master">
         <xsd:complexType>
-            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="dataSource" type="xsd:string" use="required" />
             <xsd:attribute name="weight" type="xsd:int" use="optional" />
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="db-readonly">
         <xsd:complexType>
-            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="dataSource" type="xsd:string" use="required" />
             <xsd:attribute name="weight" type="xsd:int" use="optional" />
         </xsd:complexType>
     </xsd:element>

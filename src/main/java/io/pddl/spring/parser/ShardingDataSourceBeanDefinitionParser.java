@@ -1,6 +1,9 @@
 package io.pddl.spring.parser;
 
-import static io.pddl.spring.Constants.*;
+import static io.pddl.spring.Constants.DB_MASTER;
+import static io.pddl.spring.Constants.DB_PARTITION;
+import static io.pddl.spring.Constants.DB_PARTITIONS;
+import static io.pddl.spring.Constants.DB_READONLY;
 
 import java.util.List;
 
@@ -16,9 +19,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
-import com.alibaba.cobar.client.datasources.DataSourceDescriptor;
-import com.alibaba.cobar.client.datasources.DefaultShardingDataSource;
-import com.alibaba.cobar.client.datasources.PartitionDataSource;
+import io.pddl.datasource.DatabaseType;
+import io.pddl.datasource.support.DefaultDataSourceProxy;
+import io.pddl.datasource.support.DefaultPartitionDataSource;
+import io.pddl.datasource.support.DefaultShardingDataSource;
 
 public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser{
 
@@ -32,24 +36,18 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 			partitionDataSources.add(parsePartitionDataSource(partition,parserContext));
 		}
 		factory.addPropertyValue("partitionDataSources", partitionDataSources);
-		
-//		Element readStrategyElement= DomUtils.getChildElementByTagName(element, "read-strategy");
-//		if(readStrategyElement!= null){
-//			String repository= readStrategyElement.getAttribute("repository");
-//			factory.addPropertyReference("readStrategyRepository", repository);
-//		}
-		
+		factory.addPropertyValue("databaseType", DatabaseType.valueOf(element.getAttribute("dbType")));
 		return factory.getBeanDefinition();
 	}
 	
 	private BeanDefinition parsePartitionDataSource(Element element, ParserContext parserContext){
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(PartitionDataSource.class);
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultPartitionDataSource.class);
 		factory.addPropertyValue("name", element.getAttribute("name"));
-		String poolSize= element.getAttribute("pool-size");
+		String poolSize= element.getAttribute("poolSize");
 		if(!StringUtils.isEmpty(poolSize)){
 			factory.addPropertyValue("poolSize", Integer.parseInt(poolSize));
 		}
-		String readStrategy= element.getAttribute("read-strategy");
+		String readStrategy= element.getAttribute("readStrategy");
 		if(!StringUtils.isEmpty(readStrategy)){
 			factory.addPropertyValue("readStrategy", readStrategy);
 		}
@@ -69,9 +67,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	}
 	
 	private BeanDefinition parseDataSourceDescriptor(Element element,ParserContext parserContext){
-		String ref= element.getAttribute("ref");
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DataSourceDescriptor.class);
-		factory.addPropertyReference("dataSource", ref);
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultDataSourceProxy.class);
+		factory.addConstructorArgReference(element.getAttribute("dataSource"));
 		String weight= element.getAttribute("weight");
 		if(!StringUtils.isEmpty(weight)){
 			factory.addPropertyValue("weight", Integer.parseInt(weight));

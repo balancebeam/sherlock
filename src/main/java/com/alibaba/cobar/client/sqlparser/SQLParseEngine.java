@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.alibaba.cobar.client.exception.SQLParserException;
 import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
@@ -14,6 +13,8 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 import com.google.common.base.Preconditions;
+
+import io.pddl.exception.SQLParserException;
 
 public final class SQLParseEngine {
 	protected Log logger = LogFactory.getLog(getClass());
@@ -41,12 +42,12 @@ public final class SQLParseEngine {
         visitor.setParameters(parameters);       
         sqlStatement.accept(visitor);
         
-//        SQLParsedResult result = sqlVisitor.getSQLResult();
-        
-        return sqlVisitor.getSQLResult();
+        SQLParsedResult result = sqlVisitor.getSQLResult();
+        result.setStatementType(getType());
+        return result;
     }
     
-    public SQLStatementType getType() {
+    protected SQLStatementType getType() {
         if (sqlStatement instanceof SQLSelectStatement) {
             return SQLStatementType.SELECT;
         }

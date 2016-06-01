@@ -5,8 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.alibaba.cobar.client.sequence.SequenceGenerator;
-
+import io.pddl.sequence.SequenceGenerator;
 import junit.framework.TestCase;
 
 public class ConcurrentSequenceTest extends TestCase{

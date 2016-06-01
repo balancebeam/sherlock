@@ -3,13 +3,14 @@ package com.alibaba.cobar.client.sqlparser;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.exception.DatabaseTypeUnsupportedException;
-import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLDeleteVisitor;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLInsertVisitor;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLSelectVisitor;
 import com.alibaba.cobar.client.sqlparser.vistor.PGSQLUpdateVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
+
+import io.pddl.datasource.DatabaseType;
+import io.pddl.exception.DatabaseTypeUnsupportedException;
 
 public final class SQLVisitorRegistry {
     
@@ -31,13 +32,13 @@ public final class SQLVisitorRegistry {
     private static void registerSelectVistor() {
         //SELECT_REGISTRY.put(DatabaseType.MySQL, MySQLSelectVisitor.class);
         // TODO 其他数据库
-        SELECT_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLSelectVisitor.class);
+        SELECT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLSelectVisitor.class);
     }
     
     private static void registerInsertVistor() {
         
         //INSERT_REGISTRY.put(DatabaseType.MySQL, MySQLInsertVisitor.class);
-    	INSERT_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLInsertVisitor.class);
+    	INSERT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLInsertVisitor.class);
         // TODO 其他数据库
     }
     
@@ -45,14 +46,14 @@ public final class SQLVisitorRegistry {
       
         //UPDATE_REGISTRY.put(DatabaseType.MySQL, MySQLUpdateVisitor.class);
         // TODO 其他数据库
-    	SELECT_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLUpdateVisitor.class);
+    	SELECT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLUpdateVisitor.class);
     }
     
     private static void registerDeleteVistor() {
         
         //DELETE_REGISTRY.put(DatabaseType.MySQL, MySQLDeleteVisitor.class);
         // TODO 其他数据库
-    	DELETE_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLDeleteVisitor.class);
+    	DELETE_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLDeleteVisitor.class);
 
     }
     

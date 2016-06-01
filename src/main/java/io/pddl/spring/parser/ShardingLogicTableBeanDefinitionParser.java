@@ -20,9 +20,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
-import io.pddl.table.model.LogicChildTableConfig;
-import io.pddl.table.model.LogicPrimaryTableConfig;
-import io.pddl.table.support.DefaultShardingTableRepository;
+import io.pddl.router.table.config.LogicChildTableConfig;
+import io.pddl.router.table.config.LogicPrimaryTableConfig;
+import io.pddl.router.table.support.DefaultShardingTableRepository;
 
 public class ShardingLogicTableBeanDefinitionParser extends AbstractBeanDefinitionParser{
 

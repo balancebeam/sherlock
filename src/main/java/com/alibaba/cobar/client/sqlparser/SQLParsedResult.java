@@ -9,7 +9,7 @@ import com.alibaba.cobar.client.sqlparser.bean.Condition;
 import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
 import com.alibaba.cobar.client.sqlparser.bean.Condition.Column;
 import com.alibaba.cobar.client.sqlparser.bean.ConditionContext;
-import com.alibaba.cobar.client.sqlparser.bean.DatabaseType;
+import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
 import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLExpr;
@@ -21,11 +21,14 @@ import com.alibaba.druid.sql.visitor.SQLEvalVisitorUtils;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
+import io.pddl.datasource.DatabaseType;
+
 public class SQLParsedResult {
 
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
+	private SQLStatementType statementType;
 	private final ConditionContext curConditionContext = new ConditionContext();
 
 	public SQLParsedResult(SQLBuilder sqlBuilder) {
@@ -35,6 +38,14 @@ public class SQLParsedResult {
 
 	public SQLBuilder getSqlBuilder() {
 		return sqlBuilder;
+	}
+	
+	public void setStatementType(SQLStatementType statementType){
+		this.statementType= statementType;
+	}
+	
+	public SQLStatementType getStatementType(){
+		return statementType;
 	}
 
 	public void setSqlBuilder(SQLBuilder sqlBuilder) {

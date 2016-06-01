@@ -1,17 +1,16 @@
 package com.hj.cobar;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.alibaba.cobar.client.sequence.SequenceGenerator;
 import com.hj.cobar.bean.Cont;
 import com.hj.cobar.query.ContQuery;
 import com.hj.cobar.service.ContService;
+
+import io.pddl.sequence.SequenceGenerator;
 
 public class Tester {
 	

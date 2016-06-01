@@ -1,0 +1,1280 @@
+/**
+ * Copyright 1999-2011 Alibaba Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ package io.pddl;
+
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.JdbcUpdateAffectedIncorrectNumberOfRowsException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
+import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
+import org.springframework.orm.ibatis.SqlMapClientCallback;
+import org.springframework.orm.ibatis.SqlMapClientTemplate;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.util.ReflectionUtils;
+
+import com.ibatis.sqlmap.client.SqlMapExecutor;
+import com.ibatis.sqlmap.client.SqlMapSession;
+import com.ibatis.sqlmap.client.event.RowHandler;
+import com.ibatis.sqlmap.engine.execution.SqlExecutor;
+import com.ibatis.sqlmap.engine.impl.SqlMapClientImpl;
+import com.ibatis.sqlmap.engine.impl.SqlMapExecutorDelegate;
+import com.ibatis.sqlmap.engine.mapping.sql.Sql;
+import com.ibatis.sqlmap.engine.mapping.sql.stat.StaticSql;
+
+import io.pddl.audit.SqlAuditor;
+import io.pddl.datasource.PartitionDataSource;
+import io.pddl.datasource.ShardingDataSource;
+import io.pddl.datasource.support.DefaultPartitionDataSource;
+import io.pddl.exception.UncategorizedCobarClientException;
+import io.pddl.executor.ExecutorContext;
+import io.pddl.executor.ExecutorContextHolder;
+import io.pddl.executor.ExtSqlExecutor;
+import io.pddl.executor.support.ExecutorContextSupport;
+import io.pddl.router.database.DatabaseRouter;
+import io.pddl.router.database.execution.ConcurrentRequest;
+import io.pddl.router.database.execution.ConcurrentRequestProcessor;
+import io.pddl.router.database.execution.support.DefaultConcurrentRequestProcessor;
+import io.pddl.router.database.merger.Merger;
+import io.pddl.router.database.support.IBatisRoutingFact;
+import io.pddl.router.database.support.RoutingResult;
+import io.pddl.transaction.MultipleDataSourcesTransactionManager;
+import io.pddl.util.CollectionUtils;
+import io.pddl.util.MapUtils;
+import io.pddl.util.Predicate;
+import io.pddl.vo.BatchInsertTask;
+import io.pddl.vo.MRBase;
+
+/**
+ * {@link ExtSqlMapClientTemplate} is an extension to spring's default
+ * {@link SqlMapClientTemplate}, it works as the main component of <i>Cobar
+ * Client</i> product.<br>
+ * We mainly introduce transparent routing functionality into
+ * {@link ExtSqlMapClientTemplate} for situations when you have to partition
+ * you databases to enable horizontal scalability(scale out the system). but we
+ * still keep the default behaviors of {@link SqlMapClientTemplate} untouched if
+ * you still need them.<br> {@link ExtSqlMapClientTemplate} usually can work in 2
+ * mode, if you don't provide {@link #cobarDataSourceService} and
+ * {@link #databaseRouter} dependencies, it will work same as
+ * {@link SqlMapClientTemplate}; Only you provide at least the dependencies of
+ * {@link #cobarDataSourceService} and {@link #dsRouter},
+ * {@link ExtSqlMapClientTemplate} work in a way as it is.<br>
+ * In case some applications have specific SQL-execution auditing requirement,
+ * we expose a {@link SqlAuditor} interface for this. To prevent applications
+ * hook in a {@link SqlAuditor} w/ bad performance, we setup a default executor
+ * to send SQL to be audited asynchronously. It's a fixed size thread pool with
+ * size 1, you can inject your own ones to tune the performance of SQL auditing
+ * if necessary.<br>
+ * <br>
+ * As to the profiling of long-running SQL requirement, it will be cleaner if we
+ * wrap an AOP advice outside of {@link ExtSqlMapClientTemplate} to do such a
+ * job, but for the convenience of application developers, we make this part of
+ * logic as inline code, users can switch the profiling behavior on by setting
+ * {@link #profileLongTimeRunningSql} on, and customize the threshold on the
+ * length of SQL execution.<br>
+ * for basic data access operations, that's, CRUD, only R(read/query) can be
+ * processed in concurrency, while CUD have to be processed in sequence, because
+ * we have to keep the data access operations to use same connection that was
+ * bound to thread local before. If we process CUD in concurrency, the contract
+ * between spring's transaction manager and data access code can't be
+ * guaranteed.<br>
+ * 
+ * @author fujohnwang
+ * @since 1.0
+ * @see MultipleDataSourcesTransactionManager for transaction management
+ *      alternative.
+ */
+public class ExtSqlMapClientTemplate extends SqlMapClientTemplate implements DisposableBean {
+    private transient Logger                     logger                          = LoggerFactory
+                                                                                         .getLogger(ExtSqlMapClientTemplate.class);
+
+    private static final String                  DEFAULT_DATASOURCE_IDENTITY     = "_CobarSqlMapClientTemplate_default_data_source_name";
+
+    private String                               defaultDataSourceName           = DEFAULT_DATASOURCE_IDENTITY;
+
+    private List<ExecutorService>                internalExecutorServiceRegistry = new ArrayList<ExecutorService>();
+    /**
+     * if we want to access multiple database partitions, we need a collection
+     * of data source dependencies.<br> {@link ShardingDataSource} is a
+     * consistent way to get a collection of data source dependencies for @{link
+     * CobarSqlMapClientTemplate} and
+     * {@link MultipleDataSourcesTransactionManager}.<br>
+     * If a router is injected, a dataSourceLocator dependency should be
+     * injected too. <br>
+     */
+    private ShardingDataSource              shardingDataSource;
+
+    /**
+     * To enable database partitions access, an {@link ICobarDatabaseRouter} is a must
+     * dependency.<br>
+     * if no router is found, the CobarSqlMapClientTemplate will act with
+     * behaviors like its parent, the SqlMapClientTemplate.
+     */
+    private DatabaseRouter<IBatisRoutingFact> databaseRouter;
+
+    /**
+     * if you want to do SQL auditing, inject an {@link SqlAuditor} for use.<br>
+     * a sibling ExecutorService would be prefered too, which will be used to
+     * execute {@link SqlAuditor} asynchronously.
+     */
+    private SqlAuditor                          sqlAuditor;
+    private ExecutorService                      sqlAuditorExecutor;
+    
+    private SqlExecutor                          sqlExecutor;
+
+    /**
+     * setup ExecutorService for data access requests on each data sources.<br>
+     * map key(String) is the identity of DataSource; map value(ExecutorService)
+     * is the ExecutorService that will be used to execute query requests on the
+     * key's data source.
+     */
+    private Map<String, ExecutorService>         dataSourceSpecificExecutors     = new HashMap<String, ExecutorService>();
+
+    private ConcurrentRequestProcessor          concurrentRequestProcessor;
+
+    /**
+     * timeout threshold to indicate how long the concurrent data access request
+     * should time out.<br>
+     * time unit in milliseconds.<br>
+     */
+    private int                                  defaultQueryTimeout             = 100;
+    /**
+     * indicator to indicate whether to log/profile long-time-running SQL
+     */
+    private boolean                              profileLongTimeRunningSql       = false;
+    private long                                 longTimeRunningSqlIntervalThreshold;
+
+    /**
+     * In fact, application can do data-merging in their application code after
+     * getting the query result, but they can let
+     * {@link ExtSqlMapClientTemplate} do this for them too, as long as they
+     * provide a relationship mapping between the sql action and the merging
+     * logic provider.
+     */
+    private Map<String, Merger<Object, Object>> mergers                         = new HashMap<String, Merger<Object, Object>>();
+    
+    private PartitionDataSource defaultPartitionDataSource;
+    
+    /**
+     * NOTE: don't use this method for distributed data access.<br>
+     * If you are sure that the data access operations will be distributed in a
+     * database cluster in the future or even it happens just now, don't use
+     * this method, because we can't get enough context information to route
+     * these data access operations correctly.
+     */
+    @Override
+    public Object execute(SqlMapClientCallback action) throws DataAccessException {
+        return super.execute(action);
+    }
+
+    /**
+     * NOTE: don't use this method for distributed data access.<br>
+     * If you are sure that the data access operations will be distributed in a
+     * database cluster in the future or even it happens just now, don't use
+     * this method, because we can't get enough context information to route
+     * these data access operations correctly.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public List executeWithListResult(SqlMapClientCallback action) throws DataAccessException {
+        return super.executeWithListResult(action);
+    }
+
+    /**
+     * NOTE: don't use this method for distributed data access.<br>
+     * If you are sure that the data access operations will be distributed in a
+     * database cluster in the future or even it happens just now, don't use
+     * this method, because we can't get enough context information to route
+     * these data access operations correctly.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map executeWithMapResult(SqlMapClientCallback action) throws DataAccessException {
+        return super.executeWithMapResult(action);
+    }
+    
+    //add by yangzz
+    public void setSqlExecutor(SqlExecutor sqlExecutor){
+    	this.sqlExecutor= sqlExecutor;
+    }
+
+    @Override
+    public void delete(final String statementName, final Object parameterObject,
+                       int requiredRowsAffected) throws DataAccessException {
+        Integer rowAffected = this.delete(statementName, parameterObject);
+        if (rowAffected != requiredRowsAffected) {
+            throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(statementName,
+                    requiredRowsAffected, rowAffected);
+        }
+    }
+
+    @Override
+    public int delete(final String statementName, final Object parameterObject)
+            throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_PERSISTENCE);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+
+                    SqlMapClientCallback action = new SqlMapClientCallback() {
+                        public Object doInSqlMapClient(SqlMapExecutor executor) throws SQLException {
+                            return executor.delete(statementName, parameterObject);
+                        }
+                    };
+                    if (dsMap.size() == 1) {
+                    	String key= dsMap.firstKey();
+                        DataSource dataSource = dsMap.get(key).getWriteDataSource();
+                        ((ExecutorContextSupport)ExecutorContextHolder.getContext()).setPartitionDataSource(dsMap.get(key));
+                        return (Integer) executeWith(dataSource, action);
+                    } else {
+                        List<Object> results = executeInConcurrency(action, dsMap);
+                        Integer rowAffacted = 0;
+                        for (Object item : results) {
+                            rowAffacted += (Integer) item;
+                        }
+                        return rowAffacted;
+                    }
+                }
+            } // end if for partitioning status checking
+            return super.delete(statementName, parameterObject);
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    @Override
+    public int delete(String statementName) throws DataAccessException {
+        return this.delete(statementName, null);
+    }
+
+    /**
+     * We support insert in 3 ways here:<br>
+     * 
+     * <pre>
+     *      1- if no partitioning requirement is found:
+     *          the insert will be delegated to the default insert behavior of {@link SqlMapClientTemplate};
+     *      2- if partitioning support is enabled and 'parameterObject' is NOT a type of collection:
+     *          we will search for routing rules against it and execute insertion as per the rule if found, 
+     *          if no rule is found, the default data source will be used.
+     *      3- if partitioning support is enabled and 'parameterObject' is a type of {@link BatchInsertTask}:
+     *           this is a specific solution, mainly aimed for "insert into ..values(), (), ()" style insertion.
+     *           In this situation, we will regroup the entities in the original collection into several sub-collections as per routing rules, 
+     *           and submit the regrouped sub-collections to their corresponding target data sources.
+     *           One thing to NOTE: in this situation, although we return a object as the result of insert, but it doesn't mean any thing to you, 
+     *           because, "insert into ..values(), (), ()" style SQL doesn't return you a sensible primary key in this way. 
+     *           this, function is optional, although we return a list of sub-insert result, but don't guarantee precise semantics.
+     * </pre>
+     * 
+     * we can't just decide the execution branch on the Collection<?> type of
+     * the 'parameterObject', because sometimes, maybe the application does want
+     * to do insertion as per the parameterObject of its own.<br>
+     */
+    @Override
+    public Object insert(final String statementName, final Object parameterObject)
+            throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_PERSISTENCE);
+            if (isPartitioningBehaviorEnabled()) {
+                /**
+                 * sometimes, client will submit batch insert request like
+                 * "insert into ..values(), (), ()...", it's a rare situation,
+                 * but does exist, so we will create new executor on this kind
+                 * of request processing, and map each values to their target
+                 * data source and then reduce to sub-collection, finally,
+                 * submit each sub-collection of entities to executor to
+                 * execute.
+                 */
+                if (parameterObject != null && parameterObject instanceof BatchInsertTask) {
+                    // map collection into mapping of data source and sub collection of entities
+                    logger.info(
+                            "start to prepare batch insert operation with parameter type of:{}.",
+                            parameterObject.getClass());
+
+                    return batchInsertAfterReordering(statementName, parameterObject);
+
+                } else {
+                    SqlMapClientCallback action = new SqlMapClientCallback() {
+                        public Object doInSqlMapClient(SqlMapExecutor executor) throws SQLException {
+                            return executor.insert(statementName, parameterObject);
+                        }
+                    };
+                    SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(
+                            statementName, parameterObject);
+                    if (!MapUtils.isEmpty(dsMap) ) {
+                        if (dsMap.size() == 1) {
+                        	String key= dsMap.firstKey();
+                        	DataSource dataSource= dsMap.get(key).getWriteDataSource();
+                        	((ExecutorContextSupport)ExecutorContextHolder.getContext()).setPartitionDataSource(dsMap.get(key));
+                        	return executeWith(dataSource, action);
+                        }
+                        return executeInConcurrency(action, dsMap);
+                    }
+                }
+
+            } // end if for partitioning status checking
+            return super.insert(statementName, parameterObject);
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    /**
+     * we reorder the collection of entities in concurrency and commit them in
+     * sequence, because we have to conform to the infrastructure of spring's
+     * transaction management layer.
+     * 
+     * @param statementName
+     * @param parameterObject
+     * @return
+     */
+    private Object batchInsertAfterReordering(final String statementName,
+                                              final Object parameterObject) {
+        Set<String> keys = new HashSet<String>();
+        keys.add(getDefaultDataSourceName());
+        keys.addAll(getShardingDataSource().getPartitionDataSourceNames());
+
+        final MRBase mrbase = new MRBase(keys);
+
+        ExecutorService executor = createCustomExecutorService(Runtime.getRuntime()
+                .availableProcessors(), "batchInsertAfterReordering");
+        try {
+            
+        	final StringBuffer exceptionStaktrace = new StringBuffer();
+
+            Collection<?> paramCollection = ((BatchInsertTask) parameterObject).getEntities();
+
+            final CountDownLatch latch = new CountDownLatch(paramCollection.size());
+
+            Iterator<?> iter = paramCollection.iterator();
+            while (iter.hasNext()) {
+                final Object entity = iter.next();
+                Runnable task = new Runnable() {
+                    public void run() {
+                        try {
+                            SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(
+                                    statementName, entity);
+                            if (MapUtils.isEmpty(dsMap)) {
+                                logger
+                                        .info(
+                                                "can't find routing rule for {} with parameter {}, so use default data source for it.",
+                                                statementName, entity);
+                                mrbase.emit(getDefaultDataSourceName(), entity);
+                            } else {
+                                if (dsMap.size() > 1) {
+                                    throw new IllegalArgumentException(
+                                            "unexpected routing result, found more than 1 target data source for current entity:"
+                                                    + entity);
+                                }
+                                mrbase.emit(dsMap.firstKey(), entity);
+                            }
+                        } catch (Throwable t) {
+                            exceptionStaktrace.append(ExceptionUtils.getFullStackTrace(t));
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+                };
+                executor.execute(task);
+            }
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new ConcurrencyFailureException(
+                        "unexpected interruption when re-arranging parameter collection into sub-collections ",
+                        e);
+            }
+
+            if (exceptionStaktrace.length() > 0) {
+                throw new ConcurrencyFailureException(
+                        "unpected exception when re-arranging parameter collection, check previous log for details.\n"
+                                + exceptionStaktrace);
+            }
+        } finally {
+            executor.shutdown();
+        }
+        try{
+	        beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_PERSISTENCE);
+	        List<ConcurrentRequest> requests = new ArrayList<ConcurrentRequest>();
+	        for (Map.Entry<String, List<Object>> entity : mrbase.getResources().entrySet()) {
+	            final List<Object> paramList = entity.getValue();
+	            if (CollectionUtils.isEmpty(paramList)) {
+	                continue;
+	            }
+	
+	            String identity = entity.getKey();
+	
+	            final SqlMapClientCallback callback = new SqlMapClientCallback() {
+	                public Object doInSqlMapClient(SqlMapExecutor executor) throws SQLException {
+	                    return executor.insert(statementName, paramList);
+	                }
+	            };
+	
+	            ConcurrentRequest request = new ConcurrentRequest();
+	            request.setPartitionDataSource(getShardingDataSource().getPartitionDataSource(entity.getKey()));
+	            request.setAction(callback);
+	            request.setExecutor(getDataSourceSpecificExecutors().get(identity));
+	            requests.add(request);
+	        }
+	        return getConcurrentRequestProcessor().process(requests);
+        }
+        finally{
+        	endExecutorContext();
+        }
+    }
+
+    @Override
+    public Object insert(String statementName) throws DataAccessException {
+        return this.insert(statementName, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List queryForList(String statementName, int skipResults, int maxResults)
+            throws DataAccessException {
+        return this.queryForList(statementName, null, skipResults, maxResults);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected List queryForList(final String statementName, final Object parameterObject,
+                                final Integer skipResults, final Integer maxResults) {
+        auditSqlIfNecessary(statementName, parameterObject);
+
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_SELECT);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+                    SqlMapClientCallback callback = null;
+                    if (skipResults == null || maxResults == null) {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForList(statementName, parameterObject);
+                            }
+                        };
+                    } else {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForList(statementName, parameterObject,
+                                        skipResults, maxResults);
+                            }
+                        };
+                    }
+
+                    List<Object> originalResultList = executeInConcurrency(callback, dsMap);
+                    if (MapUtils.isNotEmpty(getMergers())
+                            && getMergers().containsKey(statementName)) {
+                        Merger<Object, Object> merger = getMergers().get(statementName);
+                        if (merger != null) {
+                            return (List) merger.merge(originalResultList);
+                        }
+                    }
+
+                    List<Object> resultList = new ArrayList<Object>();
+                    for (Object item : originalResultList) {
+                        resultList.addAll((List) item);
+                    }
+                    return resultList;
+                }
+            } // end if for partitioning status checking
+            if (skipResults == null || maxResults == null) {
+                return super.queryForList(statementName, parameterObject);
+            } else {
+                return super.queryForList(statementName, parameterObject, skipResults, maxResults);
+            }
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List queryForList(final String statementName, final Object parameterObject,
+                             final int skipResults, final int maxResults)
+            throws DataAccessException {
+        return this.queryForList(statementName, parameterObject, Integer.valueOf(skipResults),
+                Integer.valueOf(maxResults));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List queryForList(final String statementName, final Object parameterObject)
+            throws DataAccessException {
+        return this.queryForList(statementName, parameterObject, null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List queryForList(String statementName) throws DataAccessException {
+        return this.queryForList(statementName, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map queryForMap(final String statementName, final Object parameterObject,
+                           final String keyProperty, final String valueProperty)
+            throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_SELECT);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+                    SqlMapClientCallback callback = null;
+                    if (valueProperty != null) {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForMap(statementName, parameterObject,
+                                        keyProperty, valueProperty);
+                            }
+                        };
+                    } else {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForMap(statementName, parameterObject,
+                                        keyProperty);
+                            }
+                        };
+                    }
+
+                    List<Object> originalResults = executeInConcurrency(callback, dsMap);
+                    Map<Object, Object> resultMap = new HashMap<Object, Object>();
+                    for (Object item : originalResults) {
+                        resultMap.putAll((Map<?, ?>) item);
+                    }
+                    return resultMap;
+                }
+            } // end if for partitioning status checking
+
+            if (valueProperty == null) {
+                return super.queryForMap(statementName, parameterObject, keyProperty);
+            } else {
+                return super
+                        .queryForMap(statementName, parameterObject, keyProperty, valueProperty);
+            }
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map queryForMap(final String statementName, final Object parameterObject,
+                           final String keyProperty) throws DataAccessException {
+        return this.queryForMap(statementName, parameterObject, keyProperty, null);
+    }
+
+    @Override
+    public Object queryForObject(final String statementName, final Object parameterObject,
+                                 final Object resultObject) throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_SELECT);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+                    SqlMapClientCallback callback = null;
+                    if (resultObject == null) {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForObject(statementName, parameterObject);
+                            }
+                        };
+                    } else {
+                        callback = new SqlMapClientCallback() {
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                return executor.queryForObject(statementName, parameterObject,
+                                        resultObject);
+                            }
+                        };
+                    }
+                    List<Object> resultList = executeInConcurrency(callback, dsMap);
+                    @SuppressWarnings("unchecked")
+                    Collection<Object> filteredResultList = CollectionUtils.select(resultList,
+                            new Predicate() {
+                                public boolean evaluate(Object item) {
+                                    return item != null;
+                                }
+                            });
+                    if (filteredResultList.size() > 1) {
+                        throw new IncorrectResultSizeDataAccessException(1);
+                    }
+                    if (CollectionUtils.isEmpty(filteredResultList)) {
+                        return null;
+                    }
+                    return filteredResultList.iterator().next();
+                }
+            } // end if for partitioning status checking
+            if (resultObject == null) {
+                return super.queryForObject(statementName, parameterObject);
+            } else {
+                return super.queryForObject(statementName, parameterObject, resultObject);
+            }
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    @Override
+    public Object queryForObject(final String statementName, final Object parameterObject)
+            throws DataAccessException {
+        return this.queryForObject(statementName, parameterObject, null);
+    }
+
+    @Override
+    public Object queryForObject(String statementName) throws DataAccessException {
+        return this.queryForObject(statementName, null);
+    }
+
+//    /**
+//     * NOTE: since it's a deprecated interface, so distributed data access is
+//     * not supported.
+//     */
+//    @Override
+//    public PaginatedList queryForPaginatedList(String statementName, int pageSize)
+//            throws DataAccessException {
+//        return super.queryForPaginatedList(statementName, pageSize);
+//    }
+//
+//    /**
+//     * NOTE: since it's a deprecated interface, so distributed data access is
+//     * not supported.
+//     */
+//    @Override
+//    public PaginatedList queryForPaginatedList(String statementName, Object parameterObject,
+//                                               int pageSize) throws DataAccessException {
+//        return super.queryForPaginatedList(statementName, parameterObject, pageSize);
+//    }
+
+    @Override
+    public void queryWithRowHandler(final String statementName, final Object parameterObject,
+                                    final RowHandler rowHandler) throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_SELECT);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+                    SqlMapClientCallback callback = null;
+                    if (parameterObject == null) {
+                        callback = new SqlMapClientCallback() {
+
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                executor.queryWithRowHandler(statementName, rowHandler);
+                                return null;
+                            }
+                        };
+                    } else {
+                        callback = new SqlMapClientCallback() {
+
+                            public Object doInSqlMapClient(SqlMapExecutor executor)
+                                    throws SQLException {
+                                executor.queryWithRowHandler(statementName, parameterObject,
+                                        rowHandler);
+                                return null;
+                            }
+                        };
+                    }
+                    executeInConcurrency(callback, dsMap);
+                    return;
+                }
+            } //end if for partitioning status checking
+            if (parameterObject == null) {
+                super.queryWithRowHandler(statementName, rowHandler);
+            } else {
+                super.queryWithRowHandler(statementName, parameterObject, rowHandler);
+            }
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    @Override
+    public void queryWithRowHandler(String statementName, RowHandler rowHandler)
+            throws DataAccessException {
+        this.queryWithRowHandler(statementName, null, rowHandler);
+    }
+
+    @Override
+    public void update(String statementName, Object parameterObject, int requiredRowsAffected)
+            throws DataAccessException {
+        int rowAffected = this.update(statementName, parameterObject);
+        if (rowAffected != requiredRowsAffected) {
+            throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(statementName,
+                    requiredRowsAffected, rowAffected);
+        }
+    }
+
+    @Override
+    public int update(final String statementName, final Object parameterObject)
+            throws DataAccessException {
+        auditSqlIfNecessary(statementName, parameterObject);
+
+        long startTimestamp = System.currentTimeMillis();
+        try {
+        	beginExecutorContext(statementName,parameterObject,ExecutorContext.OP_PERSISTENCE);
+            if (isPartitioningBehaviorEnabled()) {
+                SortedMap<String, PartitionDataSource> dsMap = lookupDataSourcesByRouter(statementName,
+                        parameterObject);
+                if (!MapUtils.isEmpty(dsMap)) {
+
+                    SqlMapClientCallback action = new SqlMapClientCallback() {
+                        public Object doInSqlMapClient(SqlMapExecutor executor) throws SQLException {
+                            return executor.update(statementName, parameterObject);
+                        }
+                    };
+
+                    List<Object> results = executeInConcurrency(action, dsMap);
+                    Integer rowAffacted = 0;
+
+                    for (Object item : results) {
+                        rowAffacted += (Integer) item;
+                    }
+                    return rowAffacted;
+                }
+            } // end if for partitioning status checking
+            return super.update(statementName, parameterObject);
+        } finally {
+            if (isProfileLongTimeRunningSql()) {
+                long interval = System.currentTimeMillis() - startTimestamp;
+                if (interval > getLongTimeRunningSqlIntervalThreshold()) {
+                    logger
+                            .warn(
+                                    "SQL Statement [{}] with parameter object [{}] ran out of the normal time range, it consumed [{}] milliseconds.",
+                                    new Object[] { statementName, parameterObject, interval });
+                }
+            }
+            endExecutorContext();
+        }
+    }
+
+    @Override
+    public int update(String statementName) throws DataAccessException {
+        return this.update(statementName, null);
+    }
+
+    protected SortedMap<String, PartitionDataSource> lookupDataSourcesByRouter(final String statementName,
+                                                                      final Object parameterObject) {
+        SortedMap<String, PartitionDataSource> resultMap = new TreeMap<String, PartitionDataSource>();
+        IBatisRoutingFact routingFact= new IBatisRoutingFact(statementName, parameterObject,getSqlMapClient());
+        if (getDatabaseRouter() != null && getShardingDataSource() != null) {
+            List<String> dsSet = getDatabaseRouter().doRoute(routingFact).getResourceIdentities();
+            if (CollectionUtils.isNotEmpty(dsSet)) {
+                Collections.sort(dsSet);
+                for (String dsName : dsSet) {
+                    resultMap.put(dsName, getShardingDataSource().getPartitionDataSource(dsName));
+                }
+            }
+            //if dml operation
+            if(ExecutorContextHolder.getContext().isPersistent()){
+            	RoutingResult result= getDatabaseRouter().doGlobalTableRoute(routingFact);
+            	if (result!=null && CollectionUtils.isNotEmpty(dsSet= result.getResourceIdentities())) {
+                    Collections.sort(dsSet);
+                    for (String dsName : dsSet) {
+                        resultMap.put(dsName, getShardingDataSource().getPartitionDataSource(dsName));
+                    }
+                }
+            }
+        }
+        return resultMap;
+    }
+    
+    protected String getSqlByStatementName(String statementName, Object parameterObject) {
+        SqlMapClientImpl sqlMapClientImpl = (SqlMapClientImpl) getSqlMapClient();
+        Sql sql = sqlMapClientImpl.getMappedStatement(statementName).getSql();
+        if (sql instanceof StaticSql) {
+            return sql.getSql(null, parameterObject);
+        } else {
+            logger.info("dynamic sql can only return sql id.");
+            return statementName;
+        }
+    }
+
+    protected Object executeWith(DataSource dataSource, SqlMapClientCallback action) {
+        SqlMapSession session = getSqlMapClient().openSession();
+
+        try {
+            Connection springCon = null;
+            boolean transactionAware = (dataSource instanceof TransactionAwareDataSourceProxy);
+
+            // Obtain JDBC Connection to operate on...
+            try {
+                springCon = (transactionAware ? dataSource.getConnection() : DataSourceUtils
+                        .doGetConnection(dataSource));
+                session.setUserConnection(springCon);
+            } catch (SQLException ex) {
+                throw new CannotGetJdbcConnectionException("Could not get JDBC Connection", ex);
+            }
+
+            try {
+                return action.doInSqlMapClient(session);
+            } catch (SQLException ex) {
+                throw new SQLErrorCodeSQLExceptionTranslator().translate("SqlMapClient operation",
+                        null, ex);
+            } catch (Throwable t) {
+                throw new UncategorizedCobarClientException(
+                        "unknown excepton when performing data access operation.", t);
+            } finally {
+                try {
+                    if (springCon != null) {
+                        if (transactionAware) {
+                            springCon.close();
+                        } else {
+                            DataSourceUtils.doReleaseConnection(springCon, dataSource);
+                        }
+                    }
+                } catch (Throwable ex) {
+                    logger.debug("Could not close JDBC Connection", ex);
+                }
+            }
+            // Processing finished - potentially session still to be closed.
+        } finally {
+            session.close();
+        }
+    }
+
+    public List<Object> executeInConcurrency(SqlMapClientCallback action,
+                                             SortedMap<String, PartitionDataSource> dsMap) {
+        List<ConcurrentRequest> requests = new ArrayList<ConcurrentRequest>();
+
+        for (Map.Entry<String, PartitionDataSource> entry : dsMap.entrySet()) {
+            ConcurrentRequest request = new ConcurrentRequest();
+            request.setAction(action);
+            request.setPartitionDataSource(entry.getValue());
+            request.setExecutor(getDataSourceSpecificExecutors().get(entry.getKey()));
+            requests.add(request);
+        }
+
+        List<Object> results = getConcurrentRequestProcessor().process(requests);
+        return results;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        if (isProfileLongTimeRunningSql()) {
+            if (longTimeRunningSqlIntervalThreshold <= 0) {
+                throw new IllegalArgumentException(
+                        "'longTimeRunningSqlIntervalThreshold' should have a positive value if 'profileLongTimeRunningSql' is set to true");
+            }
+        }
+        setupDefaultExecutorServicesIfNecessary();
+        setUpDefaultSqlAuditorExecutorIfNecessary();
+        if (getConcurrentRequestProcessor() == null) {
+            setConcurrentRequestProcessor(new DefaultConcurrentRequestProcessor(getSqlMapClient()));
+        }
+        
+        if(null!= sqlExecutor){
+	        Field field= ReflectionUtils.findField(SqlMapExecutorDelegate.class, "sqlExecutor");
+			ReflectionUtils.makeAccessible(field);
+			SqlMapExecutorDelegate delegate= ((SqlMapClientImpl)getSqlMapClient()).getDelegate();
+			PartitionDataSource defaultPartitionDataSource;
+			if(getShardingDataSource()!=null){
+				defaultPartitionDataSource= getShardingDataSource().getDefaultPartitionDataSource();
+			}
+			else{
+				DefaultPartitionDataSource ds= new DefaultPartitionDataSource();
+				ds.setName("__ibatis_default_datasource__");
+				ds.setWriteDataSource(super.getDataSource());
+				ds.setPoolSize(Runtime.getRuntime().availableProcessors() * 5);
+		        getDataSourceSpecificExecutors().put(ds.getName(),
+		                createExecutorForSpecificDataSource(ds));
+		        defaultPartitionDataSource= ds;
+			}
+			this.defaultPartitionDataSource= defaultPartitionDataSource;
+			((ExtSqlExecutor)sqlExecutor).setCobarSqlMapClientTemplate(this);
+			ReflectionUtils.setField(field,delegate,sqlExecutor);
+        }
+    }
+    
+    public PartitionDataSource getDefaultPartitionDataSource(){
+    	return defaultPartitionDataSource;
+    }
+
+    public void destroy() throws Exception {
+        if (CollectionUtils.isNotEmpty(internalExecutorServiceRegistry)) {
+            logger.info("shutdown executors of CobarSqlMapClientTemplate...");
+            for (ExecutorService executor : internalExecutorServiceRegistry) {
+                if (executor != null) {
+                    try {
+                        executor.shutdown();
+                        executor.awaitTermination(5, TimeUnit.MINUTES);
+                        executor = null;
+                    } catch (InterruptedException e) {
+                        logger.warn("interrupted when shuting down the query executor:\n{}", e);
+                    }
+                }
+            }
+            getDataSourceSpecificExecutors().clear();
+            logger.info("all of the executor services in CobarSqlMapClientTemplate are disposed.");
+        }
+    }
+
+    /**
+     * if a SqlAuditor is injected and a sqlAuditorExecutor is NOT provided
+     * together, we need to setup a sqlAuditorExecutor so that the SQL auditing
+     * actions can be performed asynchronously. <br>
+     * otherwise, the data access process may be blocked by auditing SQL.<br>
+     * Although an external ExecutorService can be injected for use, normally,
+     * it's not so necessary.<br>
+     * Most of the time, you should inject an proper {@link SqlAuditor} which
+     * will do SQL auditing in a asynchronous way.<br>
+     */
+    private void setUpDefaultSqlAuditorExecutorIfNecessary() {
+        if (sqlAuditor != null && sqlAuditorExecutor == null) {
+            sqlAuditorExecutor = createCustomExecutorService(1,
+                    "setUpDefaultSqlAuditorExecutorIfNecessary");
+            // 1. register executor for disposing later explicitly
+            internalExecutorServiceRegistry.add(sqlAuditorExecutor);
+            // 2. dispose executor implicitly 
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    if (sqlAuditorExecutor == null) {
+                        return;
+                    }
+                    try {
+                        sqlAuditorExecutor.shutdown();
+                        sqlAuditorExecutor.awaitTermination(5, TimeUnit.MINUTES);
+                    } catch (InterruptedException e) {
+                        logger.warn("interrupted when shuting down the query executor:\n{}", e);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * If more than one data sources are involved in a data access request, we
+     * need a collection of executors to execute the request on these data
+     * sources in parallel.<br>
+     * But in case the users forget to inject a collection of executors for this
+     * purpose, we need to setup a default one.<br>
+     */
+    private void setupDefaultExecutorServicesIfNecessary() {
+        if (isPartitioningBehaviorEnabled()) {
+
+            if (MapUtils.isEmpty(getDataSourceSpecificExecutors())) {
+
+            	for(Iterator<String> item= getShardingDataSource().getPartitionDataSourceNames().iterator();item.hasNext();){
+            		PartitionDataSource partition= getShardingDataSource().getPartitionDataSource(item.next());
+                    ExecutorService executor = createExecutorForSpecificDataSource(partition);
+                    getDataSourceSpecificExecutors().put(partition.getName(), executor);
+            	}
+            }
+
+            addDefaultSingleThreadExecutorIfNecessary();
+        }
+    }
+
+    private ExecutorService createExecutorForSpecificDataSource(PartitionDataSource partitionDataSource) {
+        final String identity = partitionDataSource.getName();
+        final ExecutorService executor = createCustomExecutorService(partitionDataSource.getPoolSize(),
+                "createExecutorForSpecificDataSource-" + identity + " data source");
+        // 1. register executor for disposing explicitly
+        internalExecutorServiceRegistry.add(executor);
+        // 2. dispose executor implicitly
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if (executor == null) {
+                    return;
+                }
+
+                try {
+                    executor.shutdown();
+                    executor.awaitTermination(5, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {
+                    logger.warn("interrupted when shuting down the query executor:\n{}", e);
+                }
+            }
+        });
+        return executor;
+    }
+
+    private void addDefaultSingleThreadExecutorIfNecessary() {
+        String identity = getDefaultDataSourceName();
+        DefaultPartitionDataSource partition = new DefaultPartitionDataSource();
+        partition.setName(identity);
+        partition.setPoolSize(Runtime.getRuntime().availableProcessors() * 5);
+        getDataSourceSpecificExecutors().put(identity,
+                createExecutorForSpecificDataSource(partition));
+    }
+
+    protected void auditSqlIfNecessary(final String statementName, final Object parameterObject) {
+        if (getSqlAuditor() != null) {
+            getSqlAuditorExecutor().execute(new Runnable() {
+                public void run() {
+                    getSqlAuditor().audit(statementName,
+                            getSqlByStatementName(statementName, parameterObject), parameterObject);
+                }
+            });
+        }
+    }
+
+    /**
+     * if a router and a data source locator is provided, it means data access
+     * on different databases is enabled.<br>
+     */
+    protected boolean isPartitioningBehaviorEnabled() {
+        return ((databaseRouter != null) && (getShardingDataSource() != null));
+    }
+
+    public void setSqlAuditor(SqlAuditor sqlAuditor) {
+        this.sqlAuditor = sqlAuditor;
+    }
+
+    public SqlAuditor getSqlAuditor() {
+        return sqlAuditor;
+    }
+
+    public void setSqlAuditorExecutor(ExecutorService sqlAuditorExecutor) {
+        this.sqlAuditorExecutor = sqlAuditorExecutor;
+    }
+
+    public ExecutorService getSqlAuditorExecutor() {
+        return sqlAuditorExecutor;
+    }
+
+    public void setDataSourceSpecificExecutors(
+                                               Map<String, ExecutorService> dataSourceSpecificExecutors) {
+        if (MapUtils.isEmpty(dataSourceSpecificExecutors)) {
+            return;
+        }
+        this.dataSourceSpecificExecutors = dataSourceSpecificExecutors;
+    }
+
+    public Map<String, ExecutorService> getDataSourceSpecificExecutors() {
+        return dataSourceSpecificExecutors;
+    }
+
+    public void setDefaultQueryTimeout(int defaultQueryTimeout) {
+        this.defaultQueryTimeout = defaultQueryTimeout;
+    }
+
+    public int getDefaultQueryTimeout() {
+        return defaultQueryTimeout;
+    }
+
+    public void setShardingDataSource(ShardingDataSource shardingDataSource) {
+        this.shardingDataSource = shardingDataSource;
+    }
+
+    public ShardingDataSource getShardingDataSource() {
+        return shardingDataSource;
+    }
+
+    public void setProfileLongTimeRunningSql(boolean profileLongTimeRunningSql) {
+        this.profileLongTimeRunningSql = profileLongTimeRunningSql;
+    }
+
+    public boolean isProfileLongTimeRunningSql() {
+        return profileLongTimeRunningSql;
+    }
+
+    public void setLongTimeRunningSqlIntervalThreshold(long longTimeRunningSqlIntervalThreshold) {
+        this.longTimeRunningSqlIntervalThreshold = longTimeRunningSqlIntervalThreshold;
+    }
+
+    public long getLongTimeRunningSqlIntervalThreshold() {
+        return longTimeRunningSqlIntervalThreshold;
+    }
+
+    public void setDefaultDataSourceName(String defaultDataSourceName) {
+        this.defaultDataSourceName = defaultDataSourceName;
+    }
+
+    public String getDefaultDataSourceName() {
+        return defaultDataSourceName;
+    }
+
+    public void setDatabaseRouter(DatabaseRouter<IBatisRoutingFact> databaseRouter) {
+        this.databaseRouter = databaseRouter;
+    }
+
+    public DatabaseRouter<IBatisRoutingFact> getDatabaseRouter() {
+        return databaseRouter;
+    }
+    
+    public void setConcurrentRequestProcessor(ConcurrentRequestProcessor concurrentRequestProcessor) {
+        this.concurrentRequestProcessor = concurrentRequestProcessor;
+    }
+
+    public ConcurrentRequestProcessor getConcurrentRequestProcessor() {
+        return concurrentRequestProcessor;
+    }
+
+    public void setMergers(Map<String, Merger<Object, Object>> mergers) {
+        this.mergers = mergers;
+    }
+
+    public Map<String, Merger<Object, Object>> getMergers() {
+        return mergers;
+    }
+
+    private ExecutorService createCustomExecutorService(int poolSize, final String method) {
+        int coreSize = Runtime.getRuntime().availableProcessors();
+        if (poolSize < coreSize) {
+            coreSize = poolSize;
+        }
+        ThreadFactory tf = new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "thread created at CobarSqlMapClientTemplate method ["
+                        + method + "]");
+                t.setDaemon(true);
+                return t;
+            }
+        };
+        BlockingQueue<Runnable> queueToUse = new LinkedBlockingQueue<Runnable>(coreSize);
+        final ThreadPoolExecutor executor = new ThreadPoolExecutor(coreSize, poolSize, 60,
+                TimeUnit.SECONDS, queueToUse, tf, new ThreadPoolExecutor.CallerRunsPolicy());
+
+        return executor;
+    }
+    
+    @Override
+    public DataSource getDataSource() {
+    	//default dataSource is write database
+    	if(getShardingDataSource() != null){
+    		return getShardingDataSource().getDefaultPartitionDataSource().getWriteDataSource();
+    	}
+    	return super.getDataSource();
+    }
+    
+    private void beginExecutorContext(String statementName,Object parameterObject,int op){
+		ExecutorContextSupport context= new ExecutorContextSupport();
+		context.setSatementName(statementName);
+		context.setParameterObject(parameterObject);
+		context.setPartitionDataSource(getDefaultPartitionDataSource());
+		if(TransactionSynchronizationManager.isActualTransactionActive()){
+			op= op | ExecutorContext.OP_TRANSACTION;
+		}
+		context.setOperationType(op);
+		ExecutorContextHolder.setContext(context);
+	}
+    
+    private void endExecutorContext(){
+    	ExecutorContextHolder.setContext(null);
+    }
+    
+}

@@ -1,6 +1,6 @@
 package com.alibaba.cobar.client.util;
 
-import com.alibaba.cobar.client.exception.ShardingException;
+import io.pddl.exception.ShardingException;
 
 public class ClassUtil {
 

@@ -8,7 +8,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.alibaba.cobar.client.sequence.SequenceGenerator;
+import io.pddl.sequence.SequenceGenerator;
 
 public class ZooKeeperSequence {
 

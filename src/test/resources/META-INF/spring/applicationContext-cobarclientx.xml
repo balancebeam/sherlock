@@ -12,18 +12,18 @@
 	default-lazy-init="false">
 
 	<!-- 配置数据源开始 -->
-	<pddl:db-sharding id="shardingDataSource">
+	<pddl:db-sharding id="shardingDataSource" dbType="PostgreSQL">
 		<pddl:db-partitions>
-			<pddl:db-partition name="partition0" read-strategy="polling" >
-				<pddl:db-master ref="dataSource0" weight="200" />
-				<pddl:db-readonly ref="dataSource0" weight="200" />
-				<pddl:db-readonly ref="dataSource0" weight="400" />
+			<pddl:db-partition name="partition0" readStrategy="weight" >
+				<pddl:db-master dataSource="dataSource0" weight="200" />
+				<pddl:db-readonly dataSource="dataSource0" weight="200" />
+				<pddl:db-readonly dataSource="dataSource0" weight="400" />
 			</pddl:db-partition>
 			<pddl:db-partition name="partition1">
-				<pddl:db-master ref="dataSource1" />
+				<pddl:db-master dataSource="dataSource1" />
 			</pddl:db-partition>
 			<pddl:db-partition name="partition2">
-				<pddl:db-master ref="dataSource2" />
+				<pddl:db-master dataSource="dataSource2" />
 			</pddl:db-partition>
 		</pddl:db-partitions>
 	</pddl:db-sharding>
@@ -37,54 +37,10 @@
 		</pddl:table-logic>
 	</pddl:table-sharding>
 	
-	<pddl:table-strategy id="orderTableStrategy" columns="order_id" expression="_${order_id.longValue() % 4}"/>
-
-	
-	<bean id="readStrategyRepository" class="com.alibaba.cobar.client.datasources.PartitionReadStrategyRepository">
-		<property name="readStrategies">
-			<map>
-				<entry key="only-write">
-					<bean class="com.alibaba.cobar.client.datasources.support.OnlyWriteReadStrategySupport"/>
-				</entry>
-				<entry key="polling">
-					<bean class="com.alibaba.cobar.client.datasources.support.PollingReadStrategySupport"/>
-				</entry>
-				<entry key="polling-w">
-					<bean class="com.alibaba.cobar.client.datasources.support.PollingReadStrategyWithWriteSupport"/>
-				</entry>
-				<entry key="power">
-					<bean class="com.alibaba.cobar.client.datasources.support.PowerReadStrategySupport"/>
-				</entry>
-				<entry key="power-w">
-					<bean class="com.alibaba.cobar.client.datasources.support.PowerReadStrategyWithWriteSupport"/>
-				</entry>
-				<entry key="weight">
-					<bean class="com.alibaba.cobar.client.datasources.support.WeightReadStrategySupport"/>
-				</entry>
-				<entry key="weight-w">
-					<bean class="com.alibaba.cobar.client.datasources.support.WeightReadStrategyWithWriteSupport"/>
-				</entry>
-			</map>
-		</property>
-	</bean>
-
-	<!-- <bean id="shardingDataSource" class="com.alibaba.cobar.client.datasources.DefaultShardingDataSource"> 
-		<property name="partitionDataSources"> <set> <bean class="com.alibaba.cobar.client.datasources.PartitionDataSource"> 
-		<property name="name" value="partition0"/> <property name="readWriteStrategy" 
-		value="1"></property> <property name="writeDataSource" ref="dataSource0"/> 
-		<property name="readDataSources"> <list> <bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor"> 
-		<property name="dataSource" ref="dataSource0"></property> <property name="weight" 
-		value="200"></property> </bean> <bean class="com.alibaba.cobar.client.datasources.DataSourceDescriptor"> 
-		<property name="dataSource" ref="dataSource0"></property> <property name="weight" 
-		value="300"></property> </bean> <ref bean="dataSource0"/> </list> </property> 
-		</bean> <bean class="com.alibaba.cobar.client.datasources.PartitionDataSource"> 
-		<property name="name" value="partition1"/> <property name="writeDataSource" 
-		ref="dataSource1"/> </bean> <bean class="com.alibaba.cobar.client.datasources.PartitionDataSource"> 
-		<property name="name" value="partition2"/> <property name="writeDataSource" 
-		ref="dataSource2"/> </bean> </set> </property> </bean> -->
+	<pddl:table-strategy id="orderTableStrategy" columns="order_id" expression="_${order_id.longValue() % 3}"/>
 
 	<bean id="dbRouter"
-		class="com.alibaba.cobar.client.router.config.CobarInteralRouterXmlFactoryBean">
+		class="io.pddl.router.database.config.DefaultInteralRouterXmlFactoryBean">
 		<!-- functionsMap是在使用自定义路由规则函数的时候使用 -->
 		<property name="functionsMap">
 			<map>
@@ -96,21 +52,12 @@
 				<value>classpath:/dbRule/sharding-rules-on-namespace.xml</value>
 			</list>
 		</property>
-		<!-- global table definition properties -->
-		<property name="globalTableLocation">
-			<value>classpath:/dbRule/sharding-global-table.properties</value>
-		</property>
-		<!-- parse the sql to fetch table name -->
-		<property name="dmlSqlParser">
-			<bean class="com.alibaba.cobar.client.router.support.PGDMLSQLParser"></bean>
-		</property>
-		
 	</bean>
 	<!-- 配置路由规则结束 -->
 
 	<!-- 事务配置 -->
 	<bean id="transactionManager"
-		class="com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager">
+		class="io.pddl.transaction.MultipleDataSourcesTransactionManager">
 		<property name="shardingDataSource" ref="shardingDataSource" />
 		<property name="transactionSynchronization" value="2" />
 	</bean>
@@ -128,22 +75,19 @@
 	</bean>
 
 	<!-- definition extension sql executor -->
-	<bean id="sqlExecutor" class="com.alibaba.cobar.client.executor.CobarSqlExecutor">
+	<bean id="sqlExecutor" class="io.pddl.executor.ExtSqlExecutor">
 		<property name="tableRouter">
-			<bean class="io.pddl.table.router.DefaultLogicTableRouter">
+			<bean class="io.pddl.router.table.support.DefaultLogicTableRouter">
 				<property name="logicTableRepository" ref="shardingTable"/>
 			</bean>
 		</property>
 	</bean>
 
 	<!-- 工程里一定要使用此工程模板，不能再使用ibatis原生的api，不然有的情况会不经过cobar的过滤 -->
-	<bean id="sqlMapClientTemplate" class="com.alibaba.cobar.client.CobarSqlMapClientTemplate">
+	<bean id="sqlMapClientTemplate" class="io.pddl.ExtSqlMapClientTemplate">
 		<property name="sqlMapClient" ref="sqlMapClient" />
 		<property name="shardingDataSource" ref="shardingDataSource" />
-		<property name="dbRouter" ref="dbRouter" />
-		<property name="sqlAuditor">
-			<bean class="com.alibaba.cobar.client.audit.SimpleSqlAuditor" />
-		</property>
+		<property name="databaseRouter" ref="dbRouter" />
 		<property name="profileLongTimeRunningSql" value="true" />
 		<property name="longTimeRunningSqlIntervalThreshold" value="3600000" />
 		<property name="sqlExecutor" ref="sqlExecutor" />

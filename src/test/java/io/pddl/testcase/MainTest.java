@@ -3,8 +3,7 @@ package io.pddl.testcase;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.alibaba.cobar.client.sequence.SequenceGenerator;
-
+import io.pddl.sequence.SequenceGenerator;
 import io.pddl.testcase.entity.Order;
 import io.pddl.testcase.service.OrderService;
 
