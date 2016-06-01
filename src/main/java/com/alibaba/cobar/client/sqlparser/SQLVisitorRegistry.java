@@ -53,6 +53,7 @@ public final class SQLVisitorRegistry {
         //DELETE_REGISTRY.put(DatabaseType.MySQL, MySQLDeleteVisitor.class);
         // TODO 其他数据库
     	DELETE_REGISTRY.put(DatabaseType.POSTGRESQL, PGSQLDeleteVisitor.class);
+
     }
     
     /**
