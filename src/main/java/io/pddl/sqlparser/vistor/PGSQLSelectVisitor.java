@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser.vistor;
+package io.pddl.sqlparser.vistor;
 
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;

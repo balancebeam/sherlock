@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser.bean;
+package io.pddl.sqlparser.bean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,7 @@ public class Condition {
 		
 	    @Override
 	    public int hashCode(){
-	    	return (tableName+columnName).hashCode();
+	    	return (tableName+"#"+columnName).hashCode();
 	    }
 	    
 	    @Override

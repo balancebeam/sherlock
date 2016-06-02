@@ -12,6 +12,7 @@ import io.pddl.testcase.entity.Item;
 import io.pddl.testcase.entity.ItemCondition;
 import io.pddl.testcase.entity.ItemExt;
 import io.pddl.testcase.entity.Order;
+import io.pddl.testcase.entity.OrderCondition;
 
 @Repository
 public class OrderDAO {
@@ -43,7 +44,7 @@ public class OrderDAO {
 		this.sqlMapClientTemplate.delete("Order.deleteItemByKeys",condition);
 	}
 	
-	public List<Object> queryOrder(Order order){
-		return this.sqlMapClientTemplate.queryForList("Order.getOrder", order);
+	public List<Object> queryOrders(OrderCondition condition){
+		return this.sqlMapClientTemplate.queryForList("Order.getOrders", condition);
 	}
 }

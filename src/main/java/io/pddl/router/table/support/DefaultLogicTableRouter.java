@@ -21,13 +21,6 @@ import org.apache.commons.dbutils.DbUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.cobar.client.sqlparser.SQLBuilder;
-import com.alibaba.cobar.client.sqlparser.SQLParseEngine;
-import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
-import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
-import com.alibaba.cobar.client.sqlparser.bean.Condition;
-import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
-import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.google.common.base.Optional;
 
 import io.pddl.cache.ShardingCache;
@@ -43,6 +36,13 @@ import io.pddl.router.table.value.ShardingCollectionValue;
 import io.pddl.router.table.value.ShardingRangeValue;
 import io.pddl.router.table.value.ShardingSingleValue;
 import io.pddl.router.table.value.ShardingValue;
+import io.pddl.sqlparser.SQLBuilder;
+import io.pddl.sqlparser.SQLParseEngine;
+import io.pddl.sqlparser.SQLParsedResult;
+import io.pddl.sqlparser.SQLParserFactory;
+import io.pddl.sqlparser.bean.Condition;
+import io.pddl.sqlparser.bean.SQLStatementType;
+import io.pddl.sqlparser.bean.Table;
 import io.pddl.util.CollectionUtils;
 
 public class DefaultLogicTableRouter implements LogicTableRouter {
@@ -105,7 +105,7 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 				@Override
 				public int compare(LogicTable o1, LogicTable o2) {
 					String[] hierar1 = o1.getHierarchical().split(",");
-					String[] hierar2 = o1.getHierarchical().split(",");
+					String[] hierar2 = o2.getHierarchical().split(",");
 					int result = hierar1.length - hierar2.length;
 					if (result == 0) {
 						for (int i = 0; i < hierar1.length; i++) {

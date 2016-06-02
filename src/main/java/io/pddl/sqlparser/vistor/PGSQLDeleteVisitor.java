@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser.vistor;
+package io.pddl.sqlparser.vistor;
 
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
@@ -16,9 +16,8 @@ public class PGSQLDeleteVisitor extends AbstractPGSQLVisitor {
     public boolean visit(SQLIdentifierExpr x) {
     	if(x.getParent() instanceof SQLExprTableSource){
     		printToken(x.getName());
-    	}else{
-    		return super.visit(x);
+    		return false;
     	}
-        return false;
+    	return super.visit(x);
     }
 }

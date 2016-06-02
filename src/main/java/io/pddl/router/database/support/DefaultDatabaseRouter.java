@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
-import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
 import com.ibatis.sqlmap.engine.impl.SqlMapClientImpl;
 import com.ibatis.sqlmap.engine.mapping.sql.stat.StaticSql;
 import com.ibatis.sqlmap.engine.mapping.statement.MappedStatement;
@@ -20,6 +19,7 @@ import io.pddl.exception.RoutingException;
 import io.pddl.router.database.DatabaseRouter;
 import io.pddl.router.database.rule.RoutingRule;
 import io.pddl.router.table.GlobalTableRepository;
+import io.pddl.sqlparser.SQLParserFactory;
 
 public class DefaultDatabaseRouter implements DatabaseRouter<IBatisRoutingFact> {
 

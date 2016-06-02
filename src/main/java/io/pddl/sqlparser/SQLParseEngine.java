@@ -1,11 +1,10 @@
-package com.alibaba.cobar.client.sqlparser;
+package io.pddl.sqlparser;
 
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
@@ -15,6 +14,7 @@ import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 import com.google.common.base.Preconditions;
 
 import io.pddl.exception.SQLParserException;
+import io.pddl.sqlparser.bean.SQLStatementType;
 
 public final class SQLParseEngine {
 	protected Log logger = LogFactory.getLog(getClass());

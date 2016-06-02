@@ -3,10 +3,9 @@ package io.pddl.executor.support;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
-
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.executor.ExecutorContext;
+import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.util.MapUtils;
 
 public class ExecutorContextSupport implements ExecutorContext{

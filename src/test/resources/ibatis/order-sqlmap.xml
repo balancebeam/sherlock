@@ -6,6 +6,7 @@
 	<typeAlias alias="Item" type="io.pddl.testcase.entity.Item" />
 	<typeAlias alias="Ext" type="io.pddl.testcase.entity.ItemExt" />
 	<typeAlias alias="ItemCondition" type="io.pddl.testcase.entity.ItemCondition" />
+	<typeAlias alias="OrderCondition" type="io.pddl.testcase.entity.OrderCondition" />
 	<resultMap id="order" class="Order">
 		<result property="userId" column="user_id" />
 		<result property="orderId" column="order_id" />
@@ -139,11 +140,14 @@
 		</iterate>
 	</delete>
 	
-	<select id="Order.getOrder" 
-		parameterClass="Order">
+	<select id="Order.getOrders" 
+		parameterClass="OrderCondition">
 		SELECT o.order_id, o.user_id,o.status,i.item_id,i.status,e.ext_id,e.status FROM t_order o,t_item i,t_item_ext e 
 		WHERE
-		o.order_id= i.order_id AND i.item_id= e.item_id AND o.order_id= #orderId#
+		o.order_id= i.order_id AND i.item_id= e.item_id AND o.order_id in
+		<iterate conjunction="," open="(" close=")" property="orderIds">
+			#orderIds[]#
+		</iterate>
 	</select>
 	
 </sqlMap>

@@ -1,12 +1,13 @@
-package com.alibaba.cobar.client.sqlparser.bean;
+package io.pddl.sqlparser.bean;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.Column;
 import com.google.common.base.Optional;
+
+import io.pddl.sqlparser.bean.Condition.BinaryOperator;
+import io.pddl.sqlparser.bean.Condition.Column;
 
 public final class ConditionContext {
     

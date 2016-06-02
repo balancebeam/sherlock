@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser;
+package io.pddl.sqlparser;
 
 import java.io.IOException;
 import java.util.Collection;

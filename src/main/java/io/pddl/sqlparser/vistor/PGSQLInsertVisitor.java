@@ -1,14 +1,13 @@
-package com.alibaba.cobar.client.sqlparser.vistor;
+package io.pddl.sqlparser.vistor;
 
-import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGInsertStatement;
-import com.google.common.base.Optional;
+
+import io.pddl.sqlparser.bean.Condition.BinaryOperator;
 
 public class PGSQLInsertVisitor  extends AbstractPGSQLVisitor {
     
     @Override
     public boolean visit(final PGInsertStatement x) {
-        setCurrentTable(x.getTableName().toString(), Optional.fromNullable(x.getAlias()));
         if (null == x.getValues()) {
             return super.visit(x);
         }

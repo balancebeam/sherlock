@@ -1,16 +1,16 @@
-package com.alibaba.cobar.client.sqlparser;
+package io.pddl.sqlparser;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.cobar.client.sqlparser.vistor.PGSQLDeleteVisitor;
-import com.alibaba.cobar.client.sqlparser.vistor.PGSQLInsertVisitor;
-import com.alibaba.cobar.client.sqlparser.vistor.PGSQLSelectVisitor;
-import com.alibaba.cobar.client.sqlparser.vistor.PGSQLUpdateVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.exception.DatabaseTypeUnsupportedException;
+import io.pddl.sqlparser.vistor.PGSQLDeleteVisitor;
+import io.pddl.sqlparser.vistor.PGSQLInsertVisitor;
+import io.pddl.sqlparser.vistor.PGSQLSelectVisitor;
+import io.pddl.sqlparser.vistor.PGSQLUpdateVisitor;
 
 public final class SQLVisitorRegistry {
     

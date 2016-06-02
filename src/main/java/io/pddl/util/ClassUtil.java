@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.util;
+package io.pddl.util;
 
 import io.pddl.exception.ShardingException;
 

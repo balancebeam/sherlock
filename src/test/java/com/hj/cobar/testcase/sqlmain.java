@@ -2,14 +2,14 @@ package com.hj.cobar.testcase;
 
 import java.util.List;
 
-import com.alibaba.cobar.client.sqlparser.SQLParseEngine;
-import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
-import com.alibaba.cobar.client.sqlparser.SQLParserFactory;
-import com.alibaba.cobar.client.sqlparser.bean.Condition;
-import com.alibaba.cobar.client.sqlparser.bean.Table;
 import com.google.common.collect.Lists;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.sqlparser.SQLParseEngine;
+import io.pddl.sqlparser.SQLParsedResult;
+import io.pddl.sqlparser.SQLParserFactory;
+import io.pddl.sqlparser.bean.Condition;
+import io.pddl.sqlparser.bean.Table;
 
 public class sqlmain {
 

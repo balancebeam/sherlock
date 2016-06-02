@@ -1,4 +1,4 @@
-package com.alibaba.cobar.client.sqlparser.bean;
+package io.pddl.sqlparser.bean;
 public enum SQLStatementType {
     
     INSERT, DELETE, UPDATE, SELECT

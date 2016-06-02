@@ -1,14 +1,8 @@
-package com.alibaba.cobar.client.sqlparser.vistor;
+package io.pddl.sqlparser.vistor;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.alibaba.cobar.client.sqlparser.SQLBuilder;
-import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
-import com.alibaba.cobar.client.sqlparser.SQLVisitor;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
-import com.alibaba.cobar.client.sqlparser.bean.Table;
-import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLHint;
 import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
@@ -22,6 +16,12 @@ import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.sqlparser.SQLBuilder;
+import io.pddl.sqlparser.SQLParsedResult;
+import io.pddl.sqlparser.SQLVisitor;
+import io.pddl.sqlparser.bean.Table;
+import io.pddl.sqlparser.bean.Condition.BinaryOperator;
+import io.pddl.util.SQLUtil;
 
 public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor {
 

@@ -1,17 +1,10 @@
-package com.alibaba.cobar.client.sqlparser;
+package io.pddl.sqlparser;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.alibaba.cobar.client.sqlparser.bean.Condition;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.BinaryOperator;
-import com.alibaba.cobar.client.sqlparser.bean.Condition.Column;
-import com.alibaba.cobar.client.sqlparser.bean.ConditionContext;
-import com.alibaba.cobar.client.sqlparser.bean.SQLStatementType;
-import com.alibaba.cobar.client.sqlparser.bean.Table;
-import com.alibaba.cobar.client.util.SQLUtil;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
@@ -22,6 +15,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.sqlparser.bean.Condition;
+import io.pddl.sqlparser.bean.ConditionContext;
+import io.pddl.sqlparser.bean.SQLStatementType;
+import io.pddl.sqlparser.bean.Table;
+import io.pddl.sqlparser.bean.Condition.BinaryOperator;
+import io.pddl.sqlparser.bean.Condition.Column;
+import io.pddl.util.SQLUtil;
 
 public class SQLParsedResult {
 

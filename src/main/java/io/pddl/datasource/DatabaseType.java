@@ -4,7 +4,7 @@ public enum DatabaseType {
 	
 	PostgreSQL, MySQL, Oracle, DB2, SQLServer, H2;
 	
-	private static DatabaseType applicationDatabaseType;
+	private static DatabaseType applicationDatabaseType= PostgreSQL;
 	
 	public static DatabaseType getApplicationDatabaseType(){
 		return applicationDatabaseType;

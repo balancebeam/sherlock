@@ -1,8 +1,7 @@
 package io.pddl.executor;
 
-import com.alibaba.cobar.client.sqlparser.SQLParsedResult;
-
 import io.pddl.datasource.PartitionDataSourceContext;
+import io.pddl.sqlparser.SQLParsedResult;
 
 public interface ExecutorContext extends PartitionDataSourceContext,Cloneable{
 
