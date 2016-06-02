@@ -20,6 +20,20 @@
 		<shards>partition2</shards>
 	</rule>
 	
-	
+	<rule>
+		<namespace>Order</namespace>
+		<shardingExpression>hash.apply(userId) == 0</shardingExpression>
+		<shards>partition0</shards>
+	</rule>
+	<rule>
+		<namespace>Order</namespace>
+		<shardingExpression>hash.apply(userId) == 1</shardingExpression>
+		<shards>partition1</shards>
+	</rule>
+	<rule>
+		<namespace>Order</namespace>
+		<shardingExpression>hash.apply(userId) == 2</shardingExpression>
+		<shards>partition2</shards>
+	</rule>
 	
 </rules>

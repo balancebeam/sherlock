@@ -31,7 +31,7 @@
 	<pddl:table-sharding id="shardingTable">
 		<pddl:table-global name="stock" partitions="partition0,partition1,partition2"/>
 		<pddl:table-logic name="t_order" partitions="partition0" primaryKey="order_id" postfixes="_0,_1,_2" strategy="orderTableStrategy">
-			<pddl:table-child name="t_order_item" primaryKey="item_id" foreignKey="order_id">
+			<pddl:table-child name="t_item" primaryKey="item_id" foreignKey="order_id">
 				<pddl:table-child name="t_item_ext" primaryKey="ext_id" foreignKey="item_id"/>
 			</pddl:table-child>
 		</pddl:table-logic>

@@ -2,7 +2,7 @@ package io.pddl.testcase.entity;
 
 public class Item {
 
-private long userId;
+	private long userId;
 
 	private long itemId;
 	
@@ -10,20 +10,11 @@ private long userId;
 	
 	private String status;
 	
-	public Item(){}
-	
-	public Item(long itemId,long userId,long orderId,String status){
-		this.itemId= itemId;
-		this.userId= userId;
-		this.orderId= orderId;
-		this.status= status;
-	}
-	
 	public void setItemId(long itemId){
 		this.itemId= itemId;
 	}
 	
-	public long getItem(){
+	public long getItemId(){
 		return itemId;
 	}
 	

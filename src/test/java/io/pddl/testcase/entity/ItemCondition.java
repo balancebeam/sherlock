@@ -1,12 +1,20 @@
 package io.pddl.testcase.entity;
 
-public class Order {
+public class ItemCondition {
 
 	private long userId;
+
+	private long[] itemIds;
 	
 	private long orderId;
 	
-	private String status;
+	public void setItemIds(long[] itemIds){
+		this.itemIds= itemIds;
+	}
+	
+	public long[] getItemIds(){
+		return itemIds;
+	}
 	
 	public void setUserId(long userId){
 		this.userId= userId;
@@ -24,11 +32,4 @@ public class Order {
 		return orderId;
 	}
 	
-	public void setStatus(String status){
-		this.status= status;
-	}
-	
-	public String getStatus(){
-		return status;
-	}
 }

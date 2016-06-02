@@ -8,19 +8,23 @@ public class ItemExt {
 	
 	private String status;
 	
+	private long userId;
+	
 	public ItemExt(){}
 	
-	public ItemExt(long extId,long itemId,String status){
-		this.extId= extId;
-		this.itemId= itemId;
-		this.status= status;
+	public void setUserId(long userId){
+		this.userId= userId;
+	}
+	
+	public long getUserId(){
+		return userId;
 	}
 	
 	public void setItemId(long itemId){
 		this.itemId= itemId;
 	}
 	
-	public long getItem(){
+	public long getItemId(){
 		return itemId;
 	}
 	

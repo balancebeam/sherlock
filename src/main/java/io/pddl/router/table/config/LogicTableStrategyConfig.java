@@ -25,4 +25,17 @@ public class LogicTableStrategyConfig {
 	public LogicTableStrategy getStrategy(){
 		return strategy;
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder builder= new StringBuilder();
+		builder.append("[ ")
+		.append("columns=")
+		.append(getColumns())
+		.append(", ")
+		.append("function=")
+		.append(strategy)
+		.append(" ]");
+		return builder.toString();
+	}
 }

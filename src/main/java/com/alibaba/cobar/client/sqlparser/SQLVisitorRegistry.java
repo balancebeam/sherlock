@@ -46,7 +46,7 @@ public final class SQLVisitorRegistry {
       
         //UPDATE_REGISTRY.put(DatabaseType.MySQL, MySQLUpdateVisitor.class);
         // TODO 其他数据库
-    	SELECT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLUpdateVisitor.class);
+    	UPDATE_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLUpdateVisitor.class);
     }
     
     private static void registerDeleteVistor() {

@@ -86,4 +86,23 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	public String getHierarchical(){
 		return hierarchical;
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder builder= new StringBuilder();
+		builder.append("[ ")
+		.append("tableName=")
+		.append(getName())
+		.append(", ")
+		.append("postfixes=")
+		.append(getPostfixes())
+		.append(", ")
+		.append("partitions=")
+		.append(getPartitions())
+		.append(", ")
+		.append("strategy=")
+		.append(getStrategyConfig())
+		.append(" ]");
+		return builder.toString();
+	}
 }

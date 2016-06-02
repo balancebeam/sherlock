@@ -5,6 +5,7 @@
 	<typeAlias alias="Order" type="io.pddl.testcase.entity.Order" />
 	<typeAlias alias="Item" type="io.pddl.testcase.entity.Item" />
 	<typeAlias alias="Ext" type="io.pddl.testcase.entity.ItemExt" />
+	<typeAlias alias="ItemCondition" type="io.pddl.testcase.entity.ItemCondition" />
 	<resultMap id="order" class="Order">
 		<result property="userId" column="user_id" />
 		<result property="orderId" column="order_id" />
@@ -49,5 +50,100 @@
 			</isNotEmpty>
 		</dynamic>
 	</insert>
-
+	<insert id="Order.addItem" parameterClass="Item">
+		INSERT INTO t_item
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="itemId">
+				item_id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="userId">
+				user_id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="orderId">
+				order_id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="status">
+				status
+			</isNotEmpty>
+		</dynamic>
+		VALUES
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="itemId">
+				#itemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="userId">
+				#userId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="orderId">
+				#orderId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="status">
+				#status#
+			</isNotEmpty>
+		</dynamic>
+	</insert>
+	<insert id="Order.addItemExt" parameterClass="Ext">
+		INSERT INTO t_item_ext
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="itemId">
+				item_id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="extId">
+				ext_id
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="status">
+				status
+			</isNotEmpty>
+		</dynamic>
+		VALUES
+		<dynamic prepend="(" close=")">
+			<isNotEmpty prepend="," property="itemId">
+				#itemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="extId">
+				#extId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="status">
+				#status#
+			</isNotEmpty>
+		</dynamic>
+	</insert>
+	
+	<update id="Order.updateItemByKey" parameterClass="Item">
+		UPDATE t_item
+		<dynamic prepend="SET">
+			<isNotNull prepend="," property="status">
+				status = #status#
+			</isNotNull>
+		</dynamic>
+		WHERE
+		item_id= #itemId# AND order_id= #orderId#
+	</update>
+	
+	<delete id="Order.deleteItemByKeys" parameterClass="ItemCondition">
+		DELETE FROM t_item
+		WHERE
+		order_id= #orderId# AND 
+		item_id in
+		<iterate conjunction="," open="(" close=")" property="itemIds">
+			#itemIds[]#
+		</iterate>
+	</delete>
+	
+	<delete id="Order.deleteItemExtByKeys" parameterClass="ItemCondition">
+		DELETE FROM t_item_ext
+		WHERE
+		item_id in
+		<iterate conjunction="," open="(" close=")" property="itemIds">
+			#itemIds[]#
+		</iterate>
+	</delete>
+	
+	<select id="Order.getOrder" 
+		parameterClass="Order">
+		SELECT o.order_id, o.user_id,o.status,i.item_id,i.status,e.ext_id,e.status FROM t_order o,t_item i,t_item_ext e 
+		WHERE
+		o.order_id= i.order_id AND i.item_id= e.item_id AND o.order_id= #orderId#
+	</select>
+	
 </sqlMap>
