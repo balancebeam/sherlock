@@ -18,7 +18,6 @@ import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.exception.SQLParserException;
-import io.pddl.exception.ShardingTableException;
 
 public final class SQLParserFactory {
 	private static Log logger = LogFactory.getLog(SQLParserFactory.class);
