@@ -5,9 +5,9 @@ import io.pddl.router.database.support.RoutingResult;
 
 public interface ShardingCache {
 	
-	String getLogicTablePostfix(String tableName,String primaryKey,Object value);
+	String getLogicTablePostfix(String tableName,String primaryKey,Comparable<?> value);
 	
-	void putLocalTablePostfix(String tableName,String primaryKey,Object value,String postfix);
+	void putLocalTablePostfix(String tableName,String primaryKey,Comparable<?> value,String postfix);
 	
 	RoutingResult getDatabaseRoutingResult(IBatisRoutingFact routingFact);
 	

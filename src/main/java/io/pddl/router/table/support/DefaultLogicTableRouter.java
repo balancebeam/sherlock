@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -79,8 +78,8 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 	
 	private List<List<LogicTable>> parseLogicTables(Set<Table> tables) {
 		Map<String, List<LogicTable>> hash = new HashMap<String, List<LogicTable>>(tables.size());
-		for (Iterator<Table> it= tables.iterator();it.hasNext();) {
-			String tableName= it.next().getName();
+		for (Table table: tables) {
+			String tableName= table.getName();
 			LogicTable logicTable = logicTableRepository.getLogicTable(tableName);
 			//if not logic table
 			if (logicTable == null) {
@@ -99,17 +98,16 @@ public class DefaultLogicTableRouter implements LogicTableRouter {
 			list.add(logicTable);
 		}
 		List<List<LogicTable>> result = new ArrayList<List<LogicTable>>(hash.size());
-		for (Iterator<List<LogicTable>> it = hash.values().iterator(); it.hasNext();) {
-			List<LogicTable> list = it.next();
+		for (List<LogicTable> list: hash.values()) {
 			Collections.sort(list, new Comparator<LogicTable>() {
 				@Override
 				public int compare(LogicTable o1, LogicTable o2) {
-					String[] hierar1 = o1.getHierarchical().split(",");
-					String[] hierar2 = o2.getHierarchical().split(",");
-					int result = hierar1.length - hierar2.length;
+					String[] h1 = o1.getHierarchical().split(",");
+					String[] h2 = o2.getHierarchical().split(",");
+					int result = h1.length - h2.length;
 					if (result == 0) {
-						for (int i = 0; i < hierar1.length; i++) {
-							if (0 != (result = Integer.parseInt(hierar1[i]) - Integer.parseInt(hierar2[i]))) {
+						for (int i = 0; i < h1.length; i++) {
+							if (0 != (result = Integer.parseInt(h1[i]) - Integer.parseInt(h2[i]))) {
 								return result;
 							}
 						}
@@ -183,20 +181,22 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 	private String lookupSingleTablePostfix(LogicTable logicTable,Connection conn){
 		if(!logicTable.isPrimaryTable()){
 			//find parent logic table primary key value
-			Condition primaryCondtion= getCondition(logicTable.getName(),logicTable.getPrimaryKey());
-			if(primaryCondtion== null){
+			Condition primaryKeyCondition= getCondition(logicTable.getName(),logicTable.getPrimaryKey());
+			if(primaryKeyCondition== null){
 				throw new IllegalArgumentException("miss primary-key value for table "+logicTable.getName());
 			}
 			
 			String foreignKey= ((LogicChildTable)logicTable).getForeignKey();
-			Condition foreignCondition= getCondition(logicTable.getName(),foreignKey);
-			if(foreignCondition!= null){
+			Condition foreignKeyCondition= getCondition(logicTable.getName(),foreignKey);
+			if(foreignKeyCondition!= null){
 				LogicTable parent= logicTable.getParent();
 				String primaryKey= parent.getPrimaryKey();
 				if(shardingCache!= null){
-					String postfix= shardingCache.getLogicTablePostfix(parent.getName(),parent.getPrimaryKey(),foreignCondition.getValues());
+					Comparable<?> value= foreignKeyCondition.getValues().get(0);
+					String postfix= shardingCache.getLogicTablePostfix(parent.getName(),parent.getPrimaryKey(),value);
 					if(postfix!= null){
-						shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), primaryCondtion.getValues(), postfix);
+						value= primaryKeyCondition.getValues().get(0);
+						shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), value, postfix);
 						return postfix;
 					}
 				}
@@ -205,14 +205,24 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 					PreparedStatement ps= null;
 					ResultSet rs= null;
 					for(String postfix: parent.getPostfixes()){
-						String sql= "select t."+primaryKey+" from "+ parent.getName()+ postfix + " t where t."+ primaryKey + "=?";
+						StringBuilder builder= new StringBuilder();
+						builder.append("select t.")
+								.append(primaryKey)
+								.append(" from ")
+								.append(parent.getName())
+								.append(postfix)
+								.append(" t where t.")
+								.append(primaryKey)
+								.append("=?");
+						String sql= builder.toString();
 						try{
 							ps= conn.prepareStatement(sql);
-							ps.setObject(1, foreignCondition.getValues().get(0));
+							ps.setObject(1, foreignKeyCondition.getValues().get(0));
 							rs= ps.executeQuery();
 							if(rs.next()){
 								if(shardingCache!= null){
-									shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), primaryCondtion.getValues(), postfix);
+									Comparable<?> value= primaryKeyCondition.getValues().get(0);
+									shardingCache.putLocalTablePostfix(logicTable.getName(), logicTable.getPrimaryKey(), value, postfix);
 								}
 								return postfix;
 							}
@@ -222,7 +232,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						}
 					}
 				} catch (SQLException e) {
-					logger.equals(e);
+					logger.error(e.getMessage(),e);
 				}
 			}
 		}
@@ -237,8 +247,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 			List<String> result) {
 		if (logicTables.size() <= index) {
 			SQLBuilder sqlBuilder= ExecutorContextHolder.getContext().getSQLParsedResult().getSqlBuilder();
-			for(Iterator<Entry<String,String>> it= ctx.entrySet().iterator();it.hasNext();){
-				Entry<String,String> entry= it.next();
+			for (Entry<String,String> entry: ctx.entrySet()) {
 				String logicTable= entry.getKey();
 				String actualTable= entry.getValue();
 				sqlBuilder.buildSQL(logicTable, actualTable);
@@ -246,8 +255,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 			result.add(sqlBuilder.toSQL());
 			return;
 		}
-		for (Iterator<String> it = postfixes.get(index).iterator(); it.hasNext();) {
-			String postfix = it.next();
+		for (String postfix: postfixes.get(index)) {
 			for (LogicTable table : logicTables.get(index)) {
 				ctx.put(table.getName(), table.getName() + postfix);
 			}
