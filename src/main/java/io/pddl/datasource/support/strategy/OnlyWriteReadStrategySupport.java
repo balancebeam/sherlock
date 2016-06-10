@@ -8,8 +8,8 @@ import io.pddl.datasource.DatabaseReadStrategy;
 public class OnlyWriteReadStrategySupport implements DatabaseReadStrategy{
 	
 	@Override
-	public DataSource getReadDataSource(PartitionDataSource ds) {
-		return ds.getWriteDataSource();
+	public DataSource getSlaveDataSource(PartitionDataSource ds) {
+		return ds.getMasterDataSource();
 	}
 	
 	@Override

@@ -10,15 +10,15 @@ import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 import io.pddl.exception.ShardingTableException;
-import io.pddl.router.table.config.LogicTableStrategyConfig;
-import io.pddl.router.table.strategy.support.DefaultLogicTableExpressionStrategy;
+import io.pddl.router.strategy.config.ShardingStrategyConfig;
+import io.pddl.router.strategy.support.ExpressionShardingStrategySupport;
 
 public class ShardingTableStrategyBeanDefinitionParser extends AbstractBeanDefinitionParser{
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableStrategyConfig.class);
-		factory.addPropertyValue("columns", Arrays.asList(element.getAttribute("columns").split(",")));
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ShardingStrategyConfig.class);
+		factory.addPropertyValue("columns", Arrays.asList(element.getAttribute("sharding-columns").split(",")));
 		String strategy= element.getAttribute("strategy");
 		if(!StringUtils.isEmpty(strategy)){
 			factory.addPropertyReference("strategy", strategy);
@@ -26,7 +26,7 @@ public class ShardingTableStrategyBeanDefinitionParser extends AbstractBeanDefin
 		}
 		String expression= element.getAttribute("expression");
 		if(!StringUtils.isEmpty(expression)){
-			BeanDefinitionBuilder strategyBuilder = BeanDefinitionBuilder.rootBeanDefinition(DefaultLogicTableExpressionStrategy.class);
+			BeanDefinitionBuilder strategyBuilder = BeanDefinitionBuilder.rootBeanDefinition(ExpressionShardingStrategySupport.class);
 			strategyBuilder.addPropertyValue("expression", expression);
 			factory.addPropertyValue("strategy", strategyBuilder.getBeanDefinition());
 			return factory.getBeanDefinition();

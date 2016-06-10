@@ -7,15 +7,9 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
-import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.PartitionDataSourceContext;
-
-
-public class DefaultDataSourceProxy extends LazyConnectionDataSourceProxy implements DataSource,PartitionDataSourceContext{
+public class DefaultDataSourceProxy extends LazyConnectionDataSourceProxy implements DataSource{
 	
 	private int weight;
-	
-	private PartitionDataSource partitionDataSource;
 	
 	public DefaultDataSourceProxy(DataSource delegate){
 		super(delegate);
@@ -27,15 +21,6 @@ public class DefaultDataSourceProxy extends LazyConnectionDataSourceProxy implem
 	
 	public void setWeight(int weight){
 		this.weight= weight;
-	}
-	
-	@Override
-	public PartitionDataSource getPartitionDataSource() {
-		return partitionDataSource;
-	}
-	
-	void setPartitionDataSource(PartitionDataSource partitionDataSource){
-		this.partitionDataSource= partitionDataSource;
 	}
 	
 	@Override

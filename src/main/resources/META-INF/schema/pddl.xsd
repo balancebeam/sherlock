@@ -7,31 +7,35 @@
             attributeFormDefault="unqualified">
     <xsd:import namespace="http://www.springframework.org/schema/beans" schemaLocation="http://www.springframework.org/schema/beans/spring-beans.xsd"/>
     <!-- SHARDING DATASOURCE XSD DESCRIPTOR -->
-    <xsd:element name="db-sharding">
+    <xsd:element name="data-source">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="db-partitions" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="data-source-partitions" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tables" minOccurs="0" maxOccurs="1"/>
             </xsd:sequence>
             <xsd:attribute name="id" type="xsd:string" use="required" />
-            <xsd:attribute name="dbType" type="dbTypeEnumType" use="required" />
+            <xsd:attribute name="database-type" type="dbTypeEnumType" use="required" />
+            <xsd:attribute name="database-router" type="xsd:string" use="optional" />
+            <xsd:attribute name="sharding-cache" type="xsd:string" use="optional" />
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="db-partitions">
+    <xsd:element name="data-source-partitions">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="db-partition" minOccurs="1" maxOccurs="unbounded"/>
+                <xsd:element ref="data-source-partition" minOccurs="1" maxOccurs="unbounded"/>
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="db-partition">
+    <xsd:element name="data-source-partition">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="db-master" minOccurs="1" maxOccurs="1"/>
-                <xsd:element ref="db-readonly" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="master-data-source" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="slave-data-source" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="name" type="xsd:string" use="required"/>
-            <xsd:attribute name="pooSize" type="xsd:int" use="optional"/>
-            <xsd:attribute name="readStrategy" type="readStrategyEnumType" use="optional"/>
+            <xsd:attribute name="poo-size" type="xsd:int" use="optional"/>
+            <xsd:attribute name="timeout" type="xsd:int" use="optional"/>
+            <xsd:attribute name="read-strategy" type="readStrategyEnumType" use="optional"/>
         </xsd:complexType>
     </xsd:element>
     <xsd:simpleType name="dbTypeEnumType">
@@ -55,61 +59,59 @@
 		  <xsd:enumeration value="weight-w"/>
     	</xsd:restriction>
     </xsd:simpleType>
-    <xsd:element name="db-master">
+    <xsd:element name="master-data-source">
         <xsd:complexType>
-            <xsd:attribute name="dataSource" type="xsd:string" use="required" />
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
             <xsd:attribute name="weight" type="xsd:int" use="optional" />
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="db-readonly">
+    <xsd:element name="slave-data-source">
         <xsd:complexType>
-            <xsd:attribute name="dataSource" type="xsd:string" use="required" />
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
             <xsd:attribute name="weight" type="xsd:int" use="optional" />
         </xsd:complexType>
     </xsd:element>
     <!-- SHARDING TABLE XSD DESCRIPTOR -->
-    <xsd:element name="table-sharding">
+    <xsd:element name="tables">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="table-global" minOccurs="0" maxOccurs="unbounded"/>
-                <xsd:element ref="table-logic" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="global-table" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="logic-table" minOccurs="1" maxOccurs="unbounded"/>
             </xsd:sequence>
-            <xsd:attribute name="id" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="table-global">
+    <xsd:element name="global-table">
         <xsd:complexType>
             <xsd:attribute name="name" type="xsd:string" use="required" />
-            <xsd:attribute name="partitions" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="table-logic">
+    <xsd:element name="logic-table">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="table-child" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="logic-child-table" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="name" type="xsd:string" use="required" />
-            <xsd:attribute name="partitions" type="xsd:string" use="required" />
-            <xsd:attribute name="primaryKey" type="xsd:string" use="required" />
-            <xsd:attribute name="postfixes" type="xsd:string" use="required" />
-            <xsd:attribute name="strategy" type="xsd:string" use="required" />
+            <xsd:attribute name="primary-key" type="xsd:string" use="required" />
+            <xsd:attribute name="table-postfixes" type="xsd:string" use="required" />
+            <xsd:attribute name="table-strategy" type="xsd:string" use="required" />
+            <xsd:attribute name="database-strategy" type="xsd:string" use="optional" />
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="table-child">
+    <xsd:element name="logic-child-table">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element ref="table-child" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="logic-child-table" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="name" type="xsd:string" use="required" />
-            <xsd:attribute name="primaryKey" type="xsd:string" use="required" />
-            <xsd:attribute name="foreignKey" type="xsd:string" use="required" />
+            <xsd:attribute name="primary-key" type="xsd:string" use="required" />
+            <xsd:attribute name="foreign-key" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
     <!-- SHARDING TABLE STRAGERY XSD DESCRIPTOR -->
-     <xsd:element name="table-strategy">
+     <xsd:element name="strategy">
         <xsd:complexType>
         	<xsd:attribute name="id" type="xsd:string" use="required" />
-            <xsd:attribute name="columns" type="xsd:string" use="required" />
+            <xsd:attribute name="sharding-columns" type="xsd:string" use="required" />
             <xsd:attribute name="expression" type="xsd:string" use="optional" />
             <xsd:attribute name="strategy" type="xsd:string" use="optional" />
         </xsd:complexType>

@@ -13,6 +13,8 @@ import io.pddl.datasource.support.strategy.WeightReadStrategySupport;
 import io.pddl.datasource.support.strategy.WeightReadStrategyWithWriteSupport;
 
 final public class DatabaseReadStrategyRepository {
+	
+	private DatabaseReadStrategyRepository(){}
 
 	private static Map<String,DatabaseReadStrategy> databaseReadStrategies= new HashMap<String,DatabaseReadStrategy>();
 	

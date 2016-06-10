@@ -1,11 +1,33 @@
 package io.pddl.spring.parser;
 
-import static io.pddl.spring.Constants.DB_MASTER;
-import static io.pddl.spring.Constants.DB_PARTITION;
-import static io.pddl.spring.Constants.DB_PARTITIONS;
-import static io.pddl.spring.Constants.DB_READONLY;
+import static io.pddl.spring.Constants.DATABASE_ROUTER;
+import static io.pddl.spring.Constants.DATA_BASE_STRATEGY;
+import static io.pddl.spring.Constants.DATA_BASE_TYPE;
+import static io.pddl.spring.Constants.DATA_SOURCE_NAME;
+import static io.pddl.spring.Constants.DATA_SOURCE_PARTITION;
+import static io.pddl.spring.Constants.DATA_SOURCE_PARTITIONS;
+import static io.pddl.spring.Constants.DATA_SOURCE_REF;
+import static io.pddl.spring.Constants.DATA_SOURCE_WEIGHT;
+import static io.pddl.spring.Constants.FOREIGN_KEY;
+import static io.pddl.spring.Constants.GLOBAL_TABLE;
+import static io.pddl.spring.Constants.LOGIC_CHILD_TABLE;
+import static io.pddl.spring.Constants.LOGIC_TABLE;
+import static io.pddl.spring.Constants.MASTER_DATA_SOURCE;
+import static io.pddl.spring.Constants.POOL_SIZE;
+import static io.pddl.spring.Constants.PRIMARY_KEY;
+import static io.pddl.spring.Constants.READ_STRATEGY;
+import static io.pddl.spring.Constants.SHARDING_CACHE;
+import static io.pddl.spring.Constants.SLAVE_DATA_SOURCE;
+import static io.pddl.spring.Constants.TABLES;
+import static io.pddl.spring.Constants.TABLE_NAME;
+import static io.pddl.spring.Constants.TABLE_POSTFIXES;
+import static io.pddl.spring.Constants.TABLE_STRATEGY;
+import static io.pddl.spring.Constants.TIME_OUT;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -20,60 +42,194 @@ import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.datasource.support.PartitionDataSourceSupport;
 import io.pddl.datasource.support.DefaultDataSourceProxy;
-import io.pddl.datasource.support.DefaultPartitionDataSource;
-import io.pddl.datasource.support.DefaultShardingDataSource;
+import io.pddl.datasource.support.ShardingDataSourceRepositorySupport;
+import io.pddl.executor.support.ExecuteProcessorSupport;
+import io.pddl.jdbc.ShardingDataSource;
+import io.pddl.router.database.support.DatabaseRouterSupport;
+import io.pddl.router.support.SQLRouterSupport;
+import io.pddl.router.table.config.LogicChildTableConfig;
+import io.pddl.router.table.config.LogicTableConfig;
+import io.pddl.router.table.support.GlobalTableRepositorySupport;
+import io.pddl.router.table.support.LogicTableRepositorySupport;
+import io.pddl.router.table.support.LogicTableRouterSupport;
 
 public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser{
+	
+	private BeanDefinition shardingDataSourceRepositoryDefinition;
+	
+	private BeanDefinition globalTableRepositoryDefinition;
+	
+	private BeanDefinition logicTableRepositoryDefinition;
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultShardingDataSource.class);
-		Element partitionsElement= DomUtils.getChildElementByTagName(element, DB_PARTITIONS);
-		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, DB_PARTITION);
-		ManagedSet<BeanDefinition> partitionDataSources  = new ManagedSet<BeanDefinition>();
-		for(Element partition: partitions){
-			partitionDataSources.add(parsePartitionDataSource(partition,parserContext));
-		}
-		factory.addPropertyValue("partitionDataSources", partitionDataSources);
-		factory.addPropertyValue("databaseType", DatabaseType.valueOf(element.getAttribute("dbType")));
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ShardingDataSource.class);
+		
+		parseShardingDataSource(element,parserContext);
+		parseShardingTables(element,parserContext);
+		
+		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
+		factory.addPropertyValue("sqlRouter", parseSQLRouter(element,parserContext));
+		factory.addPropertyValue("processor", parseExecutorProcessor());
+		
 		return factory.getBeanDefinition();
 	}
 	
-	private BeanDefinition parsePartitionDataSource(Element element, ParserContext parserContext){
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultPartitionDataSource.class);
-		factory.addPropertyValue("name", element.getAttribute("name"));
-		String poolSize= element.getAttribute("poolSize");
+	private void parseShardingDataSource(Element element, ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ShardingDataSourceRepositorySupport.class);
+		Element partitionsElement= DomUtils.getChildElementByTagName(element, DATA_SOURCE_PARTITIONS);
+		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, DATA_SOURCE_PARTITION);
+		ManagedSet<BeanDefinition> partitionDataSources  = new ManagedSet<BeanDefinition>();
+		for(Element partition: partitions){
+			partitionDataSources.add(parseDataSourcePartition(partition,parserContext));
+		}
+		factory.addPropertyValue("partitionDataSources", partitionDataSources);
+		factory.addPropertyValue("databaseType", DatabaseType.valueOf(element.getAttribute(DATA_BASE_TYPE)));
+		shardingDataSourceRepositoryDefinition= factory.getBeanDefinition();
+	}
+	
+	private BeanDefinition parseDataSourcePartition(Element element, ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(PartitionDataSourceSupport.class);
+		factory.addPropertyValue("name", element.getAttribute(DATA_SOURCE_NAME));
+		String poolSize= element.getAttribute(POOL_SIZE);
 		if(!StringUtils.isEmpty(poolSize)){
 			factory.addPropertyValue("poolSize", Integer.parseInt(poolSize));
 		}
-		String readStrategy= element.getAttribute("readStrategy");
+		String timeout= element.getAttribute(TIME_OUT);
+		if(!StringUtils.isEmpty(timeout)){
+			factory.addPropertyValue("timeout", Integer.parseInt(timeout));
+		}
+		String readStrategy= element.getAttribute(READ_STRATEGY);
 		if(!StringUtils.isEmpty(readStrategy)){
 			factory.addPropertyValue("readStrategy", readStrategy);
 		}
 		
-		Element write= DomUtils.getChildElementByTagName(element, DB_MASTER);
-		factory.addPropertyValue("writeDataSource", parseDataSourceDescriptor(write,parserContext));
+		Element master= DomUtils.getChildElementByTagName(element, MASTER_DATA_SOURCE);
+		factory.addPropertyValue("masterDataSource", parseDataSourceDescriptor(master,parserContext));
 		
-		List<Element> reads= DomUtils.getChildElementsByTagName(element, DB_READONLY);
-		if(!CollectionUtils.isEmpty(reads)){
-			ManagedList<BeanDefinition> readDataSources= new ManagedList<BeanDefinition>(reads.size());
-			for(Element read: reads){
-				readDataSources.add(parseDataSourceDescriptor(read,parserContext));
+		List<Element> slaves= DomUtils.getChildElementsByTagName(element, SLAVE_DATA_SOURCE);
+		if(!CollectionUtils.isEmpty(slaves)){
+			ManagedList<BeanDefinition> slaveDataSources= new ManagedList<BeanDefinition>(slaves.size());
+			for(Element slave: slaves){
+				slaveDataSources.add(parseDataSourceDescriptor(slave,parserContext));
 			}
-			factory.addPropertyValue("readDataSources",readDataSources);
+			factory.addPropertyValue("slaveDataSources",slaveDataSources);
 		}
 		return factory.getBeanDefinition();
 	}
 	
 	private BeanDefinition parseDataSourceDescriptor(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultDataSourceProxy.class);
-		factory.addConstructorArgReference(element.getAttribute("dataSource"));
-		String weight= element.getAttribute("weight");
+		factory.addConstructorArgReference(element.getAttribute(DATA_SOURCE_REF));
+		String weight= element.getAttribute(DATA_SOURCE_WEIGHT);
 		if(!StringUtils.isEmpty(weight)){
 			factory.addPropertyValue("weight", Integer.parseInt(weight));
 		}
 		return factory.getBeanDefinition();
 	}
 	
+	private void parseShardingTables(Element element,ParserContext parserContext){
+		Element tablesElement= DomUtils.getChildElementByTagName(element, TABLES);
+		if(tablesElement!= null){
+			List<Element> globalElements= DomUtils.getChildElementsByTagName(tablesElement, GLOBAL_TABLE);
+			if(!CollectionUtils.isEmpty(globalElements)){
+				BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(GlobalTableRepositorySupport.class);
+				Set<String> globalTables= new HashSet<String>();
+				for(Element it: globalElements){
+					String name= it.getAttribute(TABLE_NAME);
+					globalTables.add(name);
+				}
+				factory.addPropertyValue("globalTables", globalTables);
+				globalTableRepositoryDefinition= factory.getBeanDefinition();
+			}
+			BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableRepositorySupport.class);
+			List<Element> logicTableElements= DomUtils.getChildElementsByTagName(tablesElement, LOGIC_TABLE);
+			ManagedList<BeanDefinition> logicTables= new ManagedList<BeanDefinition>();
+			for(Element it: logicTableElements){
+				logicTables.add(parseLogicTable(it,parserContext));
+			}
+			factory.addPropertyValue("logicTables", logicTables);
+			logicTableRepositoryDefinition= factory.getBeanDefinition();
+		}
+	}
+	
+	private BeanDefinition parseLogicTable(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableConfig.class);
+		factory.addPropertyValue("name", element.getAttribute(TABLE_NAME));
+		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
+		factory.addPropertyReference("tableStrategyConfig", element.getAttribute(TABLE_STRATEGY));
+		factory.addPropertyValue("tablePostfixes", Arrays.asList(element.getAttribute(TABLE_POSTFIXES).split(",")));
+		String databaseStrategy= element.getAttribute(DATA_BASE_STRATEGY);
+		if(!StringUtils.isEmpty(databaseStrategy)){
+			factory.addPropertyReference("databaseStrategyConfig", databaseStrategy);
+		}
+		List<Element> logicChildTableElements= DomUtils.getChildElementsByTagName(element, LOGIC_CHILD_TABLE);
+		if(!CollectionUtils.isEmpty(logicChildTableElements)){
+			ManagedList<BeanDefinition> children= new ManagedList<BeanDefinition>();
+			for(Element it: logicChildTableElements){
+				children.add(parseLogicChildTable(it,parserContext));
+			}
+			factory.addPropertyValue("children", children);
+		}
+		return factory.getBeanDefinition();
+	}
+	
+	private BeanDefinition parseLogicChildTable(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicChildTableConfig.class);
+		factory.addPropertyValue("name", element.getAttribute(TABLE_NAME));
+		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
+		factory.addPropertyValue("foreignKey", element.getAttribute(FOREIGN_KEY));
+		List<Element> logicChildTableElements= DomUtils.getChildElementsByTagName(element, LOGIC_CHILD_TABLE);
+		if(!CollectionUtils.isEmpty(logicChildTableElements)){
+			ManagedList<BeanDefinition> children= new ManagedList<BeanDefinition>();
+			for(Element it: logicChildTableElements){
+				children.add(parseLogicChildTable(it,parserContext));
+			}
+			factory.addPropertyValue("children", children);
+		}
+		return factory.getBeanDefinition();
+	}
+	
+	private BeanDefinition parseSQLRouter(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(SQLRouterSupport.class);
+		String databaseRouter= element.getAttribute(DATABASE_ROUTER);
+		if(!StringUtils.isEmpty(databaseRouter)){
+			factory.addPropertyReference("databaseRouter", databaseRouter);
+		}
+		else{
+			factory.addPropertyValue("databaseRouter", parseDatabaseRouter(element,parserContext));
+		}
+		factory.addPropertyValue("tableRouter", parseTableRouter(element,parserContext));
+		factory.addPropertyValue("globalTableRepository", globalTableRepositoryDefinition);
+		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
+		return factory.getBeanDefinition();
+	}
+	private BeanDefinition parseDatabaseRouter(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DatabaseRouterSupport.class);
+		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
+		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
+		String shardingCache= element.getAttribute(SHARDING_CACHE);
+		if(!StringUtils.isEmpty(shardingCache)){
+			factory.addPropertyReference("shardingCache", shardingCache);
+		}
+		return factory.getBeanDefinition();
+	}
+	
+	private BeanDefinition parseTableRouter(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableRouterSupport.class);
+		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
+		String shardingCache= element.getAttribute(SHARDING_CACHE);
+		if(!StringUtils.isEmpty(shardingCache)){
+			factory.addPropertyReference("shardingCache", shardingCache);
+		}
+		return factory.getBeanDefinition();
+	}
+	
+	private BeanDefinition parseExecutorProcessor(){
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ExecuteProcessorSupport.class);
+		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
+		return factory.getBeanDefinition();
+	}
 }

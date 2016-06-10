@@ -1,60 +1,29 @@
 package io.pddl.testcase;
 
-import java.util.List;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import javax.sql.DataSource;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import io.pddl.testcase.entity.Item;
-import io.pddl.testcase.entity.ItemCondition;
-import io.pddl.testcase.entity.OrderCondition;
-import io.pddl.testcase.service.OrderService;
-
 public class MainTest {
 
 	@SuppressWarnings("resource")
-	public static void main(String[] args){
-		final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/spring/applicationContext.xml");
+	public static void main(String[] args)throws Exception{
+		final ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 		
-		OrderService service= context.getBean(OrderService.class);
-		
-		long userId= 0;
-		List<Map<String,Long>> list= service.addOrders(userId);
-		System.out.println(list);
-		
-		System.out.println("--------------------------------");
-		
-		OrderCondition condition= new OrderCondition();
-		condition.setUserId(userId);
-		long[] orderIds= new long[list.size()];
-		int index=0;
-		for(Map<String,Long> hash: list){
-			orderIds[index++]= hash.get("orderId");
-		}
-		condition.setOrderIds(orderIds);
-		List<Object> result= service.queryOrders(condition);
-		System.out.println(result);
-		
-		System.out.println("--------------------------------");
-		
-		for(Map<String,Long> hash: list){
-			Item item= new Item();
-			item.setItemId(hash.get("itemId"));
-			item.setOrderId(hash.get("orderId"));
-			item.setUserId(hash.get("userId"));
-			item.setStatus("modify");
-			service.updateItem(item);
-		}
-		
-		System.out.println("--------------------------------");
-		
-		for(Map<String,Long> hash: list){
-			ItemCondition con= new ItemCondition();
-			con.setUserId(userId);
-			con.setOrderId(hash.get("orderId"));
-			con.setItemIds(new long[]{hash.get("itemId")});
-			service.deleteItems(con);
-		}
+		DataSource ds= context.getBean("shardingDataSource", DataSource.class);
+		Connection conn= ds.getConnection();
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery("select order_id from t_order where order_id=19 and user_id=3");
+		rs.next();
+		System.out.println("id= "+rs.getLong(1));
+		rs.close();
+		statement.close();
+		conn.close();
+		System.out.println(conn);
 	}
 }

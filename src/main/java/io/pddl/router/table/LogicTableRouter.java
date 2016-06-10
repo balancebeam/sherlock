@@ -1,9 +1,10 @@
 package io.pddl.router.table;
 
-import java.sql.Connection;
 import java.util.Collection;
+
+import io.pddl.executor.ExecuteContext;
 
 public interface LogicTableRouter {
 
-	Collection<String> doRoute(String sql, Object[] parameters,Connection conn);
+	Collection<String> doRoute(ExecuteContext ctx,String dataSourceName);
 }

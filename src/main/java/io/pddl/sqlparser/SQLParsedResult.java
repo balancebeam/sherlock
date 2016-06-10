@@ -16,11 +16,10 @@ import com.google.common.collect.Sets;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.sqlparser.bean.Condition;
-import io.pddl.sqlparser.bean.ConditionContext;
-import io.pddl.sqlparser.bean.SQLStatementType;
-import io.pddl.sqlparser.bean.Table;
 import io.pddl.sqlparser.bean.Condition.BinaryOperator;
 import io.pddl.sqlparser.bean.Condition.Column;
+import io.pddl.sqlparser.bean.ConditionContext;
+import io.pddl.sqlparser.bean.Table;
 import io.pddl.util.SQLUtil;
 
 public class SQLParsedResult {
@@ -28,7 +27,6 @@ public class SQLParsedResult {
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
-	private SQLStatementType statementType;
 	private final ConditionContext curConditionContext = new ConditionContext();
 
 	public SQLParsedResult(SQLBuilder sqlBuilder) {
@@ -40,20 +38,16 @@ public class SQLParsedResult {
 		return sqlBuilder;
 	}
 	
-	public void setStatementType(SQLStatementType statementType){
-		this.statementType= statementType;
-	}
-	
-	public SQLStatementType getStatementType(){
-		return statementType;
-	}
-
 	public void setSqlBuilder(SQLBuilder sqlBuilder) {
 		this.sqlBuilder = sqlBuilder;
 	}
 
 	public Set<Table> getTables() {
 		return tables;
+	}
+	
+	public Table getFirstTable(){
+		return tables.iterator().next();
 	}
 	
 	public ConditionContext getCondition(){

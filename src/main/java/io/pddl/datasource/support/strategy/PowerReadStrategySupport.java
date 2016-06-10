@@ -9,22 +9,22 @@ import javax.sql.DataSource;
 import org.springframework.util.CollectionUtils;
 
 import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.support.DefaultPartitionDataSource;
 import io.pddl.datasource.DatabaseReadStrategy;
+import io.pddl.datasource.support.PartitionDataSourceSupport;
 
 public class PowerReadStrategySupport implements DatabaseReadStrategy{
 	
 	private ConcurrentHashMap<String,AtomicLong> hash= new ConcurrentHashMap<String,AtomicLong>();
 
 	@Override
-	public DataSource getReadDataSource(PartitionDataSource ds) {
+	public DataSource getSlaveDataSource(PartitionDataSource ds) {
 		return getDataSourceByPower(ds,0);
 	}
 	
 	protected DataSource getDataSourceByPower(PartitionDataSource ds,int w){
-		List<DataSource> readDataSources= ((DefaultPartitionDataSource)ds).getReadDataSources();
+		List<DataSource> readDataSources= ((PartitionDataSourceSupport)ds).getReadDataSources();
 		if(CollectionUtils.isEmpty(readDataSources)){
-			return ds.getWriteDataSource();
+			return ds.getMasterDataSource();
 		}
 		AtomicLong next= hash.get(ds.getName());
 		if(next== null){
@@ -35,7 +35,7 @@ public class PowerReadStrategySupport implements DatabaseReadStrategy{
 		}
     	int total= readDataSources.size()+ w -1,
         	idx= (int)(next.getAndIncrement() & total);
-        return idx< readDataSources.size()? readDataSources.get(idx): ds.getWriteDataSource();
+        return idx< readDataSources.size()? readDataSources.get(idx): ds.getMasterDataSource();
     }
 	
 	@Override

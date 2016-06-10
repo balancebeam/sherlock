@@ -1,9 +1,8 @@
 package io.pddl.router.table.config;
 
 import java.util.List;
-import java.util.Set;
 
-import io.pddl.router.table.LogicPrimaryTable;
+import io.pddl.router.strategy.config.ShardingStrategyConfig;
 import io.pddl.router.table.LogicTable;
 
 public abstract class AbstractLogicTableConfig implements LogicTable{
@@ -54,28 +53,24 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 		return parent;
 	}
 	
-	public Set<String> getPartitions(){
-		return ((AbstractLogicTableConfig)parent).getPartitions();
+	@Override
+	public List<String> getTablePostfixes(){
+		return parent.getTablePostfixes();
 	}
 	
 	@Override
-	public boolean matchPartition(String partition){
-		return getPartitions().contains(partition);
+	public ShardingStrategyConfig getTableStrategyConfig(){
+		return parent.getTableStrategyConfig();
 	}
 	
 	@Override
-	public List<String> getPostfixes(){
-		return parent.getPostfixes();
+	public ShardingStrategyConfig getDatabaseStrategyConfig(){
+		return parent.getDatabaseStrategyConfig();
 	}
 	
 	@Override
-	public LogicTableStrategyConfig getStrategyConfig(){
-		return parent.getStrategyConfig();
-	}
-	
-	@Override
-	public boolean isPrimaryTable(){
-		return this instanceof LogicPrimaryTable;
+	public boolean isChildTable(){
+		return this instanceof LogicChildTableConfig;
 	}
 	
 	public void setHierarchical(String hierarchical){
@@ -94,14 +89,14 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 		.append("tableName=")
 		.append(getName())
 		.append(", ")
-		.append("postfixes=")
-		.append(getPostfixes())
+		.append("tablePostfixes=")
+		.append(getTablePostfixes())
 		.append(", ")
-		.append("partitions=")
-		.append(getPartitions())
+		.append("databaseStrategy=")
+		.append(getDatabaseStrategyConfig())
 		.append(", ")
-		.append("strategy=")
-		.append(getStrategyConfig())
+		.append("tableStrategy=")
+		.append(getTableStrategyConfig())
 		.append(" ]");
 		return builder.toString();
 	}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:pddl="http://www.pddl.io/schema/pddl" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.pddl.io/schema/pddl http://www.pddl.io/schema/pddl.xsd 
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd"
+	default-lazy-init="false">
+
+	<pddl:data-source id="shardingDataSource" database-type="PostgreSQL" >
+		<pddl:data-source-partitions>
+			<pddl:data-source-partition name="p0" read-strategy="weight">
+				<pddl:master-data-source ref="ds0" weight="200" />
+				<pddl:slave-data-source ref="ds0" weight="200" />
+				<pddl:slave-data-source ref="ds0" weight="400" />
+			</pddl:data-source-partition>
+			<pddl:data-source-partition name="p1">
+				<pddl:master-data-source ref="ds1" />
+			</pddl:data-source-partition>
+			<pddl:data-source-partition name="p2">
+				<pddl:master-data-source ref="ds2" />
+			</pddl:data-source-partition>
+		</pddl:data-source-partitions>
+		<pddl:tables>
+			<pddl:global-table name="stock"/>
+			<pddl:logic-table name="t_order" primary-key="order_id" table-postfixes="_0,_1,_2" database-strategy="orderDatabaseStrategy" table-strategy="orderTableStrategy">
+				<pddl:logic-child-table name="t_item" primary-key="item_id" foreign-key="order_id">
+					<pddl:logic-child-table name="t_item_ext" primary-key="ext_id" foreign-key="item_id"/>
+				</pddl:logic-child-table>
+			</pddl:logic-table>
+		</pddl:tables>
+	</pddl:data-source>
+	
+	<pddl:strategy id="orderDatabaseStrategy" sharding-columns="user_id" expression="p${user_id.intValue() % 3}"/>
+	
+	<pddl:strategy id="orderTableStrategy" sharding-columns="order_id" expression="_${order_id.intValue() % 3}"/>
+
+</beans>

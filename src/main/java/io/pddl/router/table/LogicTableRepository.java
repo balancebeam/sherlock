@@ -4,9 +4,7 @@ import java.util.Collection;
 
 public interface LogicTableRepository {
 
-	boolean isLogicTableEmpty();
-	
-	boolean isLogicPrimaryTable(String tableName);
+	boolean isLogicChildTable(String tableName);
 	
 	LogicTable getLogicTable(String tableName);
 	

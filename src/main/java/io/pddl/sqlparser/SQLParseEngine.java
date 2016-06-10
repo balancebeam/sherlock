@@ -42,12 +42,10 @@ public final class SQLParseEngine {
         visitor.setParameters(parameters);       
         sqlStatement.accept(visitor);
         
-        SQLParsedResult result = sqlVisitor.getSQLResult();
-        result.setStatementType(getType());
-        return result;
+        return sqlVisitor.getSQLResult();
     }
     
-    protected SQLStatementType getType() {
+    public SQLStatementType getStatementType() {
         if (sqlStatement instanceof SQLSelectStatement) {
             return SQLStatementType.SELECT;
         }

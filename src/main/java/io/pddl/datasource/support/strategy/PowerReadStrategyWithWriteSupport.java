@@ -7,7 +7,7 @@ import io.pddl.datasource.PartitionDataSource;
 public class PowerReadStrategyWithWriteSupport extends PowerReadStrategySupport{
 
 	@Override
-	public DataSource getReadDataSource(PartitionDataSource ds) {
+	public DataSource getSlaveDataSource(PartitionDataSource ds) {
 		return getDataSourceByPower(ds,1);
 	}
 	

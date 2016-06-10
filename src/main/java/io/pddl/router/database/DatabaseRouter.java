@@ -1,14 +1,12 @@
 package io.pddl.router.database;
 
 
-import io.pddl.exception.RoutingException;
-import io.pddl.router.database.support.RoutingResult;
+import java.util.Collection;
 
+import io.pddl.executor.ExecuteContext;
 
-public interface DatabaseRouter<T> {
+public interface DatabaseRouter {
 	
-	RoutingResult doRoute(T routingFact) throws RoutingException;
-	
-	RoutingResult doGlobalTableRoute(T routingFact) throws RoutingException;
+	Collection<String> doRoute(ExecuteContext ctx);
 	
 }

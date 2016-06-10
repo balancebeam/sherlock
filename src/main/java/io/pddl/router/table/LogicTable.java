@@ -2,7 +2,7 @@ package io.pddl.router.table;
 
 import java.util.List;
 
-import io.pddl.router.table.config.LogicTableStrategyConfig;
+import io.pddl.router.strategy.config.ShardingStrategyConfig;
 
 public interface LogicTable {
 
@@ -10,17 +10,17 @@ public interface LogicTable {
 	
 	String getPrimaryKey();
 	
-	boolean matchPartition(String partition);
-	
-	List<String> getPostfixes();
+	List<String> getTablePostfixes();
 	
 	LogicTable getParent();
 	
 	List<? extends LogicTable> getChildren();
 	
-	LogicTableStrategyConfig getStrategyConfig();
+	ShardingStrategyConfig getTableStrategyConfig();
 	
-	boolean isPrimaryTable();
+	ShardingStrategyConfig getDatabaseStrategyConfig();
+	
+	boolean isChildTable();
 	
 	String getHierarchical();
 }

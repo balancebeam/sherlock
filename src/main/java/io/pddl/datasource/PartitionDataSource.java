@@ -6,9 +6,11 @@ public interface PartitionDataSource{
    
 	String getName();
 	
-	DataSource getWriteDataSource();
+	DataSource getMasterDataSource();
 	
-	DataSource getReadDataSource();
+	DataSource getSlaveDataSource();
 	
 	int getPoolSize();
+	
+	int getTimeout();
 }

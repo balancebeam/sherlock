@@ -40,20 +40,6 @@ public final class SQLParserFactory {
         return new SQLParseEngine(sqlStatement, parameters, getSQLVisitor(sqlStatement));
     }
     
-    public static String getDMLTableName(final String sql){
-    	 SQLStatement sqlStatement = getSQLStatementParser(sql).parseStatement();
-    	 if(sqlStatement instanceof SQLInsertStatement){
-    		 return ((SQLInsertStatement)sqlStatement).getTableName().getSimleName();
-    	 }
-    	 if(sqlStatement instanceof SQLUpdateStatement){
-    		 return ((SQLUpdateStatement)sqlStatement).getTableName().getSimleName();
-    	 }
-    	 if(sqlStatement instanceof SQLDeleteStatement){
-    		 return ((SQLDeleteStatement)sqlStatement).getTableName().getSimleName();
-    	 }
-    	 return null;
-    }
-    
     private static SQLStatementParser getSQLStatementParser(final String sql) {
     	DatabaseType databaseType = DatabaseType.getApplicationDatabaseType();
         switch (databaseType) {

@@ -6,6 +6,6 @@ public interface DatabaseReadStrategy {
 	
 	String getStrategyName();
 	
-	DataSource getReadDataSource(PartitionDataSource ds);
+	DataSource getSlaveDataSource(PartitionDataSource ds);
 	
 }

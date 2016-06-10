@@ -7,22 +7,22 @@ import javax.sql.DataSource;
 
 import org.springframework.util.CollectionUtils;
 
-import io.pddl.datasource.DatabaseReadStrategy;
-import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.support.DefaultDataSourceProxy;
-import io.pddl.datasource.support.DefaultPartitionDataSource;
+import io.pddl.datasource.PartitionDataSource;
+import io.pddl.datasource.DatabaseReadStrategy;
+import io.pddl.datasource.support.PartitionDataSourceSupport;
 
 public class WeightReadStrategySupport implements DatabaseReadStrategy{
 	
 	@Override
-	public DataSource getReadDataSource(PartitionDataSource ds) {
+	public DataSource getSlaveDataSource(PartitionDataSource ds) {
 		return getDataSourceByWeight(ds,0);
 	}
 	
 	protected DataSource getDataSourceByWeight(PartitionDataSource ds,int w){
-		List<DataSource> readDataSources= ((DefaultPartitionDataSource)ds).getReadDataSources();
+		List<DataSource> readDataSources= ((PartitionDataSourceSupport)ds).getReadDataSources();
 		if(CollectionUtils.isEmpty(readDataSources)){
-			return ds.getWriteDataSource();
+			return ds.getMasterDataSource();
 		}
     	int total= 0;
 		for(DataSource ds0: readDataSources){
@@ -38,7 +38,7 @@ public class WeightReadStrategySupport implements DatabaseReadStrategy{
     			}
     		}
 		}
-		return ds.getWriteDataSource();
+		return ds.getMasterDataSource();
     }
 	
 	@Override
