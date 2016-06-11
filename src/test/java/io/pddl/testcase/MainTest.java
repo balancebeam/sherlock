@@ -18,9 +18,9 @@ public class MainTest {
 		DataSource ds= context.getBean("shardingDataSource", DataSource.class);
 		Connection conn= ds.getConnection();
 		Statement statement= conn.createStatement();
-		ResultSet rs= statement.executeQuery("select order_id from t_order where order_id=19 and user_id=3");
+		ResultSet rs= statement.executeQuery("select count(1) from t_order where order_id=19 and user_id=3");
 		rs.next();
-		System.out.println("id= "+rs.getLong(1));
+		System.out.println("id= "+rs.getInt(1));
 		rs.close();
 		statement.close();
 		conn.close();
