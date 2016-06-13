@@ -30,7 +30,7 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
     
     private boolean hasExecuted;
     
-    private final List<List<Object>> batchParameters = new ArrayList<>();
+    private final List<List<Object>> batchParameters = new ArrayList<List<Object>>();
     
     public ShardingPreparedStatement(final ShardingConnection shardingConnection, final String sql) throws SQLException {
         this(shardingConnection, sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
