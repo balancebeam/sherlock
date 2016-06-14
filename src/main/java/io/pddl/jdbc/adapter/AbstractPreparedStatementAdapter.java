@@ -21,7 +21,7 @@ import io.pddl.jdbc.unsupported.AbstractUnsupportedOperationPreparedStatement;
 
 public abstract class AbstractPreparedStatementAdapter extends AbstractUnsupportedOperationPreparedStatement {
     
-    protected List<Object> parameters = new ArrayList<>();
+    protected List<Object> parameters = new ArrayList<Object>();
     
     protected AbstractPreparedStatementAdapter(final ShardingConnection shardingConnection, final int resultSetType, final int resultSetConcurrency, final int resultSetHoldability) {
         super(shardingConnection, resultSetType, resultSetConcurrency, resultSetHoldability);

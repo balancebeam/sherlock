@@ -37,7 +37,7 @@ public class ShardingStatement extends AbstractStatementAdapter {
     
     protected SQLRouter sqlRouter;
     
-    private Map<HashCode, Statement> cachedRoutedStatements = new HashMap<>();
+    private Map<HashCode, Statement> cachedRoutedStatements = new HashMap<HashCode, Statement>();
     
     protected ResultSet currentResultSet;
     
@@ -197,7 +197,7 @@ public class ShardingStatement extends AbstractStatementAdapter {
         if (null != currentResultSet) {
             return currentResultSet;
         }
-        List<ResultSet> resultSets = new ArrayList<>(getRoutedStatements().size());
+        List<ResultSet> resultSets = new ArrayList<ResultSet>(getRoutedStatements().size());
         for (Statement each : getRoutedStatements()) {
             resultSets.add(each.getResultSet());
         }
