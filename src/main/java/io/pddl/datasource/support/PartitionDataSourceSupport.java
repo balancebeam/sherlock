@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 import org.springframework.util.Assert;
 
 import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.DatabaseReadStrategy;
+import io.pddl.datasource.DataSourceReadStrategy;
 
 public class PartitionDataSourceSupport implements PartitionDataSource{
 	/**
@@ -75,7 +75,7 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
     
     @Override
     public DataSource getSlaveDataSource(){
-    	DatabaseReadStrategy strategy= DatabaseReadStrategyRepository.getDatabaseReadStrategy(readStrategy);
+    	DataSourceReadStrategy strategy= DatabaseReadStrategyRepository.getDatabaseReadStrategy(readStrategy);
     	return strategy.getSlaveDataSource(this);
     }
     
@@ -90,7 +90,7 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
     	}
     }
     
-    public List<DataSource> getReadDataSources(){
+    public List<DataSource> getSlaveDataSources(){
     	return slaveDataSources;
     }
 

@@ -8,8 +8,8 @@ import io.pddl.datasource.support.WeightDataSourceProxy;
 public class WeightReadStrategyWithWriteSupport extends WeightReadStrategySupport{
 	
 	@Override
-	public DataSource getSlaveDataSource(PartitionDataSource ds) {
-		return getDataSourceByWeight(ds,((WeightDataSourceProxy)ds.getMasterDataSource()).getWeight());
+	public DataSource getSlaveDataSource(PartitionDataSource pds) {
+		return getDataSourceByWeight(pds,((WeightDataSourceProxy)pds.getMasterDataSource()).getWeight());
 	}
 	
 	@Override

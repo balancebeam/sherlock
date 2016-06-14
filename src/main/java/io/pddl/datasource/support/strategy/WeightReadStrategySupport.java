@@ -5,40 +5,49 @@ import java.util.Random;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.util.CollectionUtils;
 
 import io.pddl.datasource.support.WeightDataSourceProxy;
 import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.DatabaseReadStrategy;
+import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
 
-public class WeightReadStrategySupport implements DatabaseReadStrategy{
+public class WeightReadStrategySupport implements DataSourceReadStrategy{
+	
+	private Log logger = LogFactory.getLog(getClass());
 	
 	@Override
-	public DataSource getSlaveDataSource(PartitionDataSource ds) {
-		return getDataSourceByWeight(ds,0);
+	public DataSource getSlaveDataSource(PartitionDataSource pds) {
+		return getDataSourceByWeight(pds,0);
 	}
 	
-	protected DataSource getDataSourceByWeight(PartitionDataSource ds,int w){
-		List<DataSource> readDataSources= ((PartitionDataSourceSupport)ds).getReadDataSources();
-		if(CollectionUtils.isEmpty(readDataSources)){
-			return ds.getMasterDataSource();
+	protected DataSource getDataSourceByWeight(PartitionDataSource pds,int w){
+		List<DataSource> slaveDataSources= ((PartitionDataSourceSupport)pds).getSlaveDataSources();
+		if(CollectionUtils.isEmpty(slaveDataSources)){
+			if(logger.isInfoEnabled()){
+				logger.info("SlaveDataSource array of PartitionDataSource ["+pds.getName()+"] is empty, will use MasterDataSource");
+			}
+			return pds.getMasterDataSource();
 		}
     	int total= 0;
-		for(DataSource ds0: readDataSources){
-			total+= ((WeightDataSourceProxy)ds0).getWeight();
+    	//TODO this need cache
+		for(DataSource ds: slaveDataSources){
+			total+= ((WeightDataSourceProxy)ds).getWeight();
 		}
 		Random rand = new Random();
 		int weight= 0,rdm= rand.nextInt(total+ w);
-		if(rdm< total){
-			for(DataSource ds0: readDataSources){
-    			weight+= ((WeightDataSourceProxy)ds0).getWeight();
-    			if(weight> rdm){
-    				return ds0;
-    			}
-    		}
+		for(DataSource ds: slaveDataSources){
+			weight+= ((WeightDataSourceProxy)ds).getWeight();
+			if(weight> rdm){
+				if(logger.isInfoEnabled()){
+					logger.info("found SlaveDataSource of PartitionDataSource ["+pds.getName()+"], weight: "+((WeightDataSourceProxy)ds).getWeight());
+				}
+				return ds;
+			}
 		}
-		return ds.getMasterDataSource();
+		return pds.getMasterDataSource();
     }
 	
 	@Override

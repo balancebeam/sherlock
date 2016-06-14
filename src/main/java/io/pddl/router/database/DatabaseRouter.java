@@ -1,18 +1,18 @@
-package io.pddl.router.datasource;
+package io.pddl.router.database;
 
 import java.util.Collection;
 
 import io.pddl.executor.ExecuteContext;
 
 /**
- * 数据源路由解析引擎
+ * 数据库路由解析引擎
  * @author yangzz
  *
  */
-public interface DataSourceRouter {
+public interface DatabaseRouter {
 	
 	/**
-	 * 路由数据源操作
+	 * 路由数据库操作
 	 * @param ctx ExecuteContext SQL语句执行上下文
 	 * @return Collection<String>
 	 */

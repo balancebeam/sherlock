@@ -7,8 +7,8 @@ import io.pddl.datasource.PartitionDataSource;
 public class PollingReadStrategyWithWriteSupport extends PollingReadStrategySupport{
 	
 	@Override
-	public DataSource getSlaveDataSource(PartitionDataSource ds) {
-		return getDataSourceByPolling(ds,1);
+	public DataSource getSlaveDataSource(PartitionDataSource pds) {
+		return getDataSourceByPolling(pds,1);
 	}
 	
 	@Override
