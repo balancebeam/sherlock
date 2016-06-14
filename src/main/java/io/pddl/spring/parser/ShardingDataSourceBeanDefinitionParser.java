@@ -49,7 +49,7 @@ import io.pddl.datasource.support.ShardingDataSourceRepositorySupport;
 import io.pddl.datasource.support.WeightDataSourceProxy;
 import io.pddl.executor.support.ExecuteProcessorSupport;
 import io.pddl.jdbc.ShardingDataSource;
-import io.pddl.router.datasource.support.DataSourceRouterSupport;
+import io.pddl.router.database.support.DatabaseRouterSupport;
 import io.pddl.router.support.SQLRouterSupport;
 import io.pddl.router.table.config.LogicChildTableConfig;
 import io.pddl.router.table.config.LogicTableConfig;
@@ -211,7 +211,7 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		return factory.getBeanDefinition();
 	}
 	private BeanDefinition parseDatabaseRouter(Element element,ParserContext parserContext){
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DataSourceRouterSupport.class);
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DatabaseRouterSupport.class);
 		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
 		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
 		String shardingCache= element.getAttribute(SHARDING_CACHE);

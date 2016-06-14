@@ -1,4 +1,4 @@
-package io.pddl.router.datasource.support;
+package io.pddl.router.database.support;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import org.springframework.util.CollectionUtils;
 import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.exception.ShardingDataSourceException;
 import io.pddl.executor.ExecuteContext;
-import io.pddl.router.datasource.DataSourceRouter;
+import io.pddl.router.database.DatabaseRouter;
 import io.pddl.router.strategy.config.ShardingStrategyConfig;
 import io.pddl.router.strategy.value.ShardingValue;
 import io.pddl.router.support.AbstractRouterSupport;
@@ -21,7 +21,7 @@ import io.pddl.sqlparser.bean.SQLStatementType;
  * @author yangzz
  *
  */
-public class DataSourceRouterSupport extends AbstractRouterSupport implements DataSourceRouter{
+public class DatabaseRouterSupport extends AbstractRouterSupport implements DatabaseRouter{
 	
 	private ShardingDataSourceRepository shardingDataSourceRepository;
 	
@@ -32,11 +32,11 @@ public class DataSourceRouterSupport extends AbstractRouterSupport implements Da
 	@Override
 	public Collection<String> doRoute(ExecuteContext ctx) {
 		List<List<LogicTable>> logicTables= parseLogicTables(ctx);
-		return doMultiDataSourceSharding(ctx,logicTables);
+		return doMultiDatabaseSharding(ctx,logicTables);
 	}
 	
-	private Collection<String> doMultiDataSourceSharding(ExecuteContext ctx,List<List<LogicTable>> logicTables) {
-		List<Collection<String>> dataSourceNames = new ArrayList<Collection<String>>();
+	private Collection<String> doMultiDatabaseSharding(ExecuteContext ctx,List<List<LogicTable>> logicTables) {
+		List<Collection<String>> databaseNames = new ArrayList<Collection<String>>();
 		for (List<LogicTable> tables : logicTables) {
 tables: 	for (int i = 0; i < tables.size(); i++) {
 				LogicTable logicTable = tables.get(i);
@@ -49,38 +49,38 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						continue tables;
 					}
 				}
-				Collection<String> candidateNames= doSingleDataSourceSharding(ctx,logicTable);
+				Collection<String> candidateNames= doSingleDatabaseSharding(ctx,logicTable);
 				if(!CollectionUtils.isEmpty(candidateNames)){
 					if(logger.isInfoEnabled()){
-						logger.info("table ["+ logicTable.getName()+"] candidate dataSource names: "+candidateNames);
+						logger.info("table ["+ logicTable.getName()+"] candidate database names: "+candidateNames);
 					}
-					dataSourceNames.add(candidateNames);
+					databaseNames.add(candidateNames);
 				}
 			}
 		}
 		if(logger.isInfoEnabled()){
-			logger.info("found candidate dataSource names: "+dataSourceNames);
+			logger.info("found candidate database names: "+databaseNames);
 		}
 		List<String> result= null;
-		if(!CollectionUtils.isEmpty(dataSourceNames)){
+		if(!CollectionUtils.isEmpty(databaseNames)){
 			result = new ArrayList<String>(shardingDataSourceRepository.getPartitionDataSourceNames());
-			for(Collection<String> each: dataSourceNames){
+			for(Collection<String> each: databaseNames){
 				result.retainAll(each);
 			}
 		}
 		if(CollectionUtils.isEmpty(result)){
 			if(ctx.getStatementType()== SQLStatementType.INSERT){
-				throw new ShardingDataSourceException("can not shard dataSource for sql: " +ctx.getLogicSql());
+				throw new ShardingDataSourceException("can not shard database for sql: " +ctx.getLogicSql());
 			}
 			if(logger.isInfoEnabled()){
-				logger.info("no suitable dataSource，will use all available partition dataSource "+ctx.getAvailableDataSourceNames());
+				logger.info("no suitable database, will use all available database: "+ctx.getAvailableDataSourceNames());
 			}
 			return ctx.getAvailableDataSourceNames();
 		}
 		return result;
 	}
 	
-	private Collection<String> doSingleDataSourceSharding(ExecuteContext ctx,LogicTable logicTable) {
+	private Collection<String> doSingleDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getDataSourceStrategyConfig();
 		if(strategyConfig== null){
 			return null;

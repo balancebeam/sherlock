@@ -7,7 +7,7 @@ import javax.sql.DataSource;
  * @author yangzz
  *
  */
-public interface DatabaseReadStrategy {
+public interface DataSourceReadStrategy {
 	
 	/**
 	 * 获取策略的名称
@@ -23,9 +23,9 @@ public interface DatabaseReadStrategy {
 	
 	/**
 	 * 返回用于读操作的数据源
-	 * @param ds 数据库分片对象
+	 * @param pds 数据库分片对象
 	 * @return DataSource
 	 */
-	DataSource getSlaveDataSource(PartitionDataSource ds);
+	DataSource getSlaveDataSource(PartitionDataSource pds);
 	
 }

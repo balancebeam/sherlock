@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import io.pddl.datasource.DatabaseReadStrategy;
+import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.support.strategy.OnlyWriteReadStrategySupport;
 import io.pddl.datasource.support.strategy.PollingReadStrategySupport;
 import io.pddl.datasource.support.strategy.PollingReadStrategyWithWriteSupport;
@@ -17,7 +17,7 @@ final public class DatabaseReadStrategyRepository {
 	
 	private DatabaseReadStrategyRepository(){}
 
-	private static Map<String,DatabaseReadStrategy> databaseReadStrategies= new HashMap<String,DatabaseReadStrategy>();
+	private static Map<String,DataSourceReadStrategy> dataSourceReadStrategies= new HashMap<String,DataSourceReadStrategy>();
 	
 	static{
 		Class<?>[] strategyClasses= new Class<?>[]{
@@ -30,8 +30,8 @@ final public class DatabaseReadStrategyRepository {
 		Log logger = LogFactory.getLog(DatabaseReadStrategyRepository.class);
 			for(Class<?> cls: strategyClasses){
 				try {
-					DatabaseReadStrategy instance= (DatabaseReadStrategy)cls.newInstance();
-					databaseReadStrategies.put(instance.getStrategyName(), instance);
+					DataSourceReadStrategy instance= (DataSourceReadStrategy)cls.newInstance();
+					dataSourceReadStrategies.put(instance.getStrategyName(), instance);
 					if(logger.isInfoEnabled()){
 						logger.info("init read strategy ["+instance.getStrategyName()+"] "+instance);
 					}
@@ -42,7 +42,7 @@ final public class DatabaseReadStrategyRepository {
 	}
 
 	
-	public static DatabaseReadStrategy getDatabaseReadStrategy(String name){
-		return databaseReadStrategies.get(name);
+	public static DataSourceReadStrategy getDatabaseReadStrategy(String name){
+		return dataSourceReadStrategies.get(name);
 	}
 }

@@ -15,7 +15,7 @@ import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 import io.pddl.executor.support.ExecuteContextSupport;
 import io.pddl.router.SQLRouter;
-import io.pddl.router.datasource.DataSourceRouter;
+import io.pddl.router.database.DatabaseRouter;
 import io.pddl.router.table.GlobalTableRepository;
 import io.pddl.router.table.LogicTableRouter;
 import io.pddl.sqlparser.SQLParseEngine;
@@ -26,7 +26,7 @@ public class SQLRouterSupport implements SQLRouter{
 	
 	private Log logger = LogFactory.getLog(SQLRouterSupport.class);
 	
-	private DataSourceRouter dataSourceRouter;
+	private DatabaseRouter databaseRouter;
 	
 	private LogicTableRouter tableRouter;
 	
@@ -38,8 +38,8 @@ public class SQLRouterSupport implements SQLRouter{
 		this.tableRouter= tableRouter;
 	}
 	
-	public void setDatabaseRouter(DataSourceRouter dataSourceRouter){
-		this.dataSourceRouter= dataSourceRouter;
+	public void setDatabaseRouter(DatabaseRouter databaseRouter){
+		this.databaseRouter= databaseRouter;
 	}
 	
 	public void setGlobalTableRepository(GlobalTableRepository globalTableRepository){
@@ -83,23 +83,23 @@ public class SQLRouterSupport implements SQLRouter{
 				}
 			}
 			
-			//然后执行数据源路由
-			Collection<String> dataSourceNames= dataSourceRouter.doRoute(ctx);
-			if(CollectionUtils.isEmpty(dataSourceNames)){
+			//然后执行数据库路由
+			Collection<String> databaseNames= databaseRouter.doRoute(ctx);
+			if(CollectionUtils.isEmpty(databaseNames)){
 				throw new ShardingDataSourceException("dataSource is empty :"+logicSql);
 			}
-			logger.info("Sharding dataSource Names: " + dataSourceNames);
+			logger.info("Sharding database Names: " + databaseNames);
 			
 			List<SQLExecutionUnit> result= new ArrayList<SQLExecutionUnit>();
-			for(String dataSourceName: dataSourceNames){
+			for(String databaseName: databaseNames){
 				//最后执行表路由
-				Collection<String> sqls= tableRouter.doRoute(ctx,dataSourceName);
-				logger.info("Sharding table actual sqls: " + sqls);
+				Collection<String> sqls= tableRouter.doRoute(ctx,databaseName);
+				logger.info("Sharding table sqls: " + sqls);
 				for(String each: sqls){
-					result.add(new SQLExecutionUnit(dataSourceName,each));
+					result.add(new SQLExecutionUnit(databaseName,each));
 				}
 			}
-			logger.info("Sharding result: " + result);
+			logger.info("Sharding final result: " + result);
 			return result;
 		}finally{
 			ExecuteHolder.clear();
