@@ -7,11 +7,16 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
-public class DefaultDataSourceProxy extends LazyConnectionDataSourceProxy implements DataSource{
+/**
+ * 带权重的数据源
+ * @author yangzz
+ *
+ */
+public class WeightDataSourceProxy extends LazyConnectionDataSourceProxy implements DataSource{
 	
-	private int weight;
+	private int weight= 100;
 	
-	public DefaultDataSourceProxy(DataSource delegate){
+	public WeightDataSourceProxy(DataSource delegate){
 		super(delegate);
 	}
 	
@@ -20,6 +25,9 @@ public class DefaultDataSourceProxy extends LazyConnectionDataSourceProxy implem
 	}
 	
 	public void setWeight(int weight){
+		if(weight<1){
+			weight= 100;
+		}
 		this.weight= weight;
 	}
 	

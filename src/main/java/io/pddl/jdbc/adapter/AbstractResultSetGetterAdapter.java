@@ -1,4 +1,3 @@
-
 package io.pddl.jdbc.adapter;
 
 import java.io.InputStream;

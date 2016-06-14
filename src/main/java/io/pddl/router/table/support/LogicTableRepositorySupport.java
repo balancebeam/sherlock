@@ -39,14 +39,14 @@ public class LogicTableRepositorySupport implements LogicTableRepository{
 		}
 	}
 	
-	private void forEachLogicTable(LogicTable table,String hierarchical){
+	private void forEachLogicTable(LogicTable table,String layerIdx){
 		logicTableMapping.put(table.getName(),table);
-		((AbstractLogicTableConfig)table).setHierarchical(hierarchical);
+		((AbstractLogicTableConfig)table).setLayerIdx(layerIdx);
 		List<? extends LogicTable> children= table.getChildren();
 		if(!CollectionUtils.isEmpty(children)){
 			for(int i=0;i<children.size();i++){
 				((AbstractLogicTableConfig)children.get(i)).setParent(table);
-				forEachLogicTable(children.get(i),hierarchical+","+i);
+				forEachLogicTable(children.get(i),layerIdx+","+i);
 			}
 		}
 	}

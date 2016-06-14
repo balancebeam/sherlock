@@ -20,7 +20,7 @@ public class MainTest {
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery("select count(1) from t_order where order_id=19 and user_id=3");
 		rs.next();
-		System.out.println("id= "+rs.getInt(1));
+		System.out.println("count= "+rs.getInt(1));
 		rs.close();
 		statement.close();
 		conn.close();

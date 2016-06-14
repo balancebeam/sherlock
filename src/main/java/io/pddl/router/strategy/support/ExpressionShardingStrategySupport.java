@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.mvel2.MVEL;
 
+import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 
 public class ExpressionShardingStrategySupport extends AbstractSingleShardingStrategy<Integer>{
@@ -30,10 +31,13 @@ public class ExpressionShardingStrategySupport extends AbstractSingleShardingStr
 				this.expression= vars[1].trim();
 				this.postfix= vars[2].trim();
 		}
+		if(logger.isInfoEnabled()){
+			logger.info("{prefix="+prefix+",expression="+expression+",postfix="+postfix+"}");
+		}
 	}
 	
 	@Override
-	public String doEqualSharding(Collection<String> availableNames, String column,Integer value) {
+	public String doEqualSharding(ExecuteContext ctx,Collection<String> availableNames, String column,Integer value) {
 		@SuppressWarnings("unchecked")
 		Map<String,Integer> expressionContext= (Map<String,Integer>)ExecuteHolder.getAttribute("DefaultExpressionStrategy");
 		if(expressionContext== null){
@@ -45,23 +49,27 @@ public class ExpressionShardingStrategySupport extends AbstractSingleShardingStr
 		builder.append(prefix)
 			.append(MVEL.eval(expression, expressionContext))
 			.append(postfix);
+		
+		if(logger.isInfoEnabled()){
+			logger.info("{context="+expressionContext+",result="+builder.toString()+"}");
+		}
 		return builder.toString();
 	}
 
 	@Override
-	public Collection<String> doInSharding(Collection<String> availableNames, String column, List<Integer> values) {
+	public Collection<String> doInSharding(ExecuteContext ctx,Collection<String> availableNames, String column, List<Integer> values) {
 		Set<String> result= new HashSet<String>();
 		for(Integer value: values){
-			result.add(doEqualSharding(availableNames,column,value));
+			result.add(doEqualSharding(ctx,availableNames,column,value));
 		}
 		return result;
 	}
 
 	@Override
-	public Collection<String> doBetweenSharding(Collection<String> availableNames, String column, Integer lower, Integer upper) {
+	public Collection<String> doBetweenSharding(ExecuteContext ctx,Collection<String> availableNames, String column, Integer lower, Integer upper) {
 		Set<String> result= new HashSet<String>();
 		for(Integer value=lower;value<=upper;value++){
-			result.add(doEqualSharding(availableNames,column,value));
+			result.add(doEqualSharding(ctx,availableNames,column,value));
 		}
 		return result;
 	}

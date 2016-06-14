@@ -165,5 +165,10 @@ public class SQLParsedResult {
 		}
 		return Optional.absent();
 	}
+	
+	@Override
+	public String toString(){
+		return "{tables="+tables+",conditions="+curConditionContext+"}";
+	}
 
 }

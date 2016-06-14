@@ -1,12 +1,12 @@
-package io.pddl.router.database.support;
+package io.pddl.router.datasource.support;
 
 import java.util.Collection;
 import java.util.Collections;
 
 import io.pddl.executor.ExecuteContext;
-import io.pddl.router.database.DatabaseRouter;
+import io.pddl.router.datasource.DataSourceRouter;
 
-public class TenantDatabaseRouterSupport implements DatabaseRouter{
+public class TenantDataSourceRouterSupport implements DataSourceRouter{
 
 	@Override
 	public Collection<String> doRoute(ExecuteContext ctx) {

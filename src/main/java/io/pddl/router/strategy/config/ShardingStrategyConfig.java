@@ -14,6 +14,10 @@ public class ShardingStrategyConfig{
 		this.columns= columns;
 	}
 	
+	/**
+	 * 路由列名集合
+	 * @return
+	 */
 	public List<String> getColumns(){
 		return columns;
 	}

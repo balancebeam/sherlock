@@ -6,15 +6,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import io.pddl.exception.ShardingException;
 import io.pddl.sequence.SequenceGenerator;
 
 public abstract class AbstractPartitionSequenceGenerator implements SequenceGenerator{
 	
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected Log logger = LogFactory.getLog(getClass());
 
 	protected ConcurrentHashMap<String, Future<AtomicLong>> sequenceRepository = new ConcurrentHashMap<String, Future<AtomicLong>>();
 
@@ -61,7 +61,7 @@ public abstract class AbstractPartitionSequenceGenerator implements SequenceGene
 //				Thread.sleep(1);
 //			} catch (InterruptedException e) {}
 			if(logger.isDebugEnabled()){
-				logger.debug("sequence ["+name+"] outboundary, val="+val+",boundaryMaxValue="+boundaryMaxValue);
+				logger.info("sequence ["+name+"] outboundary, val="+val+",boundaryMaxValue="+boundaryMaxValue);
 			}
 			Future<AtomicLong> nFuture= sequenceRepository.get(name);
 			if(nFuture!= future){

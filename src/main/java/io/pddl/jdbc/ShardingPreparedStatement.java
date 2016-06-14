@@ -9,8 +9,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.pddl.executor.ExecuteUnit;
-import io.pddl.executor.InputWrapper;
+import io.pddl.executor.ExecuteStatementCallback;
+import io.pddl.executor.support.ExecuteStatementWrapper;
 import io.pddl.jdbc.adapter.AbstractPreparedStatementAdapter;
 import io.pddl.merger.MergeUtils;
 import io.pddl.router.support.SQLExecutionUnit;
@@ -66,10 +66,10 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
     public ResultSet executeQuery() throws SQLException {
         hasExecuted = true;
         
-        List<ResultSet> result= processor.execute(shardingConnection.getExecuteContext(),generatePrepareStatements(parameters), new ExecuteUnit<PreparedStatement,ResultSet>(){
+        List<ResultSet> result= processor.execute(shardingConnection.getExecuteContext(),generateExecuteStatementWrappers(parameters), new ExecuteStatementCallback<PreparedStatement,ResultSet>(){
 			@Override
-			public ResultSet execute(String actualSql,PreparedStatement input) throws Exception {
-				return input.executeQuery();
+			public ResultSet execute(String actualSql,PreparedStatement statement) throws SQLException {
+				return statement.executeQuery();
 			}
     	});
         
@@ -79,10 +79,10 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
     @Override
     public int executeUpdate() throws SQLException {
         hasExecuted = true;
-        List<Integer> result= processor.execute(shardingConnection.getExecuteContext(),generatePrepareStatements(parameters), new ExecuteUnit<PreparedStatement,Integer>(){
+        List<Integer> result= processor.execute(shardingConnection.getExecuteContext(),generateExecuteStatementWrappers(parameters), new ExecuteStatementCallback<PreparedStatement,Integer>(){
 			@Override
-			public Integer execute(String shardingSql,PreparedStatement input) throws Exception {
-				return input.executeUpdate();
+			public Integer execute(String shardingSql,PreparedStatement statement) throws SQLException {
+				return statement.executeUpdate();
 			}
     	});
         return MergeUtils.mergeIntegerResult(result);
@@ -91,10 +91,10 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
     @Override
     public boolean execute() throws SQLException {
         hasExecuted = true;
-        List<Boolean> result= processor.execute(shardingConnection.getExecuteContext(),generatePrepareStatements(parameters), new ExecuteUnit<PreparedStatement,Boolean>(){
+        List<Boolean> result= processor.execute(shardingConnection.getExecuteContext(),generateExecuteStatementWrappers(parameters), new ExecuteStatementCallback<PreparedStatement,Boolean>(){
 			@Override
-			public Boolean execute(String shardingSql,PreparedStatement input) throws Exception {
-				return input.execute();
+			public Boolean execute(String shardingSql,PreparedStatement statement) throws SQLException {
+				return statement.execute();
 			}
     	});
         return result.get(0);
@@ -117,11 +117,11 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
         int[] result = new int[batchParameters.size()];
         int i = 0;
         for (List<Object> each : batchParameters) {
-        	List<InputWrapper<PreparedStatement>> routePreparedStatements = generatePrepareStatements(each);
-            List<Integer> tmp= processor.execute(shardingConnection.getExecuteContext(),routePreparedStatements, new ExecuteUnit<PreparedStatement,Integer>(){
+        	List<ExecuteStatementWrapper<PreparedStatement>> routePreparedStatements = generateExecuteStatementWrappers(each);
+            List<Integer> tmp= processor.execute(shardingConnection.getExecuteContext(),routePreparedStatements, new ExecuteStatementCallback<PreparedStatement,Integer>(){
     			@Override
-    			public Integer execute(String shardingSql,PreparedStatement input) throws Exception {
-    				return input.executeUpdate();
+    			public Integer execute(String shardingSql,PreparedStatement statement) throws SQLException {
+    				return statement.executeUpdate();
     			}
         	});
             result[i++] = MergeUtils.mergeIntegerResult(tmp);;
@@ -141,15 +141,15 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
         getRoutedPreparedStatements().clear();
     }
     
-    private List<InputWrapper<PreparedStatement>> generatePrepareStatements(List<Object> parameters) throws SQLException {
+    private List<ExecuteStatementWrapper<PreparedStatement>> generateExecuteStatementWrappers(List<Object> parameters) throws SQLException {
     	List<SQLExecutionUnit> executionUnits = sqlRouter.doRoute(shardingConnection.getExecuteContext(),sql, parameters);
-    	List<InputWrapper<PreparedStatement>> result= new ArrayList<InputWrapper<PreparedStatement>>(executionUnits.size());
+    	List<ExecuteStatementWrapper<PreparedStatement>> result= new ArrayList<ExecuteStatementWrapper<PreparedStatement>>(executionUnits.size());
         for (SQLExecutionUnit each : executionUnits) {
         	Connection conn= shardingConnection.getConnection(each.getDataSourceName());
             PreparedStatement preparedStatement = generatePrepareStatement(conn, each.getShardingSql());
             setParameters(preparedStatement, parameters);
             cachedRoutedPreparedStatements.add(preparedStatement);
-            result.add(new InputWrapper<PreparedStatement>(each,preparedStatement));
+            result.add(new ExecuteStatementWrapper<PreparedStatement>(each,preparedStatement));
         }
         return result;
     }

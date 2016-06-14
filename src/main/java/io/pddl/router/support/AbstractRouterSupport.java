@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Optional;
 
@@ -27,7 +27,7 @@ import io.pddl.sqlparser.bean.Table;
 
 public abstract class AbstractRouterSupport{
 	
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected Log logger = LogFactory.getLog(getClass());
 
 	protected LogicTableRepository logicTableRepository;
 	
@@ -41,39 +41,61 @@ public abstract class AbstractRouterSupport{
 		this.shardingCache= shardingCache;
 	}
 
+	/**
+	 * 获取解析过的逻辑表集合
+	 * 逻辑SQL：select ... from t_item i,t_order o,t_category c where ...
+	 * 其中t_item、t_order和t_category都是逻辑表，并且t_item是t_order逻辑子表
+	 * 解析的结果[[t_order,t_item],[t_category]]
+	 * 
+	 * @param ctx 执行上下文
+	 * @return List<List<LogicTable>>
+	 */
 	protected List<List<LogicTable>> parseLogicTables(ExecuteContext ctx) {
 		@SuppressWarnings("unchecked")
+		//从ThreadLocal中获取已经解析过的逻辑表结果集
 		List<List<LogicTable>> result= (List<List<LogicTable>>)ExecuteHolder.getAttribute("tableRouter.parseLogicTables");
 		if(result!= null){
+			if(logger.isInfoEnabled()){
+				logger.info("get logicTables from ThreadLocal: {tableRouter.parseLogicTables="+result+"}");
+			}
 			return result;
 		}
+		//获取SQL中所有的表名
 		Set<Table> tables= ctx.getSQLParsedResult().getTables();
 		Map<String, List<LogicTable>> hash = new HashMap<String, List<LogicTable>>(tables.size());
 		for (Table table: tables) {
 			String tableName= table.getName();
 			LogicTable logicTable = logicTableRepository.getLogicTable(tableName);
-			//if not logic table
+			//如果不是逻辑表，不需要处理
 			if (logicTable == null) {
+				if(logger.isInfoEnabled()){
+					logger.info("table ["+tableName+"] is not logic table");
+				}
 				continue;
 			}
-			String key = logicTable.getHierarchical().split(",")[0];
+			//获取逻辑主表的标识，具有相同的标识放在同一个列表中
+			String key = logicTable.getLayerIdx().split(",")[0];
 			List<LogicTable> list = hash.get(key);
 			if (list == null) {
 				hash.put(key, list= new ArrayList<LogicTable>());
 			}
 			list.add(logicTable);
 		}
+		if(logger.isInfoEnabled()){
+			logger.info("classify Logic table: "+hash);
+		}
 		result = new ArrayList<List<LogicTable>>(hash.size());
+		//对相同逻辑主表的集合做排序，层次越深位置越靠后
 		for (List<LogicTable> list: hash.values()) {
 			Collections.sort(list, new Comparator<LogicTable>() {
 				@Override
 				public int compare(LogicTable o1, LogicTable o2) {
-					String[] h1 = o1.getHierarchical().split(",");
-					String[] h2 = o2.getHierarchical().split(",");
-					int result = h1.length - h2.length;
+					String[] idx1 = o1.getLayerIdx().split(",");
+					String[] idx2 = o2.getLayerIdx().split(",");
+					int result = idx1.length - idx2.length;
 					if (result == 0) {
-						for (int i = 0; i < h1.length; i++) {
-							if (0 != (result = Integer.parseInt(h1[i]) - Integer.parseInt(h2[i]))) {
+						for (int i = 0; i < idx1.length; i++) {
+							if (0 != (result = Integer.parseInt(idx1[i]) - Integer.parseInt(idx2[i]))) {
 								return result;
 							}
 						}
@@ -83,16 +105,27 @@ public abstract class AbstractRouterSupport{
 			});
 			result.add(list);
 		}
+		//缓存解析逻辑表结果集到ThreadLocal中
 		ExecuteHolder.setAttribute("tableRouter.parseLogicTables", result);
+		if(logger.isInfoEnabled()){
+			logger.info("put logicTables to ThreadLocal: "+"{tableRouter.parseLogicTables="+result+"}");
+		}
 		return result;
 	}
 	
+	/**
+	 * 根据逻辑表名和路由列集合获取路由值集合
+	 * @param ctx 执行上下文
+	 * @param logicTableName 逻辑表名
+	 * @param columns 路由列名集合
+	 * @return
+	 */
 	protected List<ShardingValue<?>> getShardingValues(ExecuteContext ctx,String logicTableName,List<String> columns){
 		List<ShardingValue<?>> shardingValues = new ArrayList<ShardingValue<?>>(columns.size());
 		for (String column : columns) {
 			Condition condition = getCondition(ctx,logicTableName, column);
 			if (condition != null) {
-				//now only support =、in、between operator
+				//仅仅支持=、in和between等操作
 				switch(condition.getOperator()){
 					case EQUAL:
 						shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
@@ -111,7 +144,17 @@ public abstract class AbstractRouterSupport{
 		return shardingValues;
 	}
 	
-	//find Condition by tablename and column
+	/**
+	 * 根据表名和列名获取查询条件
+	 * SQL语句：select ... from t_order o,t_item i where o.order_id= i.order_id and o.user_id=4
+	 * getCondition(ctx,"t_order","user_id") 可以获取到对应的条件值{column={tableName=t_order,columnName=user_id},operator="=",values=[4]}
+	 * getCondition(ctx,"t_item","user_id") 获取不到条件值，因为SQL语句中表t_item和列user_id没有关联关系
+	 * 
+	 * @param ctx 执行上下文
+	 * @param tableName 表名
+	 * @param column 列表
+	 * @return Condition
+	 */
 	protected Condition getCondition(ExecuteContext ctx,String tableName, String column) {
 		Optional<Condition> option= ctx.getSQLParsedResult().getCondition().find(tableName, column);
 		return option.isPresent()? option.get(): null;

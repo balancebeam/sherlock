@@ -9,7 +9,7 @@ import org.springframework.beans.factory.InitializingBean;
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
-import io.pddl.exception.ShardingDatabaseException;
+import io.pddl.exception.ShardingDataSourceException;
 
 public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRepository,InitializingBean {
 	
@@ -45,7 +45,7 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
     @Override
     public void afterPropertiesSet() throws Exception {
         if (partitionDataSources.isEmpty()) {
-        	throw new ShardingDatabaseException("do not configure any sharding datasource.");
+        	throw new ShardingDataSourceException("do not configure any sharding datasource.");
         }
         
         for(Iterator<PartitionDataSource> item= partitionDataSources.iterator();item.hasNext();){
@@ -55,7 +55,7 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
         	partitionDataSourceMapping.put(partition,partitionDataSource);
         	if(((PartitionDataSourceSupport)partitionDataSource).isDefaultDataSource()){
         		if(defaultPartitionDataSource!= null){
-        			throw new ShardingDatabaseException("default datasource setting was duplicated");
+        			throw new ShardingDataSourceException("default datasource setting was duplicated");
         		}
         		defaultPartitionDataSource= partitionDataSource;
         	}

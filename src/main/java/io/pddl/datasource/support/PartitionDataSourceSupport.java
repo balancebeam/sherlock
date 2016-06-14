@@ -33,15 +33,6 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
      */
     private int poolSize = Runtime.getRuntime().availableProcessors() * 2;
     
-    /**
-     * only-write: use write dataSource only to execute DQL SQL ,default read strategy.
-     * polling: use read dataSource only to execute DQL SQL with polling read strategy.
-     * polling-w: use read and write dataSource to execute DQL SQL with polling read strategy.
-     * power: use read dataSource only to execute DQL SQL with power read strategy.
-     * power-w: use read and write dataSource to execute DQL SQL with power read strategy.
-     * weight: use read dataSource only to execute DQL SQL with weight read strategy.
-     * weight-w: use read and write dataSource to execute DQL SQL with weight read strategy.
-     */
     private String readStrategy= "only-write";
     
     private boolean defaultDataSource= false;
@@ -76,8 +67,8 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
     
     public void setMasterDataSource(DataSource masterDataSource) {
     	Assert.notNull(masterDataSource);
-    	if(!(masterDataSource instanceof DefaultDataSourceProxy)){
-    		masterDataSource= new DefaultDataSourceProxy(masterDataSource);
+    	if(!(masterDataSource instanceof WeightDataSourceProxy)){
+    		masterDataSource= new WeightDataSourceProxy(masterDataSource);
     	}
     	this.masterDataSource= masterDataSource;
     }
@@ -92,8 +83,8 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
     	Assert.notEmpty(slaveDataSources);
     	this.slaveDataSources= new ArrayList<DataSource>();
     	for(DataSource dataSource: slaveDataSources){
-    		if(!(dataSource instanceof DefaultDataSourceProxy)){
-    			dataSource= new DefaultDataSourceProxy(dataSource);
+    		if(!(dataSource instanceof WeightDataSourceProxy)){
+    			dataSource= new WeightDataSourceProxy(dataSource);
         	}
         	this.slaveDataSources.add(dataSource);
     	}

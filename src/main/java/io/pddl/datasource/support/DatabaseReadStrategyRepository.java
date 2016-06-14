@@ -3,12 +3,13 @@ package io.pddl.datasource.support;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import io.pddl.datasource.DatabaseReadStrategy;
 import io.pddl.datasource.support.strategy.OnlyWriteReadStrategySupport;
 import io.pddl.datasource.support.strategy.PollingReadStrategySupport;
 import io.pddl.datasource.support.strategy.PollingReadStrategyWithWriteSupport;
-import io.pddl.datasource.support.strategy.PowerReadStrategySupport;
-import io.pddl.datasource.support.strategy.PowerReadStrategyWithWriteSupport;
 import io.pddl.datasource.support.strategy.WeightReadStrategySupport;
 import io.pddl.datasource.support.strategy.WeightReadStrategyWithWriteSupport;
 
@@ -23,19 +24,21 @@ final public class DatabaseReadStrategyRepository {
 			OnlyWriteReadStrategySupport.class,
 			PollingReadStrategySupport.class,
 			PollingReadStrategyWithWriteSupport.class,
-			PowerReadStrategySupport.class,
-			PowerReadStrategyWithWriteSupport.class,
 			WeightReadStrategySupport.class,
 			WeightReadStrategyWithWriteSupport.class
 		};
-		try {
+		Log logger = LogFactory.getLog(DatabaseReadStrategyRepository.class);
 			for(Class<?> cls: strategyClasses){
-				DatabaseReadStrategy instance= (DatabaseReadStrategy)cls.newInstance();
-				databaseReadStrategies.put(instance.getStrategyName(), instance);
+				try {
+					DatabaseReadStrategy instance= (DatabaseReadStrategy)cls.newInstance();
+					databaseReadStrategies.put(instance.getStrategyName(), instance);
+					if(logger.isInfoEnabled()){
+						logger.info("init read strategy ["+instance.getStrategyName()+"] "+instance);
+					}
+				} catch (Exception e) {
+					logger.error("init read strategy error",e);
+				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	

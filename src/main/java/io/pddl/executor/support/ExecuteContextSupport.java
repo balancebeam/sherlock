@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.util.CollectionUtils;
@@ -23,6 +24,8 @@ public class ExecuteContextSupport implements ExecuteContext{
 	
 	private String logicSql;
 	
+	private List<Object> parameters;
+	
 	private ShardingConnection shardingConnection;
 	
 	public ExecuteContextSupport(ShardingConnection shardingConnection){
@@ -30,7 +33,7 @@ public class ExecuteContextSupport implements ExecuteContext{
 	}
 	
 	@Override
-	public boolean isDQLWithoutTransaction() {
+	public boolean isSimplyDQLOperation() {
 		try {
 			return shardingConnection.getAutoCommit() && SQLStatementType.SELECT == statementType;
 		} catch (SQLException e) {
@@ -89,7 +92,16 @@ public class ExecuteContextSupport implements ExecuteContext{
 	}
 	
 	@Override
-	public Collection<String> getAvailableDatabaseNames(){
+	public Collection<String> getAvailableDataSourceNames(){
 		return shardingConnection.getShardingDataSourceRepository().getPartitionDataSourceNames();
+	}
+	
+	public void setParameters(List<Object> parameters){
+		this.parameters= parameters;
+	}
+
+	@Override
+	public List<Object> getParameters() {
+		return parameters;
 	}
 }

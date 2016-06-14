@@ -53,8 +53,6 @@
 		  <xsd:enumeration value="only-write"/>
 		  <xsd:enumeration value="polling"/>	
 		  <xsd:enumeration value="polling-w"/>
-		  <xsd:enumeration value="power"/>
-		  <xsd:enumeration value="power-w"/>
 		  <xsd:enumeration value="weight"/>
 		  <xsd:enumeration value="weight-w"/>
     	</xsd:restriction>

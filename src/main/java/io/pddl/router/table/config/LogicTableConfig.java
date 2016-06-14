@@ -10,7 +10,7 @@ public class LogicTableConfig extends AbstractLogicTableConfig{
 	
 	private ShardingStrategyConfig tableStrategyConfig;
 	
-	private ShardingStrategyConfig databaseStrategyConfig;
+	private ShardingStrategyConfig dataSourceStrategyConfig;
 	
 	public void setTablePostfixes(List<String> tablePostfixies){
 		this.tablePostfixies= tablePostfixies;
@@ -31,11 +31,11 @@ public class LogicTableConfig extends AbstractLogicTableConfig{
 	}
 	
 	public void setDatabaseStrategyConfig(ShardingStrategyConfig databaseStrategyConfig){
-		this.databaseStrategyConfig= databaseStrategyConfig;
+		this.dataSourceStrategyConfig= databaseStrategyConfig;
 	}
 	
 	@Override
-	public ShardingStrategyConfig getDatabaseStrategyConfig(){
-		return databaseStrategyConfig;
+	public ShardingStrategyConfig getDataSourceStrategyConfig(){
+		return dataSourceStrategyConfig;
 	}
 }

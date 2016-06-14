@@ -15,7 +15,7 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	
 	private LogicTable parent;
 	
-	private String hierarchical;
+	private String layerIdx;
 	
 	public void setName(String name){
 		this.name= name;
@@ -64,8 +64,8 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	}
 	
 	@Override
-	public ShardingStrategyConfig getDatabaseStrategyConfig(){
-		return parent.getDatabaseStrategyConfig();
+	public ShardingStrategyConfig getDataSourceStrategyConfig(){
+		return parent.getDataSourceStrategyConfig();
 	}
 	
 	@Override
@@ -73,31 +73,34 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 		return this instanceof LogicChildTableConfig;
 	}
 	
-	public void setHierarchical(String hierarchical){
-		this.hierarchical= hierarchical;
+	public void setLayerIdx(String layerIdx){
+		this.layerIdx= layerIdx;
 	}
 	
 	@Override
-	public String getHierarchical(){
-		return hierarchical;
+	public String getLayerIdx(){
+		return layerIdx;
 	}
 	
 	@Override
 	public String toString(){
 		StringBuilder builder= new StringBuilder();
-		builder.append("[ ")
+		builder.append("{ ")
 		.append("tableName=")
 		.append(getName())
 		.append(", ")
 		.append("tablePostfixes=")
 		.append(getTablePostfixes())
 		.append(", ")
-		.append("databaseStrategy=")
-		.append(getDatabaseStrategyConfig())
+		.append("layerIdx=")
+		.append(layerIdx)
+		.append(", ")
+		.append("dataSourceStrategy=")
+		.append(getDataSourceStrategyConfig())
 		.append(", ")
 		.append("tableStrategy=")
 		.append(getTableStrategyConfig())
-		.append(" ]");
+		.append(" }");
 		return builder.toString();
 	}
 }

@@ -29,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -43,11 +45,11 @@ import org.w3c.dom.Element;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
-import io.pddl.datasource.support.DefaultDataSourceProxy;
 import io.pddl.datasource.support.ShardingDataSourceRepositorySupport;
+import io.pddl.datasource.support.WeightDataSourceProxy;
 import io.pddl.executor.support.ExecuteProcessorSupport;
 import io.pddl.jdbc.ShardingDataSource;
-import io.pddl.router.database.support.DatabaseRouterSupport;
+import io.pddl.router.datasource.support.DataSourceRouterSupport;
 import io.pddl.router.support.SQLRouterSupport;
 import io.pddl.router.table.config.LogicChildTableConfig;
 import io.pddl.router.table.config.LogicTableConfig;
@@ -56,6 +58,8 @@ import io.pddl.router.table.support.LogicTableRepositorySupport;
 import io.pddl.router.table.support.LogicTableRouterSupport;
 
 public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser{
+	
+	protected Log logger = LogFactory.getLog(getClass());
 	
 	private BeanDefinition shardingDataSourceRepositoryDefinition;
 	
@@ -121,7 +125,7 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	}
 	
 	private BeanDefinition parseDataSourceDescriptor(Element element,ParserContext parserContext){
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DefaultDataSourceProxy.class);
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(WeightDataSourceProxy.class);
 		factory.addConstructorArgReference(element.getAttribute(DATA_SOURCE_REF));
 		String weight= element.getAttribute(DATA_SOURCE_WEIGHT);
 		if(!StringUtils.isEmpty(weight)){
@@ -207,7 +211,7 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		return factory.getBeanDefinition();
 	}
 	private BeanDefinition parseDatabaseRouter(Element element,ParserContext parserContext){
-		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DatabaseRouterSupport.class);
+		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DataSourceRouterSupport.class);
 		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
 		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
 		String shardingCache= element.getAttribute(SHARDING_CACHE);

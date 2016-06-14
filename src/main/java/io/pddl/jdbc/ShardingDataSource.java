@@ -5,15 +5,15 @@ import java.sql.SQLException;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
-import io.pddl.executor.ExecuteProcessor;
+import io.pddl.executor.ExecuteStatementProcessor;
 import io.pddl.jdbc.adapter.AbstractDataSourceAdapter;
 import io.pddl.router.SQLRouter;
 
 public class ShardingDataSource extends AbstractDataSourceAdapter{
-    
+    //SQL数据源和表路由器
     private SQLRouter sqlRouter;
     
-    private ExecuteProcessor processor;
+    private ExecuteStatementProcessor processor;
     
     private ShardingDataSourceRepository shardingDataSourceRepository;
     
@@ -21,7 +21,7 @@ public class ShardingDataSource extends AbstractDataSourceAdapter{
     	this.sqlRouter= sqlRouter;
     }
     
-    public void setProcessor(ExecuteProcessor processor){
+    public void setProcessor(ExecuteStatementProcessor processor){
     	this.processor= processor;
     }
     
