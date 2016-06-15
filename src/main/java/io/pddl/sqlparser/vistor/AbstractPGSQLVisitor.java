@@ -3,6 +3,9 @@ package io.pddl.sqlparser.vistor;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.alibaba.druid.sql.ast.SQLHint;
 import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
@@ -16,6 +19,7 @@ import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.router.support.SQLRouterSupport;
 import io.pddl.sqlparser.SQLBuilder;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.SQLVisitor;
@@ -24,6 +28,8 @@ import io.pddl.sqlparser.bean.Condition.BinaryOperator;
 import io.pddl.util.SQLUtil;
 
 public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor {
+	
+	protected Log logger = LogFactory.getLog(getClass());
 
 	protected SQLParsedResult parseResult;
 
