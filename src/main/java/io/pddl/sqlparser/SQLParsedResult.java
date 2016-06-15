@@ -2,8 +2,11 @@ package io.pddl.sqlparser;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import org.springframework.util.CollectionUtils;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
@@ -15,10 +18,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.Condition;
 import io.pddl.sqlparser.bean.Condition.BinaryOperator;
 import io.pddl.sqlparser.bean.Condition.Column;
 import io.pddl.sqlparser.bean.ConditionContext;
+import io.pddl.sqlparser.bean.OrderColumn;
 import io.pddl.sqlparser.bean.Table;
 import io.pddl.util.SQLUtil;
 
@@ -27,6 +32,9 @@ public class SQLParsedResult {
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
+	private List<String> selectItems= new LinkedList<String>();
+	private List<OrderColumn> orderColumns;
+	private List<AggregationColumn> aggregationColumns;
 	private final ConditionContext curConditionContext = new ConditionContext();
 
 	public SQLParsedResult(SQLBuilder sqlBuilder) {
@@ -166,9 +174,43 @@ public class SQLParsedResult {
 		return Optional.absent();
 	}
 	
+	public void addSelectItem(String item){
+		selectItems.add(item);
+	}
+	
+	public List<String> getSelectItems(){
+		return selectItems;
+	}
+	
+	public void addOrderColumn(OrderColumn order){
+		if(CollectionUtils.isEmpty(orderColumns)){
+			orderColumns= new LinkedList<OrderColumn>();
+		}
+		orderColumns.add(order);
+	}
+	
+	public List<OrderColumn> getOrderColumns(){
+		return orderColumns;
+	}
+	
+    public void addAggregationColumn(AggregationColumn column) {
+    	if(CollectionUtils.isEmpty(aggregationColumns)){
+    		aggregationColumns= new LinkedList<AggregationColumn>();
+		}
+    	aggregationColumns.add(column);
+    }
+    
+    public List<AggregationColumn> getAggregationColumns(){
+    	return aggregationColumns;
+    }
+	
 	@Override
 	public String toString(){
-		return "{tables="+tables+",conditions="+curConditionContext+"}";
+		return "{tables="+tables+","
+				+ "conditions="+curConditionContext+","
+				+ "selectItems="+selectItems+","
+				+ "orderColumns="+orderColumns+","
+				+ "aggregationColumns="+aggregationColumns+"}";
 	}
 
 }

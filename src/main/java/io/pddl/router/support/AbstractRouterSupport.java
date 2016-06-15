@@ -128,10 +128,13 @@ public abstract class AbstractRouterSupport{
 				//仅仅支持=、in和between等操作
 				switch(condition.getOperator()){
 					case EQUAL:
-						shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
-						break;
 					case IN:
-						shardingValues.add(new ShardingCollectionValue<Comparable<?>>(column, condition.getValues()));
+						if(condition.getValues().size()==1){
+							shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
+						}
+						else{
+							shardingValues.add(new ShardingCollectionValue<Comparable<?>>(column, condition.getValues()));
+						}
 						break;
 					case BETWEEN:
 						shardingValues.add(new ShardingRangeValue<Comparable<?>>(column, condition.getValues()));
