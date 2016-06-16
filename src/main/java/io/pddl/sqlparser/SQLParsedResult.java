@@ -32,7 +32,7 @@ public class SQLParsedResult {
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
-	private List<String> selectItems= new LinkedList<String>();
+	private List<String> metadataNames= new LinkedList<String>();
 	private List<OrderColumn> orderColumns;
 	private List<AggregationColumn> aggregationColumns;
 	private final ConditionContext curConditionContext = new ConditionContext();
@@ -174,12 +174,12 @@ public class SQLParsedResult {
 		return Optional.absent();
 	}
 	
-	public void addSelectItem(String item){
-		selectItems.add(item);
+	public void addMetadataName(String item){
+		metadataNames.add(item);
 	}
 	
-	public List<String> getSelectItems(){
-		return selectItems;
+	public List<String> getMetadataNames(){
+		return metadataNames;
 	}
 	
 	public void addOrderColumn(OrderColumn order){
@@ -208,7 +208,7 @@ public class SQLParsedResult {
 	public String toString(){
 		return "{tables="+tables+","
 				+ "conditions="+curConditionContext+","
-				+ "selectItems="+selectItems+","
+				+ "metadataNames="+metadataNames+","
 				+ "orderColumns="+orderColumns+","
 				+ "aggregationColumns="+aggregationColumns+"}";
 	}

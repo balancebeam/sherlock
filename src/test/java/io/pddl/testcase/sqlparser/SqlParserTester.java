@@ -9,7 +9,7 @@ import io.pddl.sqlparser.SQLParserFactory;
 import junit.framework.TestCase;
 
 public class SqlParserTester extends TestCase {
-	/*
+	
 	public void testA(){
 		String sql= "select name,description,location from emp where id= 2 and name='zhangsan'";
 		print("testA",sql,Collections.<Object>emptyList());
@@ -59,12 +59,9 @@ public class SqlParserTester extends TestCase {
 		String sql= "select o.order_name ,o.salary  from t_order o order by 1 asc, o.salary desc";
 		print("testJ",sql,Arrays.<Object>asList(new Object[]{26,37,45,67}));
 	}
-	*/
 	
 	public void testK(){
-		String sql= "select avg(salary) as v ,max(salary) from t_order o";
-		print("testK",sql,Collections.<Object>emptyList());
-		sql= "select avg(salary) as v ,(select avg(bonus) from emp), max(salary) from t_order o";
+		String sql= "select name, avg(salary) as val ,(select avg(bonus) from emp), max(salary) from t_order o where id in (select id from temp) and hello=12 order by name";
 		print("testK",sql,Collections.<Object>emptyList());
 	}
 	
@@ -73,8 +70,9 @@ public class SqlParserTester extends TestCase {
 		System.out.println("---------------"+topic+"---------------------");
 		System.out.println("tables= "+result.getTables());
 		System.out.println("conditions= "+result.getCondition().getAllCondition());
-		System.out.println("selectItems= "+result.getSelectItems());
+		System.out.println("metadataNames= "+result.getMetadataNames());
 		System.out.println("orderColumns= "+result.getOrderColumns());
+		System.out.println("aggregationColumns= "+result.getAggregationColumns());
 		System.out.println("sql= "+result.getSqlBuilder());
 	}
 }

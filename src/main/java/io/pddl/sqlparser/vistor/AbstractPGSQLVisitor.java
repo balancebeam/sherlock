@@ -19,7 +19,6 @@ import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
 import io.pddl.datasource.DatabaseType;
-import io.pddl.router.support.SQLRouterSupport;
 import io.pddl.sqlparser.SQLBuilder;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.SQLVisitor;
