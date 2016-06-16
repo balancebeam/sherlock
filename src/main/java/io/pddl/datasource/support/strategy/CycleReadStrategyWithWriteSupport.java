@@ -4,16 +4,16 @@ import javax.sql.DataSource;
 
 import io.pddl.datasource.PartitionDataSource;
 
-public class PollingReadStrategyWithWriteSupport extends PollingReadStrategySupport{
+public class CycleReadStrategyWithWriteSupport extends CycleReadStrategySupport{
 	
 	@Override
 	public DataSource getSlaveDataSource(PartitionDataSource pds) {
-		return getDataSourceByPolling(pds,1);
+		return getDataSourceByCycle(pds,1);
 	}
 	
 	@Override
 	public String getStrategyName(){
-		return "polling-w";
+		return "cycle-w";
 	}
 
 }

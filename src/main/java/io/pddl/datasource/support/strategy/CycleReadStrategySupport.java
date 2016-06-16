@@ -14,7 +14,7 @@ import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
 
-public class PollingReadStrategySupport implements DataSourceReadStrategy{
+public class CycleReadStrategySupport implements DataSourceReadStrategy{
 	
 	private Log logger = LogFactory.getLog(getClass());
 	
@@ -22,10 +22,10 @@ public class PollingReadStrategySupport implements DataSourceReadStrategy{
 
 	@Override
 	public DataSource getSlaveDataSource(PartitionDataSource pds) {
-		return getDataSourceByPolling(pds,0);
+		return getDataSourceByCycle(pds,0);
 	}
 	
-	protected DataSource getDataSourceByPolling(PartitionDataSource pds,int w){
+	protected DataSource getDataSourceByCycle(PartitionDataSource pds,int w){
 		List<DataSource> slaveDataSources= ((PartitionDataSourceSupport)pds).getSlaveDataSources();
 		if(CollectionUtils.isEmpty(slaveDataSources)){
 			if(logger.isInfoEnabled()){
@@ -37,7 +37,7 @@ public class PollingReadStrategySupport implements DataSourceReadStrategy{
 		if(next== null){
 			hash.putIfAbsent(pds.getName(), new AtomicLong(0));
 			if((next= hash.get(pds.getName()))==null){
-				return getDataSourceByPolling(pds,w);
+				return getDataSourceByCycle(pds,w);
 			}
 		}
     	int total= slaveDataSources.size()+ w,
@@ -50,7 +50,7 @@ public class PollingReadStrategySupport implements DataSourceReadStrategy{
 	
 	@Override
 	public String getStrategyName(){
-		return "polling";
+		return "cycle";
 	}
 
 }
