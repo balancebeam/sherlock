@@ -8,8 +8,8 @@ import org.apache.commons.logging.LogFactory;
 
 import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.support.strategy.OnlyWriteReadStrategySupport;
-import io.pddl.datasource.support.strategy.PollingReadStrategySupport;
-import io.pddl.datasource.support.strategy.PollingReadStrategyWithWriteSupport;
+import io.pddl.datasource.support.strategy.CycleReadStrategySupport;
+import io.pddl.datasource.support.strategy.CycleReadStrategyWithWriteSupport;
 import io.pddl.datasource.support.strategy.WeightReadStrategySupport;
 import io.pddl.datasource.support.strategy.WeightReadStrategyWithWriteSupport;
 
@@ -22,8 +22,8 @@ final public class DatabaseReadStrategyRepository {
 	static{
 		Class<?>[] strategyClasses= new Class<?>[]{
 			OnlyWriteReadStrategySupport.class,
-			PollingReadStrategySupport.class,
-			PollingReadStrategyWithWriteSupport.class,
+			CycleReadStrategySupport.class,
+			CycleReadStrategyWithWriteSupport.class,
 			WeightReadStrategySupport.class,
 			WeightReadStrategyWithWriteSupport.class
 		};

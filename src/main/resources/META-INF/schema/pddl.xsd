@@ -51,8 +51,8 @@
     <xsd:simpleType name="readStrategyEnumType">
     	<xsd:restriction base="xsd:string">
 		  <xsd:enumeration value="only-write"/>
-		  <xsd:enumeration value="polling"/>	
-		  <xsd:enumeration value="polling-w"/>
+		  <xsd:enumeration value="cycle"/>	
+		  <xsd:enumeration value="cycle-w"/>
 		  <xsd:enumeration value="weight"/>
 		  <xsd:enumeration value="weight-w"/>
     	</xsd:restriction>

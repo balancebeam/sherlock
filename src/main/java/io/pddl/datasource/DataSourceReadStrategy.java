@@ -12,8 +12,8 @@ public interface DataSourceReadStrategy {
 	/**
 	 * 获取策略的名称
 	 * only-write 始终使用主数据库
-	 * polling 轮询
-	 * polling-w 主数据库参与轮询
+	 * cycle 轮询
+	 * cycle-w 主数据库参与轮询
 	 * weight 权重
 	 * weight-w 主数据库参与权重
 	 * 
