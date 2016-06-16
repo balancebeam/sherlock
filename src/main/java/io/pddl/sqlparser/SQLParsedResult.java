@@ -18,11 +18,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.merger.Limit;
 import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.Condition;
 import io.pddl.sqlparser.bean.Condition.BinaryOperator;
 import io.pddl.sqlparser.bean.Condition.Column;
 import io.pddl.sqlparser.bean.ConditionContext;
+import io.pddl.sqlparser.bean.GroupColumn;
 import io.pddl.sqlparser.bean.OrderColumn;
 import io.pddl.sqlparser.bean.Table;
 import io.pddl.util.SQLUtil;
@@ -32,10 +34,12 @@ public class SQLParsedResult {
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
-	private List<String> metadataNames= new LinkedList<String>();
+	private final ConditionContext curConditionContext = new ConditionContext();
+	private List<String> metadataColumns= new LinkedList<String>();
 	private List<OrderColumn> orderColumns;
 	private List<AggregationColumn> aggregationColumns;
-	private final ConditionContext curConditionContext = new ConditionContext();
+	private List<GroupColumn> groupColumns;
+	private Limit limit;
 
 	public SQLParsedResult(SQLBuilder sqlBuilder) {
 		this.sqlBuilder = sqlBuilder;
@@ -174,12 +178,12 @@ public class SQLParsedResult {
 		return Optional.absent();
 	}
 	
-	public void addMetadataName(String item){
-		metadataNames.add(item);
+	public void addMetadataColumn(String name){
+		metadataColumns.add(name);
 	}
 	
-	public List<String> getMetadataNames(){
-		return metadataNames;
+	public List<String> getMetadataColumns(){
+		return metadataColumns;
 	}
 	
 	public void addOrderColumn(OrderColumn order){
@@ -203,14 +207,36 @@ public class SQLParsedResult {
     public List<AggregationColumn> getAggregationColumns(){
     	return aggregationColumns;
     }
+    
+    public void addGroupColumn(GroupColumn column){
+    	if(CollectionUtils.isEmpty(groupColumns)){
+    		groupColumns= new LinkedList<GroupColumn>();
+		}
+    	groupColumns.add(column);
+    }
+    
+    public List<GroupColumn> getGroupColumns(){
+    	return groupColumns;
+    }
+    
+    public void setLimit(Limit limit){
+    	this.limit= limit;
+    }
+    
+    public Limit getLimit(){
+    	return limit;
+    }
 	
 	@Override
 	public String toString(){
-		return "{tables="+tables+","
-				+ "conditions="+curConditionContext+","
-				+ "metadataNames="+metadataNames+","
-				+ "orderColumns="+orderColumns+","
-				+ "aggregationColumns="+aggregationColumns+"}";
+		return "{\ntables="+tables+",\n"
+				+ "conditions="+curConditionContext+",\n"
+				+ "metadataColumns="+metadataColumns+",\n"
+				+ "aggregationColumns="+aggregationColumns+",\n"
+				+ "orderColumns="+orderColumns+",\n"
+				+ "groupColumns="+groupColumns+",\n"
+				+ "limit="+limit+",\n"
+				+ "sql="+sqlBuilder+"\n}";
 	}
 
 }

@@ -6,24 +6,24 @@ public class OrderColumn {
 		ASC,DESC;
 	}
 	
-	private int index;
+	private int columnIndex;
 	
-	private String name;
+	private String columnName;
 	
 	private OrderType orderType;
 	
-	public OrderColumn(int index,String name, OrderType orderType){
-		this.index= index;
-		this.name= name;
+	public OrderColumn(String columnName, OrderType orderType,int columnIndex){
+		this.columnName= columnName;
 		this.orderType= orderType;
+		this.columnIndex= columnIndex;
 	}
 	
-	public int getIndex(){
-		return index;
+	public int getColumnIndex(){
+		return columnIndex;
 	}
 	
-	public String getName(){
-		return name;
+	public String getColumnName(){
+		return columnName;
 	}
 	
 	public OrderType getOrderType(){
@@ -32,6 +32,6 @@ public class OrderColumn {
 	
 	@Override
 	public String toString(){
-		return "{name="+name+",index="+index+",orderType="+orderType+"}";
+		return "{name="+columnName+",columnIndex="+columnIndex+",orderType="+orderType+"}";
 	}
 }
