@@ -8,13 +8,13 @@ public class AggregationColumn{
 	
 	private String expression;
 	
-	private String alias;
+	private int columnIndex;
 	
 	private AggregationType aggregationType;
 
-	public AggregationColumn(String expression,String alias,AggregationType aggregationType){
+	public AggregationColumn(String expression,int columnIndex,AggregationType aggregationType){
 		this.expression= expression;
-		this.alias= alias;
+		this.columnIndex= columnIndex;
 		this.aggregationType= aggregationType;
 	}
 	
@@ -26,8 +26,14 @@ public class AggregationColumn{
 		return expression;
 	}
 	
-	public String getAlias(){
-		return alias;
+	public int getColumnIndex(){
+		return columnIndex;
+	}
+	
+	
+	@Override
+	public String toString(){
+		return "{expression="+expression+",columnIndex="+columnIndex+"}";
 	}
 	
 }
