@@ -17,6 +17,8 @@ import io.pddl.datasource.support.PartitionDataSourceSupport;
 public class WeightReadStrategySupport implements DataSourceReadStrategy{
 	
 	private Log logger = LogFactory.getLog(getClass());
+
+	private int totalWeight = 0;
 	
 	@Override
 	public DataSource getSlaveDataSource(PartitionDataSource pds) {
@@ -31,13 +33,14 @@ public class WeightReadStrategySupport implements DataSourceReadStrategy{
 			}
 			return pds.getMasterDataSource();
 		}
-    	int total= 0;
-    	//TODO this need cache
-		for(DataSource ds: slaveDataSources){
-			total+= ((WeightDataSourceProxy)ds).getWeight();
+
+		if (totalWeight == 0) {
+			// cache total weight
+			calculateTotalWeight(slaveDataSources);
 		}
+
 		Random rand = new Random();
-		int weight= 0,rdm= rand.nextInt(total+ w);
+		int weight= 0,rdm= rand.nextInt(totalWeight + w);
 		for(DataSource ds: slaveDataSources){
 			weight+= ((WeightDataSourceProxy)ds).getWeight();
 			if(weight> rdm){
@@ -53,6 +56,16 @@ public class WeightReadStrategySupport implements DataSourceReadStrategy{
 	@Override
 	public String getStrategyName(){
 		return "weight";
+	}
+
+	private synchronized void calculateTotalWeight(List<DataSource> lds) {
+		if (totalWeight != 0) return;
+
+		int total = 0;
+		for(DataSource ds: lds){
+			total+= ((WeightDataSourceProxy)ds).getWeight();
+		}
+		totalWeight = total;
 	}
 
 }
