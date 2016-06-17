@@ -34,6 +34,7 @@ public class SQLParsedResult {
 	private SQLBuilder sqlBuilder;
 	private Set<Table> tables;
 	private Table curTable;
+	private boolean distinct;
 	private final ConditionContext curConditionContext = new ConditionContext();
 	private List<String> metadataColumns= new LinkedList<String>();
 	private List<OrderColumn> orderColumns;
@@ -226,11 +227,20 @@ public class SQLParsedResult {
     public Limit getLimit(){
     	return limit;
     }
+    
+    public void markDistinct(){
+    	this.distinct= true;
+    }
+    
+    public boolean distinct(){
+    	return distinct;
+    }
 	
 	@Override
 	public String toString(){
 		return "{\ntables="+tables+",\n"
 				+ "conditions="+curConditionContext+",\n"
+				+ "distinct="+ distinct+",\n"
 				+ "metadataColumns="+metadataColumns+",\n"
 				+ "aggregationColumns="+aggregationColumns+",\n"
 				+ "orderColumns="+orderColumns+",\n"

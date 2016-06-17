@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
+import com.alibaba.druid.sql.ast.SQLSetQuantifier;
 import com.alibaba.druid.sql.ast.expr.SQLAggregateExpr;
 import com.alibaba.druid.sql.ast.expr.SQLAllColumnExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
@@ -44,6 +45,12 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         if (x.getFrom() instanceof SQLExprTableSource) {
             SQLExprTableSource tableExpr = (SQLExprTableSource) x.getFrom();
             setCurrentTable(tableExpr.getExpr().toString(), Optional.fromNullable(tableExpr.getAlias()));
+        }
+        //处理distinct
+        if(isEnableCollectMetadata()){
+        	if(SQLSetQuantifier.DISTINCT==x.getDistionOption()){
+        		parseResult.markDistinct();
+        	}
         }
         return super.visit(x);
     }
@@ -164,6 +171,36 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         tryUnion= true;
     }
     
+    //解析Groupby节点
+    @Override
+    public boolean visit(SQLSelectGroupByClause x){
+    	//如果嵌套子查询或第一个SQL解析完毕
+    	if(!isEnableCollectMetadata()){
+    		return super.visit(x); 
+    	}
+    	for(SQLExpr expr:x.getItems()){
+    		String columnName= null;
+    		if(expr instanceof SQLPropertyExpr) {
+    			columnName= ((SQLPropertyExpr)expr).getName();
+    		} else if (expr instanceof SQLIdentifierExpr) {
+    			columnName = ((SQLIdentifierExpr)expr).getName();
+    		}
+    		if(!StringUtils.isEmpty(columnName)){
+				int index= parseResult.getMetadataColumns().indexOf(columnName);
+				if(index!= -1){
+					parseResult.addGroupColumn(new GroupColumn(columnName,++index));
+					if(logger.isInfoEnabled()){
+	        			logger.info("group column ["+columnName+"] index is: "+index);
+	        		}
+				}
+				else{
+					logger.warn("cannot found group column ["+columnName+"] in metadatacolumns: "+parseResult.getMetadataColumns());
+				}
+    		}
+    	}
+    	return super.visit(x);
+    }
+    
     /*
      * 遍历orderby内容
      */
@@ -207,36 +244,6 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             }
         }
         return super.visit(x);
-    }
- 
-    //解析Groupby节点
-    @Override
-    public boolean visit(SQLSelectGroupByClause x){
-    	//如果嵌套子查询或第一个SQL解析完毕
-    	if(!isEnableCollectMetadata()){
-    		return super.visit(x); 
-    	}
-    	for(SQLExpr expr:x.getItems()){
-    		String columnName= null;
-    		if(expr instanceof SQLPropertyExpr) {
-    			columnName= ((SQLPropertyExpr)expr).getName();
-    		} else if (expr instanceof SQLIdentifierExpr) {
-    			columnName = ((SQLIdentifierExpr)expr).getName();
-    		}
-    		if(!StringUtils.isEmpty(columnName)){
-				int index= parseResult.getMetadataColumns().indexOf(columnName);
-				if(index!= -1){
-					parseResult.addGroupColumn(new GroupColumn(columnName,++index));
-					if(logger.isInfoEnabled()){
-	        			logger.info("group column ["+columnName+"] index is: "+index);
-	        		}
-				}
-				else{
-					logger.warn("cannot found group column ["+columnName+"] in metadatacolumns: "+parseResult.getMetadataColumns());
-				}
-    		}
-    	}
-    	return super.visit(x);
     }
     
     //解析Limit节点
