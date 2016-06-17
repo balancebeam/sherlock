@@ -19,6 +19,8 @@ public class sqlmain {
 		 //String sql ="SELECT * FROM test1.cont a where a.id=? or bbb=? and a.name=? or a.sex=nam"; 
 		 String sql ="DELETE FROM t_item_ext WHERE item_id IN (?, ?, ?)";
 		 
+		 
+		 
 		 List<Object> list = Lists.newArrayList();
 		 list.add(777);
 		 list.add(9);
