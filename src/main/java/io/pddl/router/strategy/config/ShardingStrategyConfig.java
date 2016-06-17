@@ -37,7 +37,7 @@ public class ShardingStrategyConfig{
 		.append("columns=")
 		.append(getColumns())
 		.append(", ")
-		.append("function=")
+		.append("strategy=")
 		.append(strategy)
 		.append(" ]");
 		return builder.toString();

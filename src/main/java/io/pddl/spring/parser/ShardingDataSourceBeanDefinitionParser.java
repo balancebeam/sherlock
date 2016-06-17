@@ -57,6 +57,11 @@ import io.pddl.router.table.support.GlobalTableRepositorySupport;
 import io.pddl.router.table.support.LogicTableRepositorySupport;
 import io.pddl.router.table.support.LogicTableRouterSupport;
 
+/**
+ * 定义分片数据源
+ * @author yangzz
+ *
+ */
 public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser{
 	
 	protected Log logger = LogFactory.getLog(getClass());
@@ -75,6 +80,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		parseShardingTables(element,parserContext);
 		
 		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
+		factory.addPropertyValue("globalTableRepository", globalTableRepositoryDefinition);
+		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
 		factory.addPropertyValue("sqlRouter", parseSQLRouter(element,parserContext));
 		factory.addPropertyValue("processor", parseExecutorProcessor());
 		
@@ -135,28 +142,32 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	}
 	
 	private void parseShardingTables(Element element,ParserContext parserContext){
+		BeanDefinitionBuilder globalTableFactory = BeanDefinitionBuilder.rootBeanDefinition(GlobalTableRepositorySupport.class);
+		BeanDefinitionBuilder logicTableFactory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableRepositorySupport.class);
 		Element tablesElement= DomUtils.getChildElementByTagName(element, TABLES);
 		if(tablesElement!= null){
 			List<Element> globalElements= DomUtils.getChildElementsByTagName(tablesElement, GLOBAL_TABLE);
 			if(!CollectionUtils.isEmpty(globalElements)){
-				BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(GlobalTableRepositorySupport.class);
 				Set<String> globalTables= new HashSet<String>();
 				for(Element it: globalElements){
 					String name= it.getAttribute(TABLE_NAME);
 					globalTables.add(name);
 				}
-				factory.addPropertyValue("globalTables", globalTables);
-				globalTableRepositoryDefinition= factory.getBeanDefinition();
+				globalTableFactory.addPropertyValue("globalTables", globalTables);
 			}
-			BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableRepositorySupport.class);
 			List<Element> logicTableElements= DomUtils.getChildElementsByTagName(tablesElement, LOGIC_TABLE);
 			ManagedList<BeanDefinition> logicTables= new ManagedList<BeanDefinition>();
 			for(Element it: logicTableElements){
 				logicTables.add(parseLogicTable(it,parserContext));
 			}
-			factory.addPropertyValue("logicTables", logicTables);
-			logicTableRepositoryDefinition= factory.getBeanDefinition();
+			logicTableFactory.addPropertyValue("logicTables", logicTables);
 		}
+		else{
+			logger.warn("GlobalTable and LogicTable are empty, Only support reading and writing separation");
+		}
+		//确保全局表和逻辑表的对象不为空
+		globalTableRepositoryDefinition= globalTableFactory.getBeanDefinition();
+		logicTableRepositoryDefinition= logicTableFactory.getBeanDefinition();
 	}
 	
 	private BeanDefinition parseLogicTable(Element element,ParserContext parserContext){
@@ -206,14 +217,10 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 			factory.addPropertyValue("databaseRouter", parseDatabaseRouter(element,parserContext));
 		}
 		factory.addPropertyValue("tableRouter", parseTableRouter(element,parserContext));
-		factory.addPropertyValue("globalTableRepository", globalTableRepositoryDefinition);
-		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
 		return factory.getBeanDefinition();
 	}
 	private BeanDefinition parseDatabaseRouter(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(DatabaseRouterSupport.class);
-		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
-		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
 		String shardingCache= element.getAttribute(SHARDING_CACHE);
 		if(!StringUtils.isEmpty(shardingCache)){
 			factory.addPropertyReference("shardingCache", shardingCache);
@@ -223,7 +230,6 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	
 	private BeanDefinition parseTableRouter(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableRouterSupport.class);
-		factory.addPropertyValue("logicTableRepository", logicTableRepositoryDefinition);
 		String shardingCache= element.getAttribute(SHARDING_CACHE);
 		if(!StringUtils.isEmpty(shardingCache)){
 			factory.addPropertyReference("shardingCache", shardingCache);
@@ -233,7 +239,6 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	
 	private BeanDefinition parseExecutorProcessor(){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ExecuteProcessorSupport.class);
-		factory.addPropertyValue("shardingDataSourceRepository", shardingDataSourceRepositoryDefinition);
 		return factory.getBeanDefinition();
 	}
 }

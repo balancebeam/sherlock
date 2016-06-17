@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import io.pddl.datasource.PartitionDataSource;
@@ -11,6 +13,11 @@ import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.exception.ShardingDataSourceException;
 
+/**
+ * 多数据源仓库
+ * @author yangzz
+ *
+ */
 public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRepository,InitializingBean {
 	
     private Set<PartitionDataSource> partitionDataSources;
@@ -38,7 +45,7 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
     }
 
 	@Override
-	public PartitionDataSource getDefaultPartitionDataSource() {
+	public PartitionDataSource getDefaultDataSource() {
 		return defaultPartitionDataSource;
 	}
 	
@@ -47,11 +54,13 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
         if (partitionDataSources.isEmpty()) {
         	throw new ShardingDataSourceException("do not configure any sharding datasource.");
         }
-        
+        Log logger = LogFactory.getLog(ShardingDataSourceRepositorySupport.class);
         for(Iterator<PartitionDataSource> item= partitionDataSources.iterator();item.hasNext();){
         	PartitionDataSource partitionDataSource= item.next();
         	String partition= partitionDataSource.getName();
-        	
+        	if(logger.isInfoEnabled()){
+        		logger.info("init partition datasource: "+partitionDataSource);
+        	}
         	partitionDataSourceMapping.put(partition,partitionDataSource);
         	if(((PartitionDataSourceSupport)partitionDataSource).isDefaultDataSource()){
         		if(defaultPartitionDataSource!= null){
@@ -62,6 +71,9 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
         }
         if(defaultPartitionDataSource==null){
         	defaultPartitionDataSource= partitionDataSources.iterator().next();
+        	if(logger.isInfoEnabled()){
+        		logger.info("default datasource: "+defaultPartitionDataSource);
+        	}
         }
     }
 }

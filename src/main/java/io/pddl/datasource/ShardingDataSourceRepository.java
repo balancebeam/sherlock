@@ -23,8 +23,8 @@ public interface ShardingDataSourceRepository {
 	PartitionDataSource getPartitionDataSource(String name);
 	
 	/**
-	 * 获取默认的分片数据源
+	 * 获取默认的数据源
 	 * @return
 	 */
-	PartitionDataSource getDefaultPartitionDataSource();
+	PartitionDataSource getDefaultDataSource();
 }

@@ -21,7 +21,6 @@ import io.pddl.router.strategy.value.ShardingRangeValue;
 import io.pddl.router.strategy.value.ShardingSingleValue;
 import io.pddl.router.strategy.value.ShardingValue;
 import io.pddl.router.table.LogicTable;
-import io.pddl.router.table.LogicTableRepository;
 import io.pddl.sqlparser.bean.Condition;
 import io.pddl.sqlparser.bean.Table;
 
@@ -29,13 +28,7 @@ public abstract class AbstractRouterSupport{
 	
 	protected Log logger = LogFactory.getLog(getClass());
 
-	protected LogicTableRepository logicTableRepository;
-	
 	protected ShardingCache shardingCache;
-	
-	public void setLogicTableRepository(LogicTableRepository logicTableRepository) {
-		this.logicTableRepository = logicTableRepository;
-	}
 	
 	public void setShardingCache(ShardingCache shardingCache){
 		this.shardingCache= shardingCache;
@@ -65,7 +58,7 @@ public abstract class AbstractRouterSupport{
 		Map<String, List<LogicTable>> hash = new HashMap<String, List<LogicTable>>(tables.size());
 		for (Table table: tables) {
 			String tableName= table.getName();
-			LogicTable logicTable = logicTableRepository.getLogicTable(tableName);
+			LogicTable logicTable = ctx.getLogicTableRepository().getLogicTable(tableName);
 			//如果不是逻辑表，不需要处理
 			if (logicTable == null) {
 				if(logger.isInfoEnabled()){

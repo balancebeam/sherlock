@@ -11,6 +11,11 @@ import io.pddl.router.table.LogicTable;
 import io.pddl.router.table.LogicTableRepository;
 import io.pddl.router.table.config.AbstractLogicTableConfig;
 
+/**
+ * 逻辑仓库仓库
+ * @author yangzz
+ *
+ */
 public class LogicTableRepositorySupport implements LogicTableRepository{
 
 	private Map<String,LogicTable> logicTableMapping= new HashMap<String,LogicTable>();
@@ -49,6 +54,11 @@ public class LogicTableRepositorySupport implements LogicTableRepository{
 				forEachLogicTable(children.get(i),layerIdx+","+i);
 			}
 		}
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return CollectionUtils.isEmpty(logicTableMapping);
 	}
 
 }

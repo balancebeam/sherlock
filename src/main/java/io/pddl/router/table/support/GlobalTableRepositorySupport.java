@@ -6,6 +6,11 @@ import org.springframework.util.CollectionUtils;
 
 import io.pddl.router.table.GlobalTableRepository;
 
+/**
+ * 全局表仓库
+ * @author yangzz
+ *
+ */
 public class GlobalTableRepositorySupport implements GlobalTableRepository{
 
 	private Set<String> globalTables;
@@ -18,5 +23,10 @@ public class GlobalTableRepositorySupport implements GlobalTableRepository{
 	public void setGlobalTables(Set<String> globalTables){
     	this.globalTables= globalTables;
     }
+
+	@Override
+	public boolean isEmpty() {
+		return CollectionUtils.isEmpty(globalTables);
+	}
 
 }

@@ -24,7 +24,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.util.CollectionUtils;
 
 import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteStatementCallback;
 import io.pddl.executor.ExecuteStatementProcessor;
@@ -40,8 +39,6 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 
 	private ConcurrentHashMap<String, ExecutorService> executorServiceMapping = new ConcurrentHashMap<String, ExecutorService>();
 
-	private ShardingDataSourceRepository shardingDataSourceRepository;
-	
 	private long timeout= 30;
 	
 	public ExecuteProcessorSupport(){
@@ -65,12 +62,8 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 		this.timeout= timeout;
 	}
 
-	public void setShardingDataSourceRepository(ShardingDataSourceRepository shardingDataSourceRepository) {
-		this.shardingDataSourceRepository = shardingDataSourceRepository;
-	}
-
 	@Override
-	public <IN extends Statement, OUT> List<OUT> execute(ExecuteContext ctx,List<ExecuteStatementWrapper<IN>> wrappers,final ExecuteStatementCallback<IN, OUT> executeUnit) throws SQLException{
+	public <IN extends Statement, OUT> List<OUT> execute(final ExecuteContext ctx,List<ExecuteStatementWrapper<IN>> wrappers,final ExecuteStatementCallback<IN, OUT> executeUnit) throws SQLException{
 		//如果只有一个Statement对象
 		if(wrappers.size() == 1){
 			return Collections.singletonList(executeUnit.execute(wrappers.get(0).getSQLExecutionUnit().getShardingSql(),wrappers.get(0).getStatement()));
@@ -90,7 +83,7 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 			}
 			List<Future<List<OUT>>> futures = new ArrayList<Future<List<OUT>>>(hash.size());
 			for(final Entry<String,List<ExecuteStatementWrapper<IN>>> each: hash.entrySet()){
-				ExecutorService executorService = getExecutorService(each.getKey());
+				ExecutorService executorService = getExecutorService(ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getKey()));
 				futures.add(executorService.submit(new Callable<List<OUT>>(){
 					@Override
 					public List<OUT> call() throws Exception {
@@ -121,7 +114,7 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 		List<Future<OUT>> futures = new ArrayList<Future<OUT>>(wrappers.size());
 		for (final ExecuteStatementWrapper<IN> each : wrappers) {
 			//根据不同的数据源获取不同的线程池对象
-			ExecutorService executorService = getExecutorService(each.getSQLExecutionUnit().getDataSourceName());
+			ExecutorService executorService = getExecutorService(ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getSQLExecutionUnit().getDataSourceName()));
 			futures.add(executorService.submit(new Callable<OUT>() {
 				@Override
 				public OUT call() throws Exception {
@@ -142,12 +135,12 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 		return result;
 	}
 	
-	private ExecutorService getExecutorService(String dataSourceName) {
-		ExecutorService executorService = executorServiceMapping.get(dataSourceName);
+	private ExecutorService getExecutorService(PartitionDataSource pds) {
+		ExecutorService executorService = executorServiceMapping.get(pds.getName());
 		if (executorService == null) {
-			executorServiceMapping.putIfAbsent(dataSourceName, createExecutorForParitionDataSource(dataSourceName));
-			if (null == (executorService = executorServiceMapping.get(dataSourceName))) {
-				return getExecutorService(dataSourceName);
+			executorServiceMapping.putIfAbsent(pds.getName(), createExecutorForParitionDataSource(pds));
+			if (null == (executorService = executorServiceMapping.get(pds.getName()))) {
+				return getExecutorService(pds);
 			}
 		}
 		return executorService;
@@ -156,11 +149,10 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 	/*
 	 * 根据数据的名称创建对应的线程池对象，各数据源的多并发执行互不影响
 	 */
-	private ExecutorService createExecutorForParitionDataSource(final String dataSourceName) {
-		PartitionDataSource dataSource = shardingDataSourceRepository.getPartitionDataSource(dataSourceName);
-		final String method= "createExecutorForDataSource-" + dataSourceName + " data source";
-		int poolSize= dataSource.getPoolSize();
-		int timeout= dataSource.getTimeout();
+	private ExecutorService createExecutorForParitionDataSource(PartitionDataSource pds) {
+		final String method= "createExecutorForDataSource-" + pds.getName() + " data source";
+		int poolSize= pds.getPoolSize();
+		int timeout= pds.getTimeout();
 		int coreSize = Runtime.getRuntime().availableProcessors();
 		if (poolSize < coreSize) {
 			coreSize = poolSize;
@@ -176,7 +168,7 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(coreSize, poolSize, timeout, TimeUnit.SECONDS, queueToUse,
 				tf, new ThreadPoolExecutor.CallerRunsPolicy());
 		if(logger.isInfoEnabled()){
-			logger.info("create executorService(poolSize="+poolSize+",timeout="+timeout+") for partition dataSource: "+dataSourceName);
+			logger.info("create executorService(poolSize="+poolSize+",timeout="+timeout+") for partition dataSource: "+pds.getName());
 		}
 		return executor;
 	}

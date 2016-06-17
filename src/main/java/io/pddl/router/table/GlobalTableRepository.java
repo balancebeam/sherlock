@@ -14,4 +14,10 @@ public interface GlobalTableRepository {
 	 * @return true | false
 	 */
 	boolean isGlobalTable(String name);
+	
+	/**
+	 * 全局表定义是否为空
+	 * @return
+	 */
+	boolean isEmpty();
 }

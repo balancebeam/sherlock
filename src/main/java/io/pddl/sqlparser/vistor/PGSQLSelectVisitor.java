@@ -31,6 +31,11 @@ import io.pddl.sqlparser.bean.GroupColumn;
 import io.pddl.sqlparser.bean.OrderColumn;
 import io.pddl.sqlparser.bean.OrderColumn.OrderType;
 
+/**
+ * PostgreSQL查询访问收集器，主要收集表名、条件项、列元数据、distinct、聚合表达式、groupby、orderby和limit等内容
+ * @author yangzz
+ *
+ */
 public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	
 	private int selectLayer= 0;
@@ -163,7 +168,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	        		parseResult.addMetadataColumn(columnName);
 	        		StringBuilder expression = new StringBuilder();
 	        		expr.accept(new PGOutputVisitor(expression));
-	        		logger.warn(expression.toString()+" miss alias, will use "+columnName+" temporarily");
+	        		logger.warn(expression.toString()+" miss alias, will use temporary column name: "+columnName);
 	        	}
         	}
         }
