@@ -15,14 +15,14 @@ import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
 
 public class WeightReadStrategySupport implements DataSourceReadStrategy{
-	
+
 	private Log logger = LogFactory.getLog(getClass());
-	
+
 	@Override
 	public DataSource getSlaveDataSource(PartitionDataSource pds) {
 		return getDataSourceByWeight(pds,0);
 	}
-	
+
 	protected DataSource getDataSourceByWeight(PartitionDataSource pds,int w){
 		List<DataSource> slaveDataSources= ((PartitionDataSourceSupport)pds).getSlaveDataSources();
 		if(CollectionUtils.isEmpty(slaveDataSources)){
@@ -31,8 +31,8 @@ public class WeightReadStrategySupport implements DataSourceReadStrategy{
 			}
 			return pds.getMasterDataSource();
 		}
-    	int total= 0;
-    	//TODO this need cache
+		int total= 0;
+		//TODO this need cache
 		for(DataSource ds: slaveDataSources){
 			total+= ((WeightDataSourceProxy)ds).getWeight();
 		}
@@ -48,8 +48,8 @@ public class WeightReadStrategySupport implements DataSourceReadStrategy{
 			}
 		}
 		return pds.getMasterDataSource();
-    }
-	
+	}
+
 	@Override
 	public String getStrategyName(){
 		return "weight";
