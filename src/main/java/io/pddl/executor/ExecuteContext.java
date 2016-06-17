@@ -1,9 +1,11 @@
 package io.pddl.executor;
 
-import java.util.Collection;
 import java.util.List;
 
+import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.jdbc.ShardingConnection;
+import io.pddl.router.table.GlobalTableRepository;
+import io.pddl.router.table.LogicTableRepository;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.bean.SQLStatementType;
 
@@ -57,8 +59,21 @@ public interface ExecuteContext{
 	List<Object> getParameters();
 	
 	/**
-	 * 获取可用的数据源集合
-	 * @return Collection<String>
+	 * 获取多数据源仓库
+	 * @return ShardingDataSourceRepository
 	 */
-	Collection<String> getAvailableDataSourceNames();
+	ShardingDataSourceRepository getShardingDataSourceRepository();
+	
+	/**
+	 * 获取全局/字典表仓库
+	 * @return GlobalTableRepository
+	 */
+	GlobalTableRepository getGlobalTableRepository();
+	
+	/**
+	 * 获取逻辑表仓库
+	 * @return LogicTableRepository
+	 */
+	LogicTableRepository getLogicTableRepository();
+	
 }

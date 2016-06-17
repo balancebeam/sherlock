@@ -12,38 +12,32 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import io.pddl.datasource.PartitionDataSource;
-import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.executor.ExecuteContext;
-import io.pddl.executor.ExecuteStatementProcessor;
 import io.pddl.executor.support.ExecuteContextSupport;
 import io.pddl.jdbc.adapter.AbstractConnectionAdapter;
-import io.pddl.router.SQLRouter;
 
 public final class ShardingConnection extends AbstractConnectionAdapter {
 	
-	private ShardingDataSourceRepository shardingDataSourceRepository;
-	
-	private SQLRouter sqlRouter;
-	
-	private ExecuteContext executeContext;
-	
-	private ExecuteStatementProcessor processor;
+	private ExecuteContext ctx;
 	
 	private Set<Connection> connections= new HashSet<Connection>();
 	
-    public ShardingConnection(ShardingDataSourceRepository shardingDataSourceRepository,SQLRouter sqlRouter,ExecuteStatementProcessor processor){
-    	this.shardingDataSourceRepository= shardingDataSourceRepository;
-    	this.sqlRouter= sqlRouter;
-    	this.processor= processor;
+	ShardingDataSource shardingDataSource;
+	
+    public ShardingConnection(ShardingDataSource shardingDataSource){
+    	this.shardingDataSource= shardingDataSource;
     	//创建和ShardingConnection相关联的ExecuteContext上下文对象
-    	this.executeContext= new ExecuteContextSupport(this);
+    	this.ctx= new ExecuteContextSupport(this,
+    			shardingDataSource.shardingDataSourceRepository,
+    			shardingDataSource.globalTableRepository,
+    			shardingDataSource.logicTableRepository);
     }
     
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
     	//获取默认数据源进行获取元数据信息
     	//TODO 如果每个数据源中的MetaData不同需要做归并处理，复杂暂时不做处理
-    	DataSource ds= shardingDataSourceRepository.getDefaultPartitionDataSource().getMasterDataSource();
+    	DataSource ds= shardingDataSource.shardingDataSourceRepository.getDefaultDataSource().getMasterDataSource();
     	Connection conn= ds.getConnection();
     	try{
     		return conn.getMetaData();
@@ -103,7 +97,7 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
 	}
 	@Override
 	public Connection getConnection(String dataSourceName) throws SQLException{
-		PartitionDataSource pds= shardingDataSourceRepository.getPartitionDataSource(dataSourceName);
+		PartitionDataSource pds= shardingDataSource.shardingDataSourceRepository.getPartitionDataSource(dataSourceName);
 		Connection connection = null;
 		ExecuteContextSupport ctx= (ExecuteContextSupport)getExecuteContext();
 		if(!ctx.isSimplyDQLOperation()){
@@ -122,20 +116,8 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
 		return connection;
 	}
 	
-	public SQLRouter getSqlRouter(){
-		return sqlRouter;
-	}
-	
-	public ExecuteStatementProcessor getProcessor(){
-		return processor;
-	}
-	
 	public ExecuteContext getExecuteContext(){
-	    return executeContext;
-	}
-	
-	public ShardingDataSourceRepository getShardingDataSourceRepository(){
-		return shardingDataSourceRepository;
+	    return ctx;
 	}
     
 }

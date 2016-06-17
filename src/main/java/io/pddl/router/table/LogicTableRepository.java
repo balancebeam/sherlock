@@ -20,7 +20,13 @@ public interface LogicTableRepository {
 	
 	/**
 	 * 获取所有逻辑表名
-	 * @return
+	 * @return Collection<String>
 	 */
 	Collection<String> getLogicTableNames();
+	
+	/**
+	 * 逻辑表定义是否为空
+	 * @return true | false
+	 */
+	boolean isEmpty();
 }

@@ -54,8 +54,8 @@ public class ShardingStatement extends AbstractStatementAdapter {
         this.resultSetType = resultSetType;
         this.resultSetConcurrency = resultSetConcurrency;
         this.resultSetHoldability = resultSetHoldability;
-        this.sqlRouter= shardingConnection.getSqlRouter();
-        this.processor= shardingConnection.getProcessor();
+        this.sqlRouter= shardingConnection.shardingDataSource.sqlRouter;
+        this.processor= shardingConnection.shardingDataSource.processor;
     }
     
     @Override

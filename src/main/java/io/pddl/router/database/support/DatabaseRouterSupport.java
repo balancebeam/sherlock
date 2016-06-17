@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.util.CollectionUtils;
 
-import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.exception.ShardingDataSourceException;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.router.database.DatabaseRouter;
@@ -22,12 +21,6 @@ import io.pddl.sqlparser.bean.SQLStatementType;
  *
  */
 public class DatabaseRouterSupport extends AbstractRouterSupport implements DatabaseRouter{
-	
-	private ShardingDataSourceRepository shardingDataSourceRepository;
-	
-	public void setShardingDataSourceRepository(ShardingDataSourceRepository shardingDataSourceRepository){
-		this.shardingDataSourceRepository= shardingDataSourceRepository;
-	}
 	
 	@Override
 	public Collection<String> doRoute(ExecuteContext ctx) {
@@ -63,8 +56,9 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 		}
 		List<String> result= null;
 		if(!CollectionUtils.isEmpty(databaseNames)){
-			result = new ArrayList<String>(shardingDataSourceRepository.getPartitionDataSourceNames());
+			result = new ArrayList<String>(ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
 			for(Collection<String> each: databaseNames){
+				//取交集
 				result.retainAll(each);
 			}
 		}
@@ -73,9 +67,9 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 				throw new ShardingDataSourceException("can not shard database for sql: " +ctx.getLogicSql());
 			}
 			if(logger.isInfoEnabled()){
-				logger.info("no suitable database, will use all available database: "+ctx.getAvailableDataSourceNames());
+				logger.info("no suitable database, will use all available database: "+ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
 			}
-			return ctx.getAvailableDataSourceNames();
+			return ctx.getShardingDataSourceRepository().getPartitionDataSourceNames();
 		}
 		return result;
 	}
@@ -89,6 +83,6 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 		if(CollectionUtils.isEmpty(shardingValues)){
 			return null;
 		}
-		return strategyConfig.getStrategy().doSharding(ctx,shardingDataSourceRepository.getPartitionDataSourceNames(), shardingValues);
+		return strategyConfig.getStrategy().doSharding(ctx,ctx.getShardingDataSourceRepository().getPartitionDataSourceNames(), shardingValues);
 	}
 }

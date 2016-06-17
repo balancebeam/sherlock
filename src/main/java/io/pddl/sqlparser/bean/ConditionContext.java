@@ -63,4 +63,9 @@ public final class ConditionContext {
         conditions.clear();
     }
     
+    @Override
+    public String toString(){
+    	return conditions.toString();
+    }
+    
 }
