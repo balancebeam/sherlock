@@ -14,7 +14,7 @@
     <import resource="applicationContext-pddl.xml"/>
     <import resource="applicationContext-sequence.xml"/>
     
-    <context:component-scan base-package="io.pddl.testcase"></context:component-scan>
+    <context:component-scan base-package="io.pddl.demo"></context:component-scan>
     
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 	   <property name="location">
