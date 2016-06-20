@@ -27,7 +27,6 @@ import io.pddl.sqlparser.bean.ConditionContext;
  * 存在外层条件的节点.
  * 
  */
-
 public class CompositeOrASTNode extends AbstractOrASTNode {
     
     private final List<Condition> outConditions = new ArrayList<Condition>();

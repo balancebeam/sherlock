@@ -29,7 +29,6 @@ import io.pddl.sqlparser.bean.ConditionContext;
 /**
  * 抽象的OR语法树节点.
  * 
- * @author gaohongtao
  */
 public abstract class AbstractOrASTNode {
     
