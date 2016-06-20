@@ -1,6 +1,6 @@
 package io.pddl.sqlparser.bean;
 
-public class OrderColumn {
+public class OrderColumn implements IndexColumn{
 	
 	public enum OrderType{
 		ASC,DESC;

@@ -1,6 +1,6 @@
 package io.pddl.sqlparser.bean;
 
-public class GroupColumn {
+public class GroupColumn implements IndexColumn{
 	
 	private String columnName;
 	

@@ -96,7 +96,7 @@ public class ZKPartitionSequenceGenerator extends AbstractPartitionSequenceGener
 	public void afterPropertiesSet() throws Exception {
 
 		Builder builder = CuratorFrameworkFactory.builder().connectString(zkAddr)
-				.retryPolicy(new ExponentialBackoffRetry(1000, 3, 3000)).namespace("cobarclientx");
+				.retryPolicy(new ExponentialBackoffRetry(1000, 3, 3000)).namespace("pddl");
 		client = builder.build();
 		client.start();
 		try {
