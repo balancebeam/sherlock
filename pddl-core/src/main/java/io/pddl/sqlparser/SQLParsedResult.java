@@ -40,7 +40,10 @@ public class SQLParsedResult {
 	private List<OrderColumn> orderColumns;
 	private List<AggregationColumn> aggregationColumns;
 	private List<GroupColumn> groupColumns;
+	private List<ConditionContext> conditionContexts = new ArrayList<ConditionContext>();
 	private Limit limit;
+	
+    private boolean hasOrCondition = false;
 
 	public SQLParsedResult(SQLBuilder sqlBuilder) {
 		this.sqlBuilder = sqlBuilder;
@@ -63,7 +66,19 @@ public class SQLParsedResult {
 		return tables.iterator().next();
 	}
 	
-	public ConditionContext getCondition(){
+	public boolean isHasOrCondition() {
+		return hasOrCondition;
+	}
+
+	public void setHasOrCondition(boolean hasOrCondition) {
+		this.hasOrCondition = hasOrCondition;
+	}
+	
+	public List<ConditionContext> getConditions(){
+		return this.conditionContexts;
+	}
+
+	public ConditionContext getCurCondition(){
 		return this.curConditionContext;
 	}
 
@@ -71,6 +86,14 @@ public class SQLParsedResult {
 		this.tables.add(table);
 		this.curTable = table;
 		return table;
+	}
+	
+	public Table getCurTable(){
+		return this.curTable;
+	}
+	
+	public void setCurTable(Table curTable){
+		this.curTable = curTable;
 	}
 	
     public void addCondition(final String columnName, final String tableName, final BinaryOperator operator, final SQLExpr valueExpr, final DatabaseType databaseType, final List<Object> parameters) {
@@ -239,7 +262,7 @@ public class SQLParsedResult {
 	@Override
 	public String toString(){
 		return "{\ntables="+tables+",\n"
-				+ "conditions="+curConditionContext+",\n"
+				+ "conditions="+conditionContexts+",\n"
 				+ "distinct="+ distinct+",\n"
 				+ "metadataColumns="+metadataColumns+",\n"
 				+ "aggregationColumns="+aggregationColumns+",\n"
