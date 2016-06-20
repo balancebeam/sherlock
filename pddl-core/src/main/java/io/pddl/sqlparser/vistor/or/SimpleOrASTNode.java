@@ -27,7 +27,6 @@ import com.google.common.base.Optional;
  * 只包含OR的节点.
  * 
  */
-
 public class SimpleOrASTNode extends AbstractOrASTNode {
     
     private SQLBinaryOpExpr canSplitExpr;
