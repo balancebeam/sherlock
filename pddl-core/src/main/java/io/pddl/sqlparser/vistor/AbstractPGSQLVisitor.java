@@ -149,6 +149,7 @@ public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQ
 
 		switch (x.getOperator()) {
 		case BooleanOr:
+			parseResult.setHasOrCondition(true);
 			break;
 		case Equality:
 			parseResult.addCondition(x.getLeft(), BinaryOperator.EQUAL, Collections.singletonList(x.getRight()), getDatabaseType(), getParameters());
