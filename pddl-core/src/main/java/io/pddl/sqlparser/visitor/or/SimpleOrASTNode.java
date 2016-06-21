@@ -15,7 +15,7 @@
  * </p>
  */
 
-package io.pddl.sqlparser.vistor.or;
+package io.pddl.sqlparser.visitor.or;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
