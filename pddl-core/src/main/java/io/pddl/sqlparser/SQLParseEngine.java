@@ -15,7 +15,7 @@ import com.google.common.base.Preconditions;
 
 import io.pddl.exception.SQLParserException;
 import io.pddl.sqlparser.bean.SQLStatementType;
-import io.pddl.sqlparser.vistor.or.OrParser;
+import io.pddl.sqlparser.visitor.or.OrParser;
 
 public final class SQLParseEngine {
 	protected Log logger = LogFactory.getLog(getClass());

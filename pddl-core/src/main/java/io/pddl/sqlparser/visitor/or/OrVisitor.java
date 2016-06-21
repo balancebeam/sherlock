@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.vistor.or;
+package io.pddl.sqlparser.visitor.or;
 
 import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
@@ -8,7 +8,7 @@ import com.alibaba.druid.wall.spi.WallVisitorUtils;
 import com.google.common.base.Optional;
 
 import io.pddl.sqlparser.SQLVisitor;
-import io.pddl.sqlparser.vistor.AbstractPGSQLVisitor;
+import io.pddl.sqlparser.visitor.AbstractPGSQLVisitor;
 
 public class OrVisitor extends AbstractPGSQLVisitor {
     

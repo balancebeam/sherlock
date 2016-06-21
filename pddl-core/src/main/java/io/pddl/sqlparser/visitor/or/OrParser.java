@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.vistor.or;
+package io.pddl.sqlparser.visitor.or;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;

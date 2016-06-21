@@ -15,7 +15,7 @@
  * </p>
  */
 
-package io.pddl.sqlparser.vistor.or;
+package io.pddl.sqlparser.visitor.or;
 
 import java.util.ArrayList;
 import java.util.List;
