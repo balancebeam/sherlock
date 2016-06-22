@@ -17,12 +17,13 @@ public abstract class AbstractShardingResultSet extends AbstractResultSetAdapter
     private boolean offsetSkipped;
     
     private int readCount;
-    
-    protected AbstractShardingResultSet(final List<ResultSet> resultSets, final Limit limit) {
+
+    // TODO
+    protected AbstractShardingResultSet(final List<ResultSet> resultSets, final Limit limit) throws SQLException {
         super(resultSets);
         this.limit = limit;
         if(!CollectionUtils.isEmpty(resultSets)){
-        	setCurrentResultSet(resultSets.get(0));
+        	//setCurrentResultSet(resultSets.get(0));
         }
     }
     

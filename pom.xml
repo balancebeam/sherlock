@@ -25,6 +25,8 @@
 		<postgresql.version>9.4.1207.jre7</postgresql.version>
 		<mysql.version>5.1.26</mysql.version>
 		<mybatis.version>2.3.4.726</mybatis.version>
+		<lombok.version>1.16.4</lombok.version>
+		<commons-collections4.version>4.1</commons-collections4.version>
 	</properties>
 
 	<dependencyManagement>
@@ -85,6 +87,16 @@
 				<groupId>org.apache.ibatis</groupId>
 				<artifactId>ibatis-sqlmap</artifactId>
 				<version>${mybatis.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-collections4</artifactId>
+				<version>${commons-collections4.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

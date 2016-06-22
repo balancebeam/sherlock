@@ -73,7 +73,7 @@ public final class ShardingPreparedStatement extends AbstractPreparedStatementAd
 			}
     	});
         
-        return currentResultSet= MergeUtils.mergeResultSet(result);
+        return currentResultSet= MergeUtils.mergeResultSet(result, shardingConnection.getExecuteContext());
     }
     
     @Override

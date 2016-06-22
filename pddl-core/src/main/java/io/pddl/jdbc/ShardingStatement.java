@@ -75,7 +75,7 @@ public class ShardingStatement extends AbstractStatementAdapter {
 				return statement.executeQuery(shardingSql);
 			}
     	});
-        return currentResultSet= MergeUtils.mergeResultSet(result);
+        return currentResultSet= MergeUtils.mergeResultSet(result, shardingConnection.getExecuteContext());
     }
     
     @Override
@@ -201,7 +201,7 @@ public class ShardingStatement extends AbstractStatementAdapter {
         for (Statement each : getRoutedStatements()) {
             resultSets.add(each.getResultSet());
         }
-        return currentResultSet = MergeUtils.mergeResultSet(resultSets);
+        return currentResultSet = MergeUtils.mergeResultSet(resultSets, shardingConnection.getExecuteContext());
     }
     
     @Override

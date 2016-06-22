@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import io.pddl.executor.ExecuteContext;
 import io.pddl.jdbc.AbstractShardingResultSet;
 
 /**
@@ -28,24 +29,24 @@ import io.pddl.jdbc.AbstractShardingResultSet;
  * 
  * @author zhangliang
  */
-public final class IteratorResultSet extends AbstractShardingResultSet {
+public final class IteratorResultSet /*extends AbstractShardingResultSet*/ {
     
-    public IteratorResultSet(final List<ResultSet> resultSets) {
-        super(resultSets,null);
-    }
-    
-    @Override
-    protected boolean nextForSharding() throws SQLException {
-        if (getCurrentResultSet().next()) {
-            return true;
-        }
-        for (int i = getResultSets().indexOf(getCurrentResultSet()) + 1; i < getResultSets().size(); i++) {
-            ResultSet each = getResultSets().get(i);
-            if (each.next()) {
-                setCurrentResultSet(each);
-                return true;
-            }
-        }
-        return false;
-    }
+//    public IteratorResultSet(final List<ResultSet> resultSets, ExecuteContext ctx) throws SQLException {
+//        super(resultSets, null);
+//    }
+//
+//    @Override
+//    protected boolean nextForSharding() throws SQLException {
+//        if (getCurrentResultSet().next()) {
+//            return true;
+//        }
+//        for (int i = getResultSets().indexOf(getCurrentResultSet()) + 1; i < getResultSets().size(); i++) {
+//            ResultSet each = getResultSets().get(i);
+//            if (each.next()) {
+//                setCurrentResultSet(each);
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 }
