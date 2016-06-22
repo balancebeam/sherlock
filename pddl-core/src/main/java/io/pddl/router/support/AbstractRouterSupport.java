@@ -152,7 +152,7 @@ public abstract class AbstractRouterSupport{
 	 * @return Condition
 	 */
 	protected Condition getCondition(ExecuteContext ctx,String tableName, String column) {
-		Optional<Condition> option= ctx.getSQLParsedResult().getCondition().find(tableName, column);
+		Optional<Condition> option= ctx.getSQLParsedResult().getCurCondition().find(tableName, column);
 		return option.isPresent()? option.get(): null;
 	}
 }

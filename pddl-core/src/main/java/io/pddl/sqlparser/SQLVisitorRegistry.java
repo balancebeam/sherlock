@@ -7,10 +7,10 @@ import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.exception.DatabaseTypeUnsupportedException;
-import io.pddl.sqlparser.vistor.PGSQLDeleteVisitor;
-import io.pddl.sqlparser.vistor.PGSQLInsertVisitor;
-import io.pddl.sqlparser.vistor.PGSQLSelectVisitor;
-import io.pddl.sqlparser.vistor.PGSQLUpdateVisitor;
+import io.pddl.sqlparser.visitor.PGSQLDeleteVisitor;
+import io.pddl.sqlparser.visitor.PGSQLInsertVisitor;
+import io.pddl.sqlparser.visitor.PGSQLSelectVisitor;
+import io.pddl.sqlparser.visitor.PGSQLUpdateVisitor;
 
 public final class SQLVisitorRegistry {
     

@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.vistor;
+package io.pddl.sqlparser.visitor;
 
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
