@@ -37,7 +37,12 @@ public final class SQLParserFactory {
         SQLStatement sqlStatement = getSQLStatementParser(sql).parseStatement();
         
         logger.debug("Get "+ sqlStatement.getClass().getName()+" SQL Statement");
-        return new SQLParseEngine(sqlStatement, parameters, getSQLVisitor(sqlStatement));
+        SQLASTOutputVisitor visitor= getSQLVisitor(sqlStatement);
+        //注入原始的SQL语句
+        if(visitor instanceof SQLAware){
+        	((SQLAware)visitor).setSQL(sql);
+        }
+        return new SQLParseEngine(sqlStatement,parameters, visitor);
     }
     
     private static SQLStatementParser getSQLStatementParser(final String sql) {
@@ -52,7 +57,7 @@ public final class SQLParserFactory {
         }
     }
     
-    private static SQLASTOutputVisitor getSQLVisitor(final SQLStatement sqlStatement) {
+    private static SQLASTOutputVisitor getSQLVisitor(SQLStatement sqlStatement) {
     	DatabaseType databaseType= DatabaseType.getApplicationDatabaseType();
         if (sqlStatement instanceof SQLSelectStatement) {
             return ClassUtil.newInstance(SQLVisitorRegistry.getSelectVistor(databaseType));
