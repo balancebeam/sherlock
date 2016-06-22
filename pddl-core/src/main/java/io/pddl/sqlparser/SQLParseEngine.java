@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 
 import io.pddl.exception.SQLParserException;
 import io.pddl.sqlparser.bean.SQLStatementType;
+import io.pddl.sqlparser.visitor.or.OrParser;
 
 public final class SQLParseEngine {
 	protected Log logger = LogFactory.getLog(getClass());
@@ -41,8 +42,15 @@ public final class SQLParseEngine {
         SQLVisitor sqlVisitor = (SQLVisitor) visitor;
         visitor.setParameters(parameters);       
         sqlStatement.accept(visitor);
+        SQLParsedResult result;
+        if(sqlVisitor.getSQLResult().isHasOrCondition()){
+        	result = new OrParser(sqlStatement, visitor).parse();
+        }else{
+        	result = sqlVisitor.getSQLResult();
+        	result.getConditions().add(result.getCurCondition());
+        }
         
-        return sqlVisitor.getSQLResult();
+        return result;
     }
     
     public SQLStatementType getStatementType() {

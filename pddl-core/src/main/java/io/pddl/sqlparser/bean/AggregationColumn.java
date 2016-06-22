@@ -1,6 +1,6 @@
 package io.pddl.sqlparser.bean;
 
-public class AggregationColumn{
+public class AggregationColumn  implements IndexColumn{
 
 	public enum AggregationType {
         MAX, MIN, SUM, COUNT, AVG;

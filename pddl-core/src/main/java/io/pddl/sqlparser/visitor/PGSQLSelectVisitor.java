@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.vistor;
+package io.pddl.sqlparser.visitor;
 
 import java.util.List;
 
