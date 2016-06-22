@@ -19,18 +19,21 @@ import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.sqlparser.SQLAware;
 import io.pddl.sqlparser.SQLBuilder;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.SQLVisitor;
-import io.pddl.sqlparser.bean.Table;
 import io.pddl.sqlparser.bean.Condition.BinaryOperator;
+import io.pddl.sqlparser.bean.Table;
 import io.pddl.util.SQLUtil;
 
-public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor {
+public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor,SQLAware {
 	
 	protected Log logger = LogFactory.getLog(getClass());
 
 	protected SQLParsedResult parseResult;
+	
+	protected String sql;
 
 	protected AbstractPGSQLVisitor() {
 		super(new SQLBuilder());
@@ -173,5 +176,10 @@ public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQ
 	public boolean visit(final SQLBetweenExpr x) {
 		parseResult.addCondition(x.getTestExpr(), BinaryOperator.BETWEEN, Arrays.asList(x.getBeginExpr(), x.getEndExpr()), getDatabaseType(), getParameters());
 		return super.visit(x);
+	}
+	
+	@Override
+	public void setSQL(String sql){
+		this.sql= sql;
 	}
 }

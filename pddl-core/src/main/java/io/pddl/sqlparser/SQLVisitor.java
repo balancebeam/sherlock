@@ -25,4 +25,5 @@ public interface SQLVisitor {
      * @param token 替换标记
      */
     void printToken(String token);
+    
 }
