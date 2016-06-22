@@ -1,25 +1,48 @@
 package io.pddl.jdbc.adapter;
 
+import com.google.common.base.Preconditions;
+import io.pddl.jdbc.unsupported.AbstractUnsupportedOperationResultSet;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
-public abstract class AbstractResultSetAdapter extends AbstractResultSetGetterAdapter {
+/**
+ * 代理结果集适配器.
+ * 
+ * @author zhangliang
+ */
+@Slf4j
+public abstract class AbstractResultSetAdapter extends AbstractUnsupportedOperationResultSet {
     
+    @Getter(AccessLevel.PROTECTED)
     private final List<ResultSet> resultSets;
     
-    public AbstractResultSetAdapter(List<ResultSet> resultSets){
-    	this.resultSets= resultSets;
-    }
-    
-    public List<ResultSet> getResultSets(){
-    	return resultSets;
-    }
-    
+    @Getter
+    private final Map<String, Integer> columnLabelIndexMap;
+
     private boolean closed;
+    
+    public AbstractResultSetAdapter(final List<ResultSet> resultSets) throws SQLException {
+        Preconditions.checkArgument(!resultSets.isEmpty());
+        this.resultSets = resultSets;
+        columnLabelIndexMap = generateColumnLabelIndexMap();
+    }
+    
+    private Map<String, Integer> generateColumnLabelIndexMap() throws SQLException {
+        ResultSetMetaData resultSetMetaData = resultSets.get(0).getMetaData();
+        Map<String, Integer> result = new CaseInsensitiveMap<String, Integer>(resultSetMetaData.getColumnCount());
+        for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
+            result.put(resultSetMetaData.getColumnLabel(i), i);
+        }
+        return result;
+    }
     
     @Override
     public final void close() throws SQLException {
@@ -35,16 +58,6 @@ public abstract class AbstractResultSetAdapter extends AbstractResultSetGetterAd
     }
     
     @Override
-    public final boolean wasNull() throws SQLException {
-        return getCurrentResultSet().wasNull();
-    }
-    
-    @Override
-    public final int getFetchDirection() throws SQLException {
-        return getCurrentResultSet().getFetchDirection();
-    }
-    
-    @Override
     public final void setFetchDirection(final int direction) throws SQLException {
         for (ResultSet each : resultSets) {
             each.setFetchDirection(direction);
@@ -52,49 +65,9 @@ public abstract class AbstractResultSetAdapter extends AbstractResultSetGetterAd
     }
     
     @Override
-    public final int getFetchSize() throws SQLException {
-        return getCurrentResultSet().getFetchSize();
-    }
-    
-    @Override
     public final void setFetchSize(final int rows) throws SQLException {
         for (ResultSet each : resultSets) {
             each.setFetchSize(rows);
         }
-    }
-    
-    @Override
-    public final int getType() throws SQLException {
-        return getCurrentResultSet().getType();
-    }
-    
-    @Override
-    public final int getConcurrency() throws SQLException {
-        return getCurrentResultSet().getConcurrency();
-    }
-    
-    @Override
-    public final Statement getStatement() throws SQLException {
-        return getCurrentResultSet().getStatement();
-    }
-    
-    @Override
-    public final SQLWarning getWarnings() throws SQLException {
-        return getCurrentResultSet().getWarnings();
-    }
-    
-    @Override
-    public final void clearWarnings() throws SQLException {
-        getCurrentResultSet().clearWarnings();
-    }
-    
-    @Override
-    public final ResultSetMetaData getMetaData() throws SQLException {
-        return getCurrentResultSet().getMetaData();
-    }
-    
-    @Override
-    public final int findColumn(final String columnLabel) throws SQLException {
-        return getCurrentResultSet().findColumn(columnLabel);
     }
 }
