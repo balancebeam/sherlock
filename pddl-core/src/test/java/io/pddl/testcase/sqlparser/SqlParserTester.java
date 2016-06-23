@@ -6,13 +6,16 @@ import java.util.List;
 
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.SQLParserFactory;
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 public class SqlParserTester extends TestCase {
 	
 	public void testA(){
 		String sql= "select name,description,location from emp where id= 2 and name='zhangsan'";
-		print("testA",sql,Collections.<Object>emptyList());
+		String actualSql= print("testA",sql,Collections.<Object>emptyList());
+//		String expectedSql= "";
+//		Assert.assertEquals(expectedSql, actualSql);
 	}
 	
 	public void testB(){
@@ -74,10 +77,23 @@ public class SqlParserTester extends TestCase {
 		print("testM",sql,Collections.<Object>emptyList());
 	}
 	
-	private void print(String topic,String sql,List<Object> parameters){
+	public void testN(){
+		String sql= "select name,avg(salary) from emp group by name order by deptno";
+		print("testN",sql,Collections.<Object>emptyList());
+	}
+	
+	public void testO(){
+		String sql ="select name from emp where id> 21 limit 7 offset 9";
+		print("testO",sql,Collections.<Object>emptyList());
+	}
+	
+	private String print(String topic,String sql,List<Object> parameters){
 		SQLParsedResult result= SQLParserFactory.create(sql, parameters).parse();
 		System.out.println("---------------"+topic+"---------------------");
 		System.out.println(sql);
 		System.out.println(result);
+		String q= result.getSqlBuilder().toSQL();
+		System.out.println(q);
+		return q;
 	}
 }
