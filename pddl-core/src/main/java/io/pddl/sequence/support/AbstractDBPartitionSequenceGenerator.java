@@ -13,6 +13,8 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.DbUtils;
 
+import io.pddl.exception.ShardingException;
+
 public abstract class AbstractDBPartitionSequenceGenerator extends AbstractPartitionSequenceGenerator{
 	
 	protected DataSource dataSource;
@@ -65,6 +67,9 @@ public abstract class AbstractDBPartitionSequenceGenerator extends AbstractParti
 				//the column name must be primary key;
 				String sql = "select t."+maxValueColumn+" from "+sequenceTable+" t where t."+sequenceColumn+"=? for update";
 				Connection conn = dataSource.getConnection();
+				if(conn== null){
+					throw new ShardingException("can not get connection");
+				}
 				conn.setAutoCommit(false);
 				PreparedStatement ps= null,ups = null;
 				ResultSet rs = null;
