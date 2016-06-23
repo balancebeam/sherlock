@@ -65,7 +65,7 @@ public final class ConditionContext {
     
     @Override
     public String toString(){
-    	return conditions.toString();
+    	return "ConditionContext@"+conditions.toString();
     }
     
 }

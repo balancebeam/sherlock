@@ -267,7 +267,7 @@ public class SQLParsedResult {
     
 	@Override
 	public String toString(){
-		return "{\ntables="+tables+",\n"
+		return "SQLParsedResult@{\ntables="+tables+",\n"
 				+ "conditions="+conditionContexts+",\n"
 				+ "distinct="+ distinct+",\n"
 				+ "metadataColumns="+metadataColumns+",\n"

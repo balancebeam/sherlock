@@ -29,8 +29,13 @@ public class Condition {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(column.getTableName()).append(".").append(column.getColumnName()).append(operator.expression)
-				.append(values.toString());
+
+		sb.append("Condition@{")
+			.append(column.getTableName())
+			.append(".").append(column.getColumnName())
+			.append(operator.expression)
+			.append(values.toString())
+			.append("}")	;
 		return sb.toString();
 	}
 
@@ -77,6 +82,11 @@ public class Condition {
 	    	}
 	    	return false;
 	    }
+
+		@Override
+		public String toString(){
+			return "Column@{table="+tableName+",column="+columnName+"}";
+		}
 	}
 
 	/**
