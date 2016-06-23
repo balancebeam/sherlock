@@ -42,7 +42,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						continue tables;
 					}
 				}
-				Collection<String> candidateNames= doSingleDatabaseSharding(ctx,logicTable);
+				Collection<String> candidateNames= doSingleTableDatabaseSharding(ctx,logicTable);
 				if(!CollectionUtils.isEmpty(candidateNames)){
 					if(logger.isInfoEnabled()){
 						logger.info("table ["+ logicTable.getName()+"] candidate database names: "+candidateNames);
@@ -74,12 +74,12 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 		return result;
 	}
 	
-	private Collection<String> doSingleDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
+	private Collection<String> doSingleTableDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getDataSourceStrategyConfig();
 		if(strategyConfig== null){
 			return null;
 		}
-		List<ShardingValue<?>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
+		List<List<ShardingValue<?>>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
 		if(CollectionUtils.isEmpty(shardingValues)){
 			return null;
 		}

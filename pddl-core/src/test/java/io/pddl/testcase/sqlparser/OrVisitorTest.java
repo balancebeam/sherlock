@@ -16,13 +16,18 @@ public class OrVisitorTest {
 		
 		System.out.println(sql);
 		System.out.println(result);
+		System.out.println(result.getSqlBuilder().toSQL());
 		
 		
 		sql = "select a,b,c from test where (a=1 or b=2) and (c=1 or d=2) ";
 		
-		result= SQLParserFactory.create(sql, parameters).parse();
+		//sql = "select a,b,c from test where (a=1 or b=2) and (a=4 or b=3) ";
+		//sql = "select a,b,c from test where (a=1 or b=2)";
 		
+		result= SQLParserFactory.create(sql, parameters).parse();
+
 		System.out.println(sql);
 		System.out.println(result);
+		System.out.println(result.getSqlBuilder().toSQL());
 	}
 }
