@@ -2,15 +2,10 @@ package io.pddl.merger.pipeline.reducer;
 
 import com.google.common.base.Optional;
 import io.pddl.merger.MergeContext;
-import io.pddl.merger.resultset.memory.AbstractMemoryOrderByResultSet;
 import io.pddl.merger.resultset.memory.AbstractMemoryResultSet;
 import io.pddl.merger.resultset.memory.row.AbstractResultSetRow;
-import io.pddl.merger.resultset.memory.row.GroupByResultSetRow;
-import io.pddl.merger.resultset.memory.row.OrderByResultSetRow;
 import io.pddl.merger.resultset.memory.row.ResultSetRow;
-import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.GroupColumn;
-import io.pddl.sqlparser.bean.OrderColumn;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,11 +22,11 @@ public final class GroupByReducerResultSet extends AbstractMemoryResultSet {
             
     private Iterator<Map.Entry<String, List<GroupByReducerResultSetRow>>> mapRowIterator;
 
-    private final List<GroupColumn> groupByColumns;
-
     private Iterator<GroupByReducerResultSetRow> listRowIterator;
 
     private List<GroupByReducerResultSetRow> listResultSet;
+
+    private final List<GroupColumn> groupByColumns;
 
     public GroupByReducerResultSet(final MergeContext mc) throws SQLException {
         super(mc.getResultSets());
@@ -44,6 +39,8 @@ public final class GroupByReducerResultSet extends AbstractMemoryResultSet {
         mapResultSet = new HashMap<String, List<GroupByReducerResultSetRow>>();
         List<GroupByReducerResultSetRow> orderByResultSetRowList;
         String hash;
+
+        // 根据hash分组数据
         for (ResultSet each : resultSets) {
             while (each.next()) {
                 hash = getHash(each);
@@ -56,6 +53,8 @@ public final class GroupByReducerResultSet extends AbstractMemoryResultSet {
                 }
             }
         }
+
+        // 初始化Iterator
         mapRowIterator = mapResultSet.entrySet().iterator();
         if (mapRowIterator.hasNext()) {
             listResultSet = mapRowIterator.next().getValue();

@@ -1,39 +1,37 @@
 package io.pddl.merger;
 
 import io.pddl.executor.ExecuteContext;
-import io.pddl.merger.pipeline.reducer.IteratorReducerResultSet;
-import io.pddl.merger.pipeline.reducer.StreamingOrderByReducerResultSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * 分片结果集合归并工具类.
+ *
+ * @author xiong.j
+ */
 public class MergeUtils {
 
+	/**
+	 * Select集合归并
+	 *
+	 * @param resultSets
+	 * @param ctx
+	 * @return
+	 * @throws SQLException
+     */
 	public static ResultSet mergeResultSet(List<ResultSet> resultSets, ExecuteContext ctx) throws SQLException {
 		MergeContext mc = new MergeContext(resultSets, ctx);
-		/*if (resultSets.size() == 0) {
-			return new IteratorReducerResultSet(mc);
-		}
-		if (resultSets.size() == 1) {
-			return resultSets.get(0);
-		}
-		if (mc.hasGroupColumn() && mc.hasOrderColumn()) {
-			// TODO
-		}
-
-		if (mc.hasGroupColumn()) {
-			// TODO
-		}
-		if (mc.hasOrderColumn()) {
-			return new StreamingOrderByReducerResultSet(mc);
-		}
-		return new IteratorReducerResultSet(mc);*/
-
-
 		return ResultSetFactory.getResultSet(mc);
 	}
-	
+
+	/**
+	 * 其它结果集合归并
+	 *
+	 * @param result
+	 * @return
+     */
 	public static int mergeIntegerResult(List<Integer> result){
 		int total= 0;
     	for(int it: result){
