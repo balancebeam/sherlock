@@ -1,7 +1,9 @@
 package io.pddl.sqlparser.visitor;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
@@ -24,6 +26,7 @@ import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.PGLi
 import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.google.common.base.Optional;
 
+import io.pddl.exception.SQLParserException;
 import io.pddl.merger.Limit;
 import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.AggregationColumn.AggregationType;
@@ -38,11 +41,19 @@ import io.pddl.sqlparser.bean.OrderColumn.OrderType;
  */
 public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	
+	final private static String AUTO_GEN_COL= "auto_gen_col_";
+	
+	final private static String AUTO_GEN_COL_COUNT= AUTO_GEN_COL + "count";
+	
 	private int selectLayer= 0;
 	
 	private boolean tryUnion= false;
 	
 	private boolean finishCollectMetadata= false;
+	
+	private boolean attachCountExpression= false;
+	
+	private List<String> missOrderbyColumns;
 	
     //遍历表名
     @Override
@@ -58,6 +69,18 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         	}
         }
         return super.visit(x);
+    }
+    
+    @Override
+    public void endVisit(final PGSelectQueryBlock x) {
+    	//把缺失的orderby列补上
+    	if(!CollectionUtils.isEmpty(missOrderbyColumns)){
+    		String orderby_columns="";
+    		for(String columnName: missOrderbyColumns){
+    			orderby_columns+= ", "+ columnName;
+    		}
+    		parseResult.getSqlBuilder().buildSQL("select_missing_columns", orderby_columns);
+    	}
     }
     
     //访问SELECT执行操作
@@ -104,7 +127,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         if(tryUnion){
         	finishCollectMetadata= true;
         }
-        boolean attachCountExpression= false;
+        
         int columnIndex= 0;
         //遍历第一级SELECT选择项
         for(SQLSelectItem each: selectList){
@@ -131,12 +154,12 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	        		}
 	        		//在有表达式的SQLSelectItem后面加上只追加一个COUNT(1) 即可，然后通过(avg1*count1+avg2*count2)/(count1+count2)求最终平均值
 	        		//原始SQL：select avg(salary) as avg_salary, (select avg(bonus) from user) from user  
-	        	    //转换SQL：select avg(salary) as avg_salary, (select avg(bonus) from user), count(1) as auto_gen_cont_key from user
+	        	    //转换SQL：select avg(salary) as avg_salary, (select avg(bonus) from user), count(1) as auto_gen_col_count from user
 	        		if(AggregationType.AVG.equals(aggregationType) && !attachCountExpression){
-	        			print(", COUNT(1) AS auto_gen_count_key");
+	        			print(", COUNT(1) AS " + AUTO_GEN_COL_COUNT);
 	        			attachCountExpression= true;
 	        			if(logger.isInfoEnabled()){
-	            			logger.info("auto create count(1) AS auto_gen_count_key column");
+	            			logger.info("auto create count(1) AS "+AUTO_GEN_COL_COUNT);
 	            		}
 	        		}
         		}catch(IllegalArgumentException ex){
@@ -145,6 +168,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             		}
         		}
         	}
+        	
         	//可以收集列元数据信息
         	if(isEnableCollectMetadata()){
 	        	//如果别名不为空，则存储别名
@@ -160,11 +184,11 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	        		parseResult.addMetadataColumn(((SQLPropertyExpr)expr).getName());
 	        	}
 	        	else if(expr instanceof SQLAllColumnExpr){
-	        		parseResult.addMetadataColumn("*");
+	        		throw new SQLParserException("not support select * for sql: "+sql+",please enumerate every column");
 	        	}
 	        	else{
 	        		//可能还是子查询SQLQueryExpr
-	        		String columnName= "auto_gen_col_"+columnIndex;
+	        		String columnName= AUTO_GEN_COL + columnIndex;
 	        		parseResult.addMetadataColumn(columnName);
 	        		StringBuilder expression = new StringBuilder();
 	        		expr.accept(new PGOutputVisitor(expression));
@@ -174,6 +198,13 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         }
         //解析完毕立即设置防止union后边的触发收集操作
         tryUnion= true;
+        
+        /*
+    	 * 预留一个位置给那些不在select选项里的oderby列，否则结果集无法按给定的orderby合并排序
+    	 * 如 select name from emp order by deptno，需要把deptno 追加到select选项中
+    	 * 最终sql：select name ,deptno from emp order by deptno
+    	 */
+    	parseResult.getSqlBuilder().appendToken("select_missing_columns", false);
     }
     
     //解析Groupby节点
@@ -192,6 +223,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     		}
     		if(!StringUtils.isEmpty(columnName)){
 				int index= parseResult.getMetadataColumns().indexOf(columnName);
+				//不应该存在groupby列不在select选项里的情况
 				if(index!= -1){
 					parseResult.addGroupColumn(new GroupColumn(columnName,++index));
 					if(logger.isInfoEnabled()){
@@ -237,6 +269,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             }
             if(!StringUtils.isEmpty(columnName)){
             	int index= parseResult.getMetadataColumns().indexOf(columnName);
+            	//如果orderby的列不在select选项里，则需要追加处理
             	if(index!= -1){
             		parseResult.addOrderColumn(new OrderColumn(columnName,orderType,++index));
             		if(logger.isInfoEnabled()){
@@ -244,7 +277,21 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             		}
             	}
             	else{
-            		logger.warn("cannot found order column ["+columnName+"] in metadatacolumns: "+parseResult.getMetadataColumns());
+            		index= parseResult.getMetadataColumns().size() + (attachCountExpression?1:0);
+            		if(StringUtils.isEmpty(missOrderbyColumns)){
+            			missOrderbyColumns= new LinkedList<String>();
+            		}
+            		if(!missOrderbyColumns.contains(columnName)){
+            			missOrderbyColumns.add(columnName);
+            			index= missOrderbyColumns.size() + index;
+            			parseResult.addOrderColumn(new OrderColumn(columnName,orderType,index));
+            			if(logger.isInfoEnabled()){
+                			logger.info("will append missing orderby column ["+columnName+"] index is: "+index);
+                		}
+            		}
+            		else{
+            			logger.warn("duplicated orderby column ["+columnName+"] "+orderType +",it doesnt work");
+            		}
             	}
             }
         }
@@ -259,16 +306,16 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     		return super.visit(x); 
     	}
     	//第一次解析
-        print("LIMIT ");
         int offset = 0;
+        String offsetFragment= "";
         if (null != x.getOffset()) {
             if (x.getOffset() instanceof SQLNumericLiteralExpr) {
                 offset = ((SQLNumericLiteralExpr) x.getOffset()).getNumber().intValue();
-                print("0, ");
+                offsetFragment= " OFFSET 0";
             } else {
                 offset = ((Number) getParameters().get(((SQLVariantRefExpr) x.getOffset()).getIndex())).intValue();
                 getParameters().set(((SQLVariantRefExpr) x.getOffset()).getIndex(), 0);
-                print("?, ");
+                offsetFragment=" OFFSET ?";
             }
         }
         int rowCount;
@@ -280,6 +327,9 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             getParameters().set(((SQLVariantRefExpr) x.getRowCount()).getIndex(), rowCount + offset);
             print("?");
         }
+        //最后在再打印offset字段
+        print(offsetFragment);
+        
         parseResult.setLimit(new Limit(offset, rowCount));
         if(logger.isInfoEnabled()){
 			logger.info("Limit [offset: "+offset+",rowCount: "+rowCount+"]");

@@ -45,6 +45,7 @@ public final class SQLParseEngine {
         SQLParsedResult result;
         if(sqlVisitor.getSQLResult().isHasOrCondition()){
         	result = new OrParser(sqlStatement, visitor).parse();
+        	result.setSqlBuilder(sqlVisitor.getSQLResult().getSqlBuilder());
         }else{
         	result = sqlVisitor.getSQLResult();
         	result.getConditions().add(result.getCurCondition());
