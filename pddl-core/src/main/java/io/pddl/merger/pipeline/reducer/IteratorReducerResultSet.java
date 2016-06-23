@@ -28,6 +28,7 @@ import java.sql.SQLException;
  *
  * @author gaohongtao
  * @author zhangliang
+ * @author xiong.j
  */
 public final class IteratorReducerResultSet extends AbstractDelegateResultSet {
     

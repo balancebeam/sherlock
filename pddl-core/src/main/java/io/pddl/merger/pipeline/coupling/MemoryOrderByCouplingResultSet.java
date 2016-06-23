@@ -12,6 +12,7 @@ import java.util.Collections;
  *
  * @author gaohongtao
  * @author zhangliang
+ * @author xiong.j
  */
 public final class MemoryOrderByCouplingResultSet extends AbstractMemoryOrderByResultSet {
     
