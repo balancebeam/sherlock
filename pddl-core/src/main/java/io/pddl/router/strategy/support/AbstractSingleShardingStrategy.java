@@ -23,31 +23,35 @@ public abstract class AbstractSingleShardingStrategy<T extends Comparable<?>> im
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<String> doSharding(ExecuteContext ctx,Collection<String> availableNames, List<ShardingValue<?>> shardingValues) {
+	public Collection<String> doSharding(ExecuteContext ctx,Collection<String> availableNames, List<List<ShardingValue<?>>> shardingValues) {
 		if(CollectionUtils.isEmpty(shardingValues)){
 			return availableNames;
 		}
-		if(shardingValues.size()> 1){
-			throw new ShardingTableException("not support multiple condition strategy");
+		//取第一条数据如果存在多column则不支持
+		if(shardingValues.get(0).size()> 1){
+			throw new ShardingTableException("not support multiple column condition strategy");
 		}
-		ShardingValue<T> shardingValue= (ShardingValue<T>)shardingValues.get(0);
 		Set<String> result= new HashSet<String>();
-		String column= shardingValue.getColumn();
-		if(shardingValue instanceof ShardingSingleValue){
-			ShardingSingleValue<T> singleValue= (ShardingSingleValue<T>)shardingValue;
-			T value= singleValue.getSingleValue();
-			result.add(doEqualSharding(ctx,availableNames,column,value));
-		}
-		else if(shardingValue instanceof ShardingCollectionValue){
-			ShardingCollectionValue<?> collectionValue= (ShardingCollectionValue<?>)shardingValue;
-			List<T> value= (List<T>)collectionValue.getCollectionValue();
-			result.addAll(doInSharding(ctx,availableNames,column,value));
-		}
-		else if(shardingValue instanceof ShardingRangeValue){
-			ShardingRangeValue<T> rangeValue= (ShardingRangeValue<T>)shardingValue;
-			T lower= rangeValue.getLower();
-			T upper= rangeValue.getUpper();
-			result.addAll(doBetweenSharding(ctx,availableNames,column,lower,upper));
+		//多条记录间是or的关系，路由集合是合集操作
+		for(List<ShardingValue<?>> oneShardingValue: shardingValues){
+			ShardingValue<T> shardingValue= (ShardingValue<T>)oneShardingValue.get(0);
+			String column= shardingValue.getColumn();
+			if(shardingValue instanceof ShardingSingleValue){
+				ShardingSingleValue<T> singleValue= (ShardingSingleValue<T>)shardingValue;
+				T value= singleValue.getSingleValue();
+				result.add(doEqualSharding(ctx,availableNames,column,value));
+			}
+			else if(shardingValue instanceof ShardingCollectionValue){
+				ShardingCollectionValue<?> collectionValue= (ShardingCollectionValue<?>)shardingValue;
+				List<T> value= (List<T>)collectionValue.getCollectionValue();
+				result.addAll(doInSharding(ctx,availableNames,column,value));
+			}
+			else if(shardingValue instanceof ShardingRangeValue){
+				ShardingRangeValue<T> rangeValue= (ShardingRangeValue<T>)shardingValue;
+				T lower= rangeValue.getLower();
+				T upper= rangeValue.getUpper();
+				result.addAll(doBetweenSharding(ctx,availableNames,column,lower,upper));
+			}
 		}
 		return result;
 	}

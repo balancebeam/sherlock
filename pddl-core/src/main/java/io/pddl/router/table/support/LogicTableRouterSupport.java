@@ -96,7 +96,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 	
 	private Collection<String> doSingleLogicTableSharding(ExecuteContext ctx,String dataSourceName,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getTableStrategyConfig();
-		List<ShardingValue<?>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
+		List<List<ShardingValue<?>>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
 		if (shardingValues.isEmpty() && SQLStatementType.INSERT== ctx.getStatementType()) {
 			//if insert child table when it's condition not found
 			if(logger.isInfoEnabled()){

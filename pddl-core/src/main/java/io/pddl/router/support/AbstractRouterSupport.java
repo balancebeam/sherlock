@@ -22,6 +22,7 @@ import io.pddl.router.strategy.value.ShardingSingleValue;
 import io.pddl.router.strategy.value.ShardingValue;
 import io.pddl.router.table.LogicTable;
 import io.pddl.sqlparser.bean.Condition;
+import io.pddl.sqlparser.bean.ConditionContext;
 import io.pddl.sqlparser.bean.Table;
 
 public abstract class AbstractRouterSupport{
@@ -111,33 +112,53 @@ public abstract class AbstractRouterSupport{
 	 * @param ctx 执行上下文
 	 * @param logicTableName 逻辑表名
 	 * @param columns 路由列名集合
-	 * @return
+	 * @return List<List<ShardingValue<?>>>
 	 */
-	protected List<ShardingValue<?>> getShardingValues(ExecuteContext ctx,String logicTableName,List<String> columns){
-		List<ShardingValue<?>> shardingValues = new ArrayList<ShardingValue<?>>(columns.size());
-		for (String column : columns) {
-			Condition condition = getCondition(ctx,logicTableName, column);
-			if (condition != null) {
-				//仅仅支持=、in和between等操作
-				switch(condition.getOperator()){
-					case EQUAL:
-					case IN:
-						if(condition.getValues().size()==1){
-							shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
-						}
-						else{
-							shardingValues.add(new ShardingCollectionValue<Comparable<?>>(column, condition.getValues()));
-						}
-						break;
-					case BETWEEN:
-						shardingValues.add(new ShardingRangeValue<Comparable<?>>(column, condition.getValues()));
-						break;
-					default:
-						throw new UnsupportedOperationException(condition.getOperator().toString());
+	protected List<List<ShardingValue<?>>> getShardingValues(ExecuteContext ctx,String logicTableName,List<String> columns){
+		//获取多个or关联的ConditionContext对象里面的Condition是and关系，如下
+		//ConditionContext(Condition and Condition) or ConditionContext(Condition and Condition)
+		List<ConditionContext> conditionContexts= ctx.getSQLParsedResult().getConditions();
+		List<List<ShardingValue<?>>> result= new ArrayList<>(conditionContexts.size());
+loop:	for(ConditionContext conditionContext : conditionContexts){
+			List<ShardingValue<?>> shardingValues = new ArrayList<ShardingValue<?>>(columns.size());
+			for (String column : columns) {
+				Condition condition = getCondition(conditionContext,logicTableName, column);
+				if (condition != null) {
+					if(logger.isInfoEnabled()){
+						logger.info("condition found: "+condition);
+					}
+					//仅仅支持=、in和between等操作
+					switch(condition.getOperator()){
+						case EQUAL:
+						case IN:
+							if(condition.getValues().size()==1){
+								shardingValues.add(new ShardingSingleValue<Comparable<?>>(column, condition.getValues()));
+							}
+							else{
+								shardingValues.add(new ShardingCollectionValue<Comparable<?>>(column, condition.getValues()));
+							}
+							break;
+						case BETWEEN:
+							shardingValues.add(new ShardingRangeValue<Comparable<?>>(column, condition.getValues()));
+							break;
+						default:
+							logger.warn("column ["+column+"] not support operation: "+condition.getOperator());
+							continue loop;
+					}
+				}
+				else{
+					if(logger.isInfoEnabled()){
+						logger.info("condition not found in "+conditionContext+" for {table="+logicTableName+",column="+column+"}");
+					}
+					continue loop;
 				}
 			}
+			if(logger.isInfoEnabled()){
+				logger.info("one sharding value found: "+shardingValues);
+			}
+			result.add(shardingValues);
 		}
-		return shardingValues;
+		return result;
 	}
 	
 	/**
@@ -146,13 +167,18 @@ public abstract class AbstractRouterSupport{
 	 * getCondition(ctx,"t_order","user_id") 可以获取到对应的条件值{column={tableName=t_order,columnName=user_id},operator="=",values=[4]}
 	 * getCondition(ctx,"t_item","user_id") 获取不到条件值，因为SQL语句中表t_item和列user_id没有关联关系
 	 * 
-	 * @param ctx 执行上下文
+	 * @param ConditionContext 条件上下文
 	 * @param tableName 表名
 	 * @param column 列表
 	 * @return Condition
 	 */
-	protected Condition getCondition(ExecuteContext ctx,String tableName, String column) {
-		Optional<Condition> option= ctx.getSQLParsedResult().getCurCondition().find(tableName, column);
+	protected Condition getCondition(ConditionContext conditionContext,String tableName, String column) {
+		Optional<Condition> option= conditionContext.find(tableName, column);
 		return option.isPresent()? option.get(): null;
 	}
+	
+	protected Condition getCondition(ExecuteContext ctx,String tableName, String column) {
+		return getCondition(ctx.getSQLParsedResult().getConditions().get(0),tableName,column);
+	}
+	
 }
