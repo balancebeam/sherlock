@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -63,12 +64,16 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 	}
 
 	@Override
-	public <IN extends Statement, OUT> List<OUT> execute(final ExecuteContext ctx,List<ExecuteStatementWrapper<IN>> wrappers,final ExecuteStatementCallback<IN, OUT> executeUnit) throws SQLException{
+	public <IN extends Statement, OUT> List<OUT> execute(
+			final ExecuteContext ctx,
+			List<ExecuteStatementWrapper<IN>> wrappers,
+			final ExecuteStatementCallback<IN, OUT> executeUnit) throws SQLException{
 		//如果只有一个Statement对象
 		if(wrappers.size() == 1){
-			return Collections.singletonList(executeUnit.execute(wrappers.get(0).getSQLExecutionUnit().getShardingSql(),wrappers.get(0).getStatement()));
+			String actualSql= wrappers.get(0).getSQLExecutionUnit().getShardingSql();
+			return Collections.singletonList(executeUnit.execute(actualSql,wrappers.get(0).getStatement()));
 		} 
-		//或者是写操作、带事务操作则需要顺序执行
+		//或者是DML或InTransaction操作则需要顺序执行
 		if(!ctx.isSimplyDQLOperation()){
 			Map<String,List<ExecuteStatementWrapper<IN>>> hash= new HashMap<String,List<ExecuteStatementWrapper<IN>>>();
 			for (ExecuteStatementWrapper<IN> each : wrappers) {
@@ -89,26 +94,28 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 					public List<OUT> call() throws Exception {
 						List<OUT> rs= new ArrayList<OUT>(each.getValue().size());
 						for(ExecuteStatementWrapper<IN> it: each.getValue()){
-							try {
-								rs.add(executeUnit.execute(it.getSQLExecutionUnit().getShardingSql(),it.getStatement()));
-							} catch (Exception e) {
-								logger.error("execute statement error", e);
-							}
+							//只有有一个有错就抛出，认为整个操作不成功，合并结果没意义
+							rs.add(executeUnit.execute(it.getSQLExecutionUnit().getShardingSql(),it.getStatement()));
 						}
 						return rs;
 					}
 				}));
 			}
-			List<OUT> result = new ArrayList<OUT>(wrappers.size());
-			for (Future<List<OUT>> each : futures) {
-				try {
+			try {
+				List<OUT> result = new ArrayList<OUT>(wrappers.size());
+				for (Future<List<OUT>> each : futures) {
 					result.addAll(each.get(timeout,TimeUnit.SECONDS));
-				} catch (Exception e) {
-					logger.warn("execute statement error", e);
-					//TODO 结果吃掉了后续需要做处理
 				}
+				return result;
+			} catch (Exception e) {
+				//cancel other running task，release thread immediately
+				for (Future<List<OUT>> each : futures) {
+					if(each instanceof FutureTask){
+						((FutureTask<List<OUT>>)each).cancel(true);
+					}
+				}
+				throw new SQLException(e.getMessage(),e);
 			}
-			return result;
 		}
 		//如果是只读查询需要进行并行处理
 		List<Future<OUT>> futures = new ArrayList<Future<OUT>>(wrappers.size());
@@ -122,19 +129,24 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 				}
 			}));
 		}
-		List<OUT> result = new ArrayList<OUT>(wrappers.size());
 		//依次获取执行结果
-		for (Future<OUT> each : futures) {
-			try {
+		try {
+			List<OUT> result = new ArrayList<OUT>(wrappers.size());
+			for (Future<OUT> each : futures) {
 				result.add(each.get(timeout,TimeUnit.SECONDS));
-			} catch (Exception e) {
-				logger.warn("execute statement error", e);
-				//TODO 结果吃掉了后续需要做处理
 			}
+			return result;
+		} catch (Exception e) {
+			//cancel other running task，release thread immediately
+			for (Future<OUT> each : futures) {
+				if(each instanceof FutureTask){
+					((FutureTask<OUT>)each).cancel(true);
+				}
+			}
+			throw new SQLException(e.getMessage(),e);
 		}
-		return result;
 	}
-	
+		
 	private ExecutorService getExecutorService(PartitionDataSource pds) {
 		ExecutorService executorService = executorServiceMapping.get(pds.getName());
 		if (executorService == null) {

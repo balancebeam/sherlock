@@ -70,7 +70,7 @@ public class ExecuteContextSupport implements ExecuteContext{
 		return sqlParsedResult;
 	}
 
-	public synchronized void setTranOrUpdateConnection(String dataSourceName,Connection conn){
+	public void setTranOrUpdateConnection(String dataSourceName,Connection conn){
 		if(connectionMapping== null){
 			connectionMapping= new HashMap<String,Connection>();
 		}

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import io.pddl.jdbc.unsupported.AbstractUnsupportedOperationResultSet;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.sql.ResultSet;
@@ -13,12 +12,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 代理结果集适配器.
- * 
- * @author zhangliang
- */
-@Slf4j
+
 public abstract class AbstractResultSetAdapter extends AbstractUnsupportedOperationResultSet {
     
     @Getter(AccessLevel.PROTECTED)

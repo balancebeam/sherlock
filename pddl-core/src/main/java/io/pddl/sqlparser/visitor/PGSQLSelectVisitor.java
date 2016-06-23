@@ -249,7 +249,8 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     	}
     	for (SQLSelectOrderByItem each : x.getItems()) {
             SQLExpr expr = each.getExpr();
-            OrderType orderType= "DESC".equals(each.getType())? OrderType.DESC : OrderType.ASC;
+            //默认是升序
+            OrderType orderType= each.getType()== null? OrderType.ASC: ("DESC".equalsIgnoreCase(each.getType().toString())? OrderType.DESC : OrderType.ASC);
             if (expr instanceof SQLIntegerExpr) {
             	int index= ((SQLIntegerExpr)expr).getNumber().intValue();
             	if(index > parseResult.getMetadataColumns().size()){
