@@ -90,7 +90,7 @@ public final class GroupByReducerResultSet extends AbstractMemoryResultSet {
         List<Object> groupByValues = getGroupByValues(resultSet);
         StringBuilder hash = new StringBuilder(groupByValues.size());
         for (Object o : groupByValues) {
-            hash.append(o.toString());
+            hash.append(o.toString()).append(",");
         }
         return hash.toString();
     }
