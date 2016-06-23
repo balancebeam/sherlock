@@ -52,7 +52,7 @@ public final class ResultSetFactory {
     }
     
     private static ResultSet buildReducer(final MergeContext mergeContext) throws SQLException {
-        if (mergeContext.hasGroupColumn()) {
+        if (mergeContext.hasGroupByOrAggregation()) {
             return new GroupByReducerResultSet(mergeContext);
         }
         if (mergeContext.hasOrderColumn()) {
@@ -66,7 +66,7 @@ public final class ResultSetFactory {
         if (mergeContext.hasGroupByOrAggregation()) {
             result = new GroupByCouplingResultSet(result, mergeContext);
         }
-        if (mergeContext.isNeedMemorySortForOrderBy()) {
+        if (mergeContext.hasOrderColumn()) {
             result = new MemoryOrderByCouplingResultSet(result, mergeContext);
         }
         if (mergeContext.hasLimit()) {
