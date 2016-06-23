@@ -18,7 +18,7 @@ public class OrVisitorTest {
 		System.out.println(result);
 		
 		
-		sql = "select * from test where (a=1 or b=2) and (c=1 or d=2) ";
+		sql = "select a,b,c from test where (a=1 or b=2) and (c=1 or d=2) ";
 		
 		result= SQLParserFactory.create(sql, parameters).parse();
 		
