@@ -2,6 +2,7 @@ package io.pddl.router.database.support;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.util.CollectionUtils;
@@ -42,7 +43,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						continue tables;
 					}
 				}
-				Collection<String> candidateNames= doSingleTableDatabaseSharding(ctx,logicTable);
+				Collection<String> candidateNames= doDatabaseSharding(ctx,logicTable);
 				if(!CollectionUtils.isEmpty(candidateNames)){
 					if(logger.isInfoEnabled()){
 						logger.info("table ["+ logicTable.getName()+"] candidate database names: "+candidateNames);
@@ -74,15 +75,16 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 		return result;
 	}
 	
-	private Collection<String> doSingleTableDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
+	private Collection<String> doDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getDataSourceStrategyConfig();
 		if(strategyConfig== null){
-			return null;
+			return Collections.emptyList();
 		}
-		List<List<ShardingValue<?>>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
-		if(CollectionUtils.isEmpty(shardingValues)){
-			return null;
+		List<List<ShardingValue<?>>> values = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
+		//对于数据库应该是确定的
+		if(CollectionUtils.isEmpty(values)){
+			return Collections.emptyList();
 		}
-		return strategyConfig.getStrategy().doSharding(ctx,ctx.getShardingDataSourceRepository().getPartitionDataSourceNames(), shardingValues);
+		return doSharding(strategyConfig.getStrategy(),ctx,ctx.getShardingDataSourceRepository().getPartitionDataSourceNames(), values);
 	}
 }

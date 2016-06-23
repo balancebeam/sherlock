@@ -12,7 +12,7 @@ import org.mvel2.MVEL;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 
-public class ExpressionShardingStrategySupport extends AbstractSingleShardingStrategy<Integer>{
+public class ExpressionShardingStrategySupport extends AbstractSingleColumnShardingStrategy<Integer>{
 
 	private String expression;
 	

@@ -73,7 +73,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						continue tables;
 					}
 				}
-				Collection<String> ps=doSingleLogicTableSharding(ctx,dataSourceName,logicTable);
+				Collection<String> ps= doLogicTableSharding(ctx,dataSourceName,logicTable);
 				if(logger.isInfoEnabled()){
 					logger.info("table ["+ logicTable.getName()+"] candidate postfix names: "+ps);
 				}
@@ -94,17 +94,21 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 		return result;
 	}
 	
-	private Collection<String> doSingleLogicTableSharding(ExecuteContext ctx,String dataSourceName,LogicTable logicTable) {
+	private Collection<String> doLogicTableSharding(ExecuteContext ctx,String dataSourceName,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getTableStrategyConfig();
-		List<List<ShardingValue<?>>> shardingValues = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
-		if (shardingValues.isEmpty() && SQLStatementType.INSERT== ctx.getStatementType()) {
+		List<List<ShardingValue<?>>> values= getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
+		if (values.isEmpty() && SQLStatementType.INSERT== ctx.getStatementType()) {
 			//if insert child table when it's condition not found
 			if(logger.isInfoEnabled()){
 				logger.info("sharding value is empty and sql type is insert");
 			}
 			return Collections.singletonList(lookupSingleTablePostfix(ctx,dataSourceName,logicTable));
 		}
-		return strategyConfig.getStrategy().doSharding(ctx,logicTable.getTablePostfixes(), shardingValues);
+		//如果获取值为空，返回table所有候选值
+		if(CollectionUtils.isEmpty(values)){
+			return logicTable.getTablePostfixes();
+		}
+		return doSharding(strategyConfig.getStrategy(),ctx,logicTable.getTablePostfixes(), values);
 	}
 	
 	//get postfix from parent table
