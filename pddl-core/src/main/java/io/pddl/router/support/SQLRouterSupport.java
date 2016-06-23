@@ -14,6 +14,8 @@ import io.pddl.exception.ShardingDataSourceException;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 import io.pddl.executor.support.ExecuteContextSupport;
+import io.pddl.hint.TenantContext;
+import io.pddl.hint.TenantContextHolder;
 import io.pddl.router.SQLRouter;
 import io.pddl.router.database.DatabaseRouter;
 import io.pddl.router.table.LogicTableRouter;
@@ -90,14 +92,24 @@ public class SQLRouterSupport implements SQLRouter{
 					return result;
 				}
 			}
-			
-			//然后执行数据库路由
-			Collection<String> databaseNames= databaseRouter.doRoute(ctx);
-			if(CollectionUtils.isEmpty(databaseNames)){
-				throw new ShardingDataSourceException("dataSource is empty :"+logicSql);
+			Collection<String> databaseNames= Collections.emptyList();
+			//判断租户传递过来的数据库分片是否存在，优先级最高
+			TenantContext tenantContext= TenantContextHolder.getTenantContext();
+			if(tenantContext!= null){
+				databaseNames= Collections.singletonList(tenantContext.getPartitionName());
+				if(logger.isInfoEnabled()){
+					logger.info("Tenant database name: " + tenantContext.getPartitionName());
+				}
 			}
-			if(logger.isInfoEnabled()){
-				logger.info("Sharding database Names: " + databaseNames);
+			else{
+				//然后执行数据库路由
+				databaseNames= databaseRouter.doRoute(ctx);
+				if(CollectionUtils.isEmpty(databaseNames)){
+					throw new ShardingDataSourceException("dataSource is empty :"+logicSql);
+				}
+				if(logger.isInfoEnabled()){
+					logger.info("Sharding database Names: " + databaseNames);
+				}
 			}
 			
 			List<SQLExecutionUnit> result= new ArrayList<SQLExecutionUnit>();

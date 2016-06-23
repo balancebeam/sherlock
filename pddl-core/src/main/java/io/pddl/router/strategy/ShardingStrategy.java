@@ -11,7 +11,7 @@ public interface ShardingStrategy {
 	/**
 	 * 根据传入的值进行分片操作（数据源或表）
 	 * 
-	 * 对于用户定义的sharding-columns列之间是and关系，且各列和表的映射关系都能取到值
+	 * 对于用户定义的sharding-columns列之间是and关系，且各列和表的映射关系都能取到值sharding-columns="a,b" ,values=[[1,and 2],or [3,and 4]]解析值的关系第一层是or第二层是and
 	 * sql= "select name form emp where a =2"; sharding-columns="id";则取到的values值是 [[]];
 	 * sql= "select name form emp where id =2"; sharding-columns="id";则取到的values值是 [[Single(2)]];
 	 * sql= "select name form emp where id =2 or id=3"; sharding-columns="id";则取到的values值是 [[Single(2)],[Single(3)]];
@@ -30,8 +30,8 @@ public interface ShardingStrategy {
 	 * 
 	 * @param ctx 执行上下文
 	 * @param availableNames 可用的列表
-	 * @param values 值列表
+	 * @param shardingValues 值列表
 	 * @return Collection<String>
 	 */
-	Collection<String> doSharding(ExecuteContext ctx,Collection<String> availableNames,List<List<ShardingValue<?>>> values);
+	Collection<String> doSharding(ExecuteContext ctx,Collection<String> availableNames,List<ShardingValue<?>> shardingValues);
 }

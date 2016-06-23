@@ -1,9 +1,11 @@
 package io.pddl.router.support;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +18,7 @@ import com.google.common.base.Optional;
 import io.pddl.cache.ShardingCache;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
+import io.pddl.router.strategy.ShardingStrategy;
 import io.pddl.router.strategy.value.ShardingCollectionValue;
 import io.pddl.router.strategy.value.ShardingRangeValue;
 import io.pddl.router.strategy.value.ShardingSingleValue;
@@ -181,4 +184,16 @@ loop:	for(ConditionContext conditionContext : conditionContexts){
 		return getCondition(ctx.getSQLParsedResult().getConditions().get(0),tableName,column);
 	}
 	
+	protected Collection<String> doSharding(
+			ShardingStrategy strategy,
+			ExecuteContext ctx,
+			Collection<String> availableNames,
+			List<List<ShardingValue<?>>> values){
+		Set<String> result= new HashSet<String>();
+		//多条记录间是or的关系，路由集合是合集操作
+		for(List<ShardingValue<?>> shardingValues: values){
+			result.addAll(strategy.doSharding(ctx, availableNames, shardingValues));
+		}
+		return result;
+	}
 }
