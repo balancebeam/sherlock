@@ -19,8 +19,13 @@ public class SimpleSQLTest {
 	public static void main(String[] args)throws Exception{
 		try {
 			init();
-			//orderSql();
-			groupSql();
+//			orderSql();
+//			groupSqlCount();
+//			groupSqlSum();
+//			groupSqlMin();
+//			groupSqlMax();
+			groupSqlAvg();
+//			limitSql();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -33,41 +38,105 @@ public class SimpleSQLTest {
 
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery(SQL_STR);
-		System.out.println("===================================");
+		System.out.println("=================ORDER START==================");
 		while (rs.next()){
 			System.out.println("order_id|" + rs.getString("order_id")
 					+ ", user_id|" + rs.getString("user_id")
 					+ ", status|" + rs.getString("status"));
 		}
+		System.out.println("=================ORDER START==================");
 		rs.close();
 		statement.close();
 	}
 
-	private static void groupSql() throws Exception {
+	private static void groupSqlCount() throws Exception {
 		SQL_STR = "select count(order_id) as order_id, user_id from t_order where order_id <30 group by user_id order by user_id";
 
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery(SQL_STR);
-		System.out.println("===================================");
+		System.out.println("=================COUNT START==================");
 		while (rs.next()){
 			System.out.println("order_id|" + rs.getString("order_id")
 					+ ", user_id|" + rs.getString("user_id"));
 		}
+		System.out.println("=================COUNT START==================");
 		rs.close();
 		statement.close();
 	}
 
-	private static void limitSql() throws Exception {
-		SQL_STR = "select order_id, user_id, status from t_order where order_id > 19 order by order_id limit 4";
+	private static void groupSqlSum() throws Exception {
+		SQL_STR = "select sum(order_id) as order_id, user_id from t_order where order_id <30 group by user_id order by user_id";
 
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery(SQL_STR);
-		System.out.println("===================================");
+		System.out.println("=================SUM START==================");
+		while (rs.next()){
+			System.out.println("order_id|" + rs.getString("order_id")
+					+ ", user_id|" + rs.getString("user_id"));
+		}
+		System.out.println("=================SUM START==================");
+		rs.close();
+		statement.close();
+	}
+
+	private static void groupSqlMax() throws Exception {
+		SQL_STR = "select max(order_id) as order_id, user_id from t_order where order_id <30 group by user_id order by user_id";
+
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery(SQL_STR);
+		System.out.println("=================MAX START==================");
+		while (rs.next()){
+			System.out.println("order_id|" + rs.getString("order_id")
+					+ ", user_id|" + rs.getString("user_id"));
+		}
+		System.out.println("=================MAX END==================");
+		rs.close();
+		statement.close();
+	}
+
+	private static void groupSqlMin() throws Exception {
+		SQL_STR = "select min(order_id) as order_id, user_id from t_order where order_id <30 group by user_id order by user_id";
+
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery(SQL_STR);
+		System.out.println("=================MIN START==================");
+		while (rs.next()){
+			System.out.println("order_id|" + rs.getString("order_id")
+					+ ", user_id|" + rs.getString("user_id"));
+		}
+		System.out.println("=================MIN END==================");
+		rs.close();
+		statement.close();
+	}
+
+	private static void groupSqlAvg() throws Exception {
+		SQL_STR = "select avg(order_id) as order_id, user_id from t_order where order_id <30 group by user_id order by user_id";
+
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery(SQL_STR);
+		System.out.println("=================AVG START==================");
+		while (rs.next()){
+			System.out.println("order_id|" + rs.getString("order_id")
+					+ ", user_id|" + rs.getString("user_id"));
+		}
+		System.out.println("=================AVG END==================");
+		rs.close();
+		statement.close();
+	}
+
+
+	private static void limitSql() throws Exception {
+		SQL_STR = "select order_id, user_id, status from t_order where order_id > 19 order by order_id limit 4 offset 4";
+
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery(SQL_STR);
+		System.out.println("=================LIMIT START==================");
 		while (rs.next()){
 			System.out.println("order_id|" + rs.getString("order_id")
 					+ ", user_id|" + rs.getString("user_id")
 					+ ", status|" + rs.getString("status"));
 		}
+		System.out.println("=================LIMIT END==================");
 		rs.close();
 		statement.close();
 	}
