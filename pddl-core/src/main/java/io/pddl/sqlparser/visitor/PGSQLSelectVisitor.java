@@ -17,7 +17,6 @@ import com.alibaba.druid.sql.ast.expr.SQLNumericLiteralExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLVariantRefExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
-import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
@@ -47,8 +46,6 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	
 	private int selectLayer= 0;
 	
-	private boolean tryUnion= false;
-	
 	private boolean finishCollectMetadata= false;
 	
 	private boolean attachCountExpression= false;
@@ -58,6 +55,7 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     //遍历表名
     @Override
     public boolean visit(final PGSelectQueryBlock x) {
+    	selectLayer++;
         if (x.getFrom() instanceof SQLExprTableSource) {
             SQLExprTableSource tableExpr = (SQLExprTableSource) x.getFrom();
             setCurrentTable(tableExpr.getExpr().toString(), Optional.fromNullable(tableExpr.getAlias()));
@@ -73,26 +71,21 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
     
     @Override
     public void endVisit(final PGSelectQueryBlock x) {
-    	//把缺失的orderby列补上
-    	if(!CollectionUtils.isEmpty(missOrderbyColumns)){
-    		String orderby_columns="";
-    		for(String columnName: missOrderbyColumns){
-    			orderby_columns+= ", "+ columnName;
-    		}
-    		parseResult.getSqlBuilder().buildSQL("select_missing_columns", orderby_columns);
+    	//把缺失的orderby列补上,union太复杂暂时不支持
+    	if(isMasterSelect()){
+	    	if(!CollectionUtils.isEmpty(missOrderbyColumns)){
+	    		String orderby_columns="";
+	    		for(String columnName: missOrderbyColumns){
+	    			orderby_columns+= ", "+ columnName;
+	    		}
+	    		parseResult.getSqlBuilder().buildSQL("select_missing_columns", orderby_columns);
+	    	}
+	    	//增加一个limit东西限制查询大小
+	    	if(parseResult.getLimit()== null){
+	    		//print(" limit 9");
+	    	}
     	}
-    }
-    
-    //访问SELECT执行操作
-    @Override
-    public boolean visit(SQLSelect x) {
-    	selectLayer++;
-    	return super.visit(x);
-    }
-   
-    //访问SELECT结束后操作
-    @Override
-    public void endVisit(SQLSelect x) {
+    	
     	if(isEnableCollectMetadata()){
     		finishCollectMetadata= true;
     	}
@@ -123,11 +116,6 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
         if(!isMasterSelect()){
         	return;
         }
-        //防止union后边再次触发收集操作，使用visit(SQLUnionQuery x)最先执行导致无效
-        if(tryUnion){
-        	finishCollectMetadata= true;
-        }
-        
         int columnIndex= 0;
         //遍历第一级SELECT选择项
         for(SQLSelectItem each: selectList){
@@ -196,8 +184,6 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
 	        	}
         	}
         }
-        //解析完毕立即设置防止union后边的触发收集操作
-        tryUnion= true;
         
         /*
     	 * 预留一个位置给那些不在select选项里的oderby列，否则结果集无法按给定的orderby合并排序
@@ -262,11 +248,16 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             	continue;
             } 
             String columnName= null;
+            String owner= null;
             if (expr instanceof SQLIdentifierExpr) {
             	columnName= ((SQLIdentifierExpr)expr).getName();
             }
             else if (expr instanceof SQLPropertyExpr) {
                 columnName= ((SQLPropertyExpr)expr).getName();
+                SQLExpr exp= ((SQLPropertyExpr)expr).getOwner();
+                if(exp!=null){
+                	owner= exp.toString();
+                }
             }
             if(!StringUtils.isEmpty(columnName)){
             	int index= parseResult.getMetadataColumns().indexOf(columnName);
@@ -278,20 +269,23 @@ public class PGSQLSelectVisitor extends AbstractPGSQLVisitor {
             		}
             	}
             	else{
-            		index= parseResult.getMetadataColumns().size() + (attachCountExpression?1:0);
-            		if(StringUtils.isEmpty(missOrderbyColumns)){
-            			missOrderbyColumns= new LinkedList<String>();
-            		}
-            		if(!missOrderbyColumns.contains(columnName)){
-            			missOrderbyColumns.add(columnName);
-            			index= missOrderbyColumns.size() + index;
-            			parseResult.addOrderColumn(new OrderColumn(columnName,orderType,index));
-            			if(logger.isInfoEnabled()){
-                			logger.info("will append missing orderby column ["+columnName+"] index is: "+index);
-                		}
-            		}
-            		else{
-            			logger.warn("duplicated orderby column ["+columnName+"] "+orderType +",it doesnt work");
+            		//只有当grouby为空的时候才能追加orderby否则sql执行会出粗
+            		if(CollectionUtils.isEmpty(parseResult.getGroupColumns())){
+	            		index= parseResult.getMetadataColumns().size() + (attachCountExpression?1:0);
+	            		if(StringUtils.isEmpty(missOrderbyColumns)){
+	            			missOrderbyColumns= new LinkedList<String>();
+	            		}
+	            		if(!missOrderbyColumns.contains(columnName)){
+	            			missOrderbyColumns.add((owner==null?"":owner+".")+columnName);
+	            			index= missOrderbyColumns.size() + index;
+	            			parseResult.addOrderColumn(new OrderColumn(columnName,orderType,index));
+	            			if(logger.isInfoEnabled()){
+	                			logger.info("will append missing orderby column ["+columnName+"] index is: "+index);
+	                		}
+	            		}
+	            		else{
+	            			logger.warn("duplicated orderby column ["+columnName+"] "+orderType +",it doesnt work");
+	            		}
             		}
             	}
             }
