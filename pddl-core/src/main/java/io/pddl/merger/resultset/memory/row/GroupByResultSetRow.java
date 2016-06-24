@@ -20,6 +20,7 @@ import java.util.Map;
  * 
  * @author gaohongtao
  * @author zhangliang
+ * @author xiong.j
  */
 public final class GroupByResultSetRow extends AbstractResultSetRow {
     
@@ -28,6 +29,8 @@ public final class GroupByResultSetRow extends AbstractResultSetRow {
     private final List<GroupColumn> groupByColumns;
     
     private final Map<AggregationColumn, AggregationUnit> aggregationUnitMap;
+
+    private final static String AUTO_GEN_COL_COUNT = "auto_gen_col_count";
     
     public GroupByResultSetRow(final ResultSet resultSet, final List<GroupColumn> groupByColumns, final List<AggregationColumn> aggregationColumns) throws SQLException {
         super(resultSet);
@@ -55,9 +58,14 @@ public final class GroupByResultSetRow extends AbstractResultSetRow {
     
     private List<Comparable<?>> getAggregationValues(final List<AggregationColumn> aggregationColumns) throws SQLException {
         List<Comparable<?>> result = new ArrayList<Comparable<?>>(aggregationColumns.size());
+        boolean hasAvg = false;
         for (AggregationColumn each : aggregationColumns) {
             result.add((Comparable<?>) resultSet.getObject(each.getColumnIndex()));
+            if (AggregationColumn.AggregationType.AVG.equals(each.getAggregationType())) {
+                hasAvg = true;
+            }
         }
+        if (hasAvg) result.add((Comparable<?>) resultSet.getObject(AUTO_GEN_COL_COUNT));
         return result;
     }
     
