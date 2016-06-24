@@ -124,7 +124,11 @@ public class SQLRouterSupport implements SQLRouter{
 				}
 			}
 			if(logger.isInfoEnabled()){
-				logger.info("Sharding final result: " + result);
+				String r="";
+				for(SQLExecutionUnit u: result){
+					r+= u.toString()+"\n";
+				}
+				logger.info("SQLExecutionUnit result:\n\n" + r);
 			}
 			return result;
 		}finally{

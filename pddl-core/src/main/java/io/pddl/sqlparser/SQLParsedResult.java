@@ -36,15 +36,17 @@ public class SQLParsedResult {
 	private Table curTable;
 	//去重属性
 	private boolean distinct;
+	//当前的条件上下文
 	private final ConditionContext curConditionContext = new ConditionContext();
 	//select查询列元数据
 	private List<String> metadataColumns= new LinkedList<String>();
 	//排序列
-	private List<OrderColumn> orderColumns;
+	private List<OrderColumn> orderColumns= Collections.<OrderColumn>emptyList();
 	//聚合列
-	private List<AggregationColumn> aggregationColumns;
+	private List<AggregationColumn> aggregationColumns= Collections.<AggregationColumn>emptyList();
 	//分组列
-	private List<GroupColumn> groupColumns;
+	private List<GroupColumn> groupColumns= Collections.<GroupColumn>emptyList();
+	//多个条件上下文他们是or的关系ConditionContext or ConditionContext,里面的条件项是and关系 Condition and Condition
 	private List<ConditionContext> conditionContexts = new ArrayList<ConditionContext>();
 	//查询大小
 	private Limit limit;
