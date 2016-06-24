@@ -40,7 +40,7 @@ public final class IteratorReducerResultSet extends AbstractDelegateResultSet {
     
     @Override
     protected boolean firstNext() throws SQLException {
-        return processCurrent();
+        return processCurrent()|| (!isOutOfIndex() && processNext());
     }
     
     @Override
