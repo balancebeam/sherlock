@@ -3,13 +3,14 @@ package io.pddl.merger;
 import java.sql.ResultSet;
 import java.util.List;
 
+import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.bean.GroupColumn;
 
 public class Row{
 	
 	public Row(){}
 
-	public Row(ResultSet rs){
+	public Row(ResultSet rs,SQLParsedResult parser){
 		
 	}
 	

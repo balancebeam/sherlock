@@ -1,17 +1,20 @@
 package io.pddl.merger;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.util.CollectionUtils;
 
 import io.pddl.executor.ExecuteContext;
+import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.AggregationColumn.AggregationType;
 import io.pddl.sqlparser.bean.GroupColumn;
@@ -32,48 +35,64 @@ public class MergeManager {
 		List<Row> mergeResult= new ArrayList<Row>();
 		
 		if(!CollectionUtils.isEmpty(groups)){
-			Map<String,List<Row>> hash = new HashMap<String,List<Row>>();
-			for(ResultSet rs: result){
-				while(rs.next()){
-					String key="";
-					for(GroupColumn c: groups){
-						key=","+rs.getObject(c.getColumnIndex());
-					}
-					//key= key.substring(1);
-					if(hash.containsKey(key)){
-						//如果没有聚合函数需要做去除记录，此时所有的字段都是groupby字段
-						if(isAggregationable){
-							hash.get(key).add(createRow(rs));
+			//先获取分组键序列
+			List<Integer> keys= new ArrayList<Integer>(groups.size());
+			for(GroupColumn c: groups){
+				keys.add(c.getColumnIndex());
+			}
+			//如果分组中有聚合操作
+			if(isAggregationable){
+				Map<String,GroupAggreRow> rowsMapping = new HashMap<String,GroupAggreRow>();
+				for(ResultSet rs: result){
+					while(rs.next()){
+						String key= getKey(rs,keys);
+						if(!rowsMapping.containsKey(key)){
+							rowsMapping.put(key, new GroupAggreRow(rs,ctx.getSQLParsedResult()));
+						}
+						Map<Integer,Object> aggreHash= rowsMapping.get(key).getAggreHash();
+						//处理聚合操作
+						for(AggregationColumn each: aggregations){
+							aggreMergerRepository.get(each.getAggregationType()).merge(rs, aggreHash, each.getColumnIndex());
 						}
 					}
-					else{
-						List<Row> rows=new LinkedList<Row>();
-						rows.add(createRow(rs));
-						hash.put(key, rows);
-					}
 				}
-			}
-			if(isAggregationable){
-				//除了聚合字段不一样，其他的字段应该是一模一样
-				for(List<Row> rows: hash.values()){
-					mergeResult.add(mergeAggregation(rows,aggregations,groups));
+				//等所有结果处理完之后
+				for(GroupAggreRow each: rowsMapping.values()){
+					//处理最终结果，把他放到row对象中
+					mergeAggre2Row(aggregations,each.getRow(),each.getAggreHash());
+					mergeResult.add(each.getRow());
 				}
 			}
 			else{
-				//对于没有归并的做简单的合并
-				for(List<Row> rows: hash.values()){
-					mergeResult.addAll(rows);
+				Set<String> unique= new HashSet<String>();
+				for(ResultSet rs: result){
+					while(rs.next()){
+						String key= getKey(rs,keys);
+						if(!unique.contains(key)){
+							unique.add(key);
+							mergeResult.add(new Row(rs,ctx.getSQLParsedResult()));
+						}
+						else{
+							//去掉多余的记录，什么也不做
+						}
+					}
 				}
 			}
 		}
 		//只有聚合列，不存在其他的列
 		else if(isAggregationable){
-			List<Row> rows = new ArrayList<Row>();
+			Row row = new Row();
+			Map<Integer,Object> aggreHash= new HashMap<Integer,Object>();
 			for(ResultSet rs: result){
-				rows.add(this.createRow(rs));
+				while(rs.next()){
+					//处理聚合操作
+					for(AggregationColumn each: aggregations){
+						aggreMergerRepository.get(each.getAggregationType()).merge(rs, aggreHash, each.getColumnIndex());
+					}
+				}
 			}
-			Row oneRow= mergeAggregation(rows,aggregations,Collections.<GroupColumn>emptyList());
-			mergeResult.add(oneRow);
+			mergeAggre2Row(aggregations,row,aggreHash);
+			mergeResult.add(row);
 		}
 		//处理排序问题
 		final List<OrderColumn> orderbys= ctx.getSQLParsedResult().getOrderColumns();
@@ -95,83 +114,128 @@ public class MergeManager {
 		Limit limit= ctx.getSQLParsedResult().getLimit();
 		if(limit!= null){
 			int fromIndex= Math.min(mergeResult.size()-1,limit.getOffset());
-			int toIndex= Math.max(fromIndex+limit.getRowCount(), mergeResult.size()-1);
+			int toIndex= Math.min(fromIndex+limit.getRowCount(), mergeResult.size()-1);
 			mergeResult= mergeResult.subList(fromIndex, toIndex);
 		}
 		
 		return null;
 	}
 	
-	private Row mergeAggregation(List<Row> rows,List<AggregationColumn> aggregations,List<GroupColumn> groups){
-		Row mergeRow= rows.get(0).clone(groups); //克隆一个记录复制grouby字段
-		Map<Integer,Object> hash = new HashMap<Integer,Object>();
-		for(Row row: rows){
-			for(AggregationColumn c: aggregations){
-				if(c.getAggregationType()== AggregationType.COUNT){
-					long val= (long)row.getObject(c.getColumnIndex());
-					if(hash.containsKey(c.getColumnIndex())){
-						hash.put(c.getColumnIndex(), val+(long)hash.get(c.getColumnIndex()));
-					}
-					else{
-						hash.put(c.getColumnIndex(),val);
-					}
-				}
-				else if(c.getAggregationType()== AggregationType.SUM){
-					double val= (double)row.getObject(c.getColumnIndex());
-					if(hash.containsKey(c.getColumnIndex())){
-						hash.put(c.getColumnIndex(), val+(double)hash.get(c.getColumnIndex()));
-					}
-					else{
-						hash.put(c.getColumnIndex(),val);
-					}
-				}
-				else if(c.getAggregationType()== AggregationType.MAX){
-					double val= (double)row.getObject(c.getColumnIndex());
-					if(hash.containsKey(c.getColumnIndex())){
-						hash.put(c.getColumnIndex(), Math.max(val,(double)hash.get(c.getColumnIndex())));
-					}
-					else{
-						hash.put(c.getColumnIndex(),val);
-					}
-				}
-				else if(c.getAggregationType()== AggregationType.MIN){
-					double val= (double)row.getObject(c.getColumnIndex());
-					if(hash.containsKey(c.getColumnIndex())){
-						hash.put(c.getColumnIndex(), Math.max(val,(double)hash.get(c.getColumnIndex())));
-					}
-					else{
-						hash.put(c.getColumnIndex(),val);
-					}
-				}
-				else if(c.getAggregationType()== AggregationType.AVG){
-					double val= (double)row.getObject(c.getColumnIndex());
-					long count= (long)row.getObject("auto_gen_col_count");
-					if(hash.containsKey(c.getColumnIndex())){
-						Object[] comvals= (Object[])hash.get(c.getColumnIndex());
-						//存储sum值
-						comvals[0] =count*val+ (double)comvals[0];
-						//存储count值
-						comvals[1] = count+ (long)comvals[1];
-					}
-					else{
-						hash.put(c.getColumnIndex(),new Object[]{count*val,count});
-					}
-				}
-			}
-		}
-		//处理最终结果，把他放到row对象中
+	//把聚合结果放到Row中
+	private void mergeAggre2Row(List<AggregationColumn> aggregations,Row mergeRow,Map<Integer,Object> aggreHash){
 		for(AggregationColumn c: aggregations){
-			Object val= hash.get(c.getColumnIndex());
+			Object val= aggreHash.get(c.getColumnIndex());
 			if(c.getAggregationType()== AggregationType.AVG){
 				Object[] comvals= ((Object[])val);
 				val= (double)comvals[0]/(long)comvals[1];
 			}
 			mergeRow.setValue(c.getColumnIndex(),val);
 		}
-		return mergeRow;
+	}
+	//根据columnindex组合主键
+	private String getKey(ResultSet rs,List<Integer> columnIndexs)throws SQLException{
+		String key="";
+		for(int index: columnIndexs){
+			key+=","+rs.getObject(index);
+		}
+		return key.substring(1);
 	}
 	
-	private Row createRow(ResultSet rs){
-		return new Row(rs);
+	private class GroupAggreRow{
+		private Row row;
+		private Map<Integer,Object> aggreHash;
+		public GroupAggreRow(ResultSet rs,SQLParsedResult parserResult){
+			row= new Row(rs,parserResult);
+			aggreHash= new HashMap<Integer,Object>();
+		}
+		
+		public Row getRow(){
+			return row;
+		}
+		
+		public Map<Integer,Object> getAggreHash(){
+			return aggreHash;
+		}
+	};
+	
+	
+	private interface AggreMerger{
+		void merge(ResultSet rs,Map<Integer,Object> aggreHash,int columnIndex)throws SQLException;
+	}
+	
+	private Map<AggregationType,AggreMerger> aggreMergerRepository= new HashMap<AggregationType,AggreMerger>();
+	
+	{
+		//总数处理
+		aggreMergerRepository.put(AggregationType.COUNT, new AggreMerger(){
+			@Override
+			public void merge(ResultSet rs,Map<Integer,Object> aggreHash, int columnIndex) throws SQLException{
+				long val= (long)rs.getObject(columnIndex);
+				if(aggreHash.containsKey(columnIndex)){
+					aggreHash.put(columnIndex, val+(long)aggreHash.get(columnIndex));
+				}
+				else{
+					aggreHash.put(columnIndex,val);
+				}
+			}
+		});
+		//总和处理
+		aggreMergerRepository.put(AggregationType.SUM, new AggreMerger(){
+			@Override
+			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
+				double val= (double)rs.getObject(columnIndex);
+				if(aggreHash.containsKey(columnIndex)){
+					aggreHash.put(columnIndex, val+(double)aggreHash.get(columnIndex));
+				}
+				else{
+					aggreHash.put(columnIndex,val);
+				}
+			}
+		});
+		//最大值
+		aggreMergerRepository.put(AggregationType.MAX, new AggreMerger(){
+			@Override
+			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
+				double val= (double)rs.getObject(columnIndex);
+				if(aggreHash.containsKey(columnIndex)){
+					aggreHash.put(columnIndex, Math.max(val,(double)aggreHash.get(columnIndex)));
+				}
+				else{
+					aggreHash.put(columnIndex,val);
+				}
+			}
+		});
+		
+		//最小值
+		aggreMergerRepository.put(AggregationType.MIN, new AggreMerger(){
+			@Override
+			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
+				double val= (double)rs.getObject(columnIndex);
+				if(aggreHash.containsKey(columnIndex)){
+					aggreHash.put(columnIndex, Math.min(val,(double)aggreHash.get(columnIndex)));
+				}
+				else{
+					aggreHash.put(columnIndex,val);
+				}
+			}
+		});
+		//平局值
+		aggreMergerRepository.put(AggregationType.AVG, new AggreMerger(){
+			@Override
+			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
+				double val= (double)rs.getObject(columnIndex);
+				long count= (long)rs.getObject("auto_gen_col_count");
+				if(aggreHash.containsKey(columnIndex)){
+					Object[] comvals= (Object[])aggreHash.get(columnIndex);
+					//存储sum值
+					comvals[0] =count*val+ (double)comvals[0];
+					//存储count值
+					comvals[1] = count+ (long)comvals[1];
+				}
+				else{
+					aggreHash.put(columnIndex,new Object[]{count*val,count});
+				}
+			}
+		});
 	}
 }
