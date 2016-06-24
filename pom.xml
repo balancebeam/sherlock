@@ -16,7 +16,7 @@
     
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<junit.version>3.8.1</junit.version>
+		<junit.version>4.12</junit.version>
 		<spring.version>3.2.13.RELEASE</spring.version>
 		<druid.version>1.0.20</druid.version>
 		<mvel2.version>2.0.16</mvel2.version>
@@ -46,6 +46,11 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-test</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
 			<!-- parse sql -->

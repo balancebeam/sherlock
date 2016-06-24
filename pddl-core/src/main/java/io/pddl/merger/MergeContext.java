@@ -12,9 +12,12 @@ import lombok.ToString;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.util.CollectionUtils;
 
 /**
  * 结果集归并上下文.
@@ -42,29 +45,29 @@ public final class MergeContext {
     }
 
     public boolean hasOrderColumn() {
-        return null != ctx.getSQLParsedResult().getOrderColumns();
+        return !CollectionUtils.isEmpty(ctx.getSQLParsedResult().getOrderColumns());
     }
 
     public List<GroupColumn> getGroupColumns() {
         if (hasGroupColumn()) {
             return ctx.getSQLParsedResult().getGroupColumns();
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public boolean hasGroupColumn() {
-        return null != ctx.getSQLParsedResult().getGroupColumns();
+        return !CollectionUtils.isEmpty(ctx.getSQLParsedResult().getGroupColumns());
     }
 
     public boolean hasAggregationColumn() {
-        return null != ctx.getSQLParsedResult().getAggregationColumns();
+        return !CollectionUtils.isEmpty(ctx.getSQLParsedResult().getAggregationColumns());
     }
 
     public List<AggregationColumn> getAgregationColumns() {
         if (hasAggregationColumn()) {
             return ctx.getSQLParsedResult().getAggregationColumns();
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public Limit getLimit() {
