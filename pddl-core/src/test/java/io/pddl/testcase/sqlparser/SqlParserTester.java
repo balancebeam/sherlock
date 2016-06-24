@@ -78,7 +78,7 @@ public class SqlParserTester extends TestCase {
 	}
 	
 	public void testN(){
-		String sql= "select name,avg(salary) from emp group by name order by deptno";
+		String sql= "select name  from emp e order by e.dept";
 		print("testN",sql,Collections.<Object>emptyList());
 	}
 	
