@@ -94,6 +94,25 @@ public class MergeManager {
 			mergeAggre2Row(aggregations,row,aggreHash);
 			mergeResult.add(row);
 		}
+		else if(ctx.getSQLParsedResult().distinct()){
+			Set<String> unique= new HashSet<String>();
+			List<Integer> keys= new ArrayList<Integer>(ctx.getSQLParsedResult().getMetadataColumns().size());
+			for(int i=1;i<=ctx.getSQLParsedResult().getMetadataColumns().size();i++){
+				keys.add(i);
+			}
+			for(ResultSet rs: result){
+				while(rs.next()){
+					String key= getKey(rs,keys);
+					if(!unique.contains(key)){
+						unique.add(key);
+						mergeResult.add(new Row(rs,ctx.getSQLParsedResult()));
+					}
+					else{
+						//去掉多余的记录，什么也不做
+					}
+				}
+			}
+		}
 		//处理排序问题
 		final List<OrderColumn> orderbys= ctx.getSQLParsedResult().getOrderColumns();
 		if(!CollectionUtils.isEmpty(orderbys)){
@@ -127,7 +146,7 @@ public class MergeManager {
 			Object val= aggreHash.get(c.getColumnIndex());
 			if(c.getAggregationType()== AggregationType.AVG){
 				Object[] comvals= ((Object[])val);
-				val= (double)comvals[0]/(long)comvals[1];
+				val= (Double)comvals[0]/(Long)comvals[1];
 			}
 			mergeRow.setValue(c.getColumnIndex(),val);
 		}
@@ -170,9 +189,9 @@ public class MergeManager {
 		aggreMergerRepository.put(AggregationType.COUNT, new AggreMerger(){
 			@Override
 			public void merge(ResultSet rs,Map<Integer,Object> aggreHash, int columnIndex) throws SQLException{
-				long val= (long)rs.getObject(columnIndex);
+				long val= (Long)rs.getObject(columnIndex);
 				if(aggreHash.containsKey(columnIndex)){
-					aggreHash.put(columnIndex, val+(long)aggreHash.get(columnIndex));
+					aggreHash.put(columnIndex, val+(Long)aggreHash.get(columnIndex));
 				}
 				else{
 					aggreHash.put(columnIndex,val);
@@ -183,9 +202,9 @@ public class MergeManager {
 		aggreMergerRepository.put(AggregationType.SUM, new AggreMerger(){
 			@Override
 			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
-				double val= (double)rs.getObject(columnIndex);
+				double val= (Double)rs.getObject(columnIndex);
 				if(aggreHash.containsKey(columnIndex)){
-					aggreHash.put(columnIndex, val+(double)aggreHash.get(columnIndex));
+					aggreHash.put(columnIndex, val+(Double)aggreHash.get(columnIndex));
 				}
 				else{
 					aggreHash.put(columnIndex,val);
@@ -196,9 +215,9 @@ public class MergeManager {
 		aggreMergerRepository.put(AggregationType.MAX, new AggreMerger(){
 			@Override
 			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
-				double val= (double)rs.getObject(columnIndex);
+				double val= (Double)rs.getObject(columnIndex);
 				if(aggreHash.containsKey(columnIndex)){
-					aggreHash.put(columnIndex, Math.max(val,(double)aggreHash.get(columnIndex)));
+					aggreHash.put(columnIndex, Math.max(val,(Double)aggreHash.get(columnIndex)));
 				}
 				else{
 					aggreHash.put(columnIndex,val);
@@ -210,9 +229,9 @@ public class MergeManager {
 		aggreMergerRepository.put(AggregationType.MIN, new AggreMerger(){
 			@Override
 			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
-				double val= (double)rs.getObject(columnIndex);
+				double val= (Double)rs.getObject(columnIndex);
 				if(aggreHash.containsKey(columnIndex)){
-					aggreHash.put(columnIndex, Math.min(val,(double)aggreHash.get(columnIndex)));
+					aggreHash.put(columnIndex, Math.min(val,(Double)aggreHash.get(columnIndex)));
 				}
 				else{
 					aggreHash.put(columnIndex,val);
@@ -223,14 +242,14 @@ public class MergeManager {
 		aggreMergerRepository.put(AggregationType.AVG, new AggreMerger(){
 			@Override
 			public void merge(ResultSet rs, Map<Integer, Object> aggreHash, int columnIndex) throws SQLException {
-				double val= (double)rs.getObject(columnIndex);
-				long count= (long)rs.getObject("auto_gen_col_count");
+				double val= (Double)rs.getObject(columnIndex);
+				long count= (Long)rs.getObject("auto_gen_col_count");
 				if(aggreHash.containsKey(columnIndex)){
 					Object[] comvals= (Object[])aggreHash.get(columnIndex);
 					//存储sum值
-					comvals[0] =count*val+ (double)comvals[0];
+					comvals[0] =count*val+ (Double)comvals[0];
 					//存储count值
-					comvals[1] = count+ (long)comvals[1];
+					comvals[1] = count+ (Long)comvals[1];
 				}
 				else{
 					aggreHash.put(columnIndex,new Object[]{count*val,count});

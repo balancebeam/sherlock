@@ -121,7 +121,7 @@ public abstract class AbstractRouterSupport{
 		//获取多个or关联的ConditionContext对象里面的Condition是and关系，如下
 		//ConditionContext(Condition and Condition) or ConditionContext(Condition and Condition)
 		List<ConditionContext> conditionContexts= ctx.getSQLParsedResult().getConditions();
-		List<List<ShardingValue<?>>> result= new ArrayList<>(conditionContexts.size());
+		List<List<ShardingValue<?>>> result= new ArrayList<List<ShardingValue<?>>>(conditionContexts.size());
 loop:	for(ConditionContext conditionContext : conditionContexts){
 			List<ShardingValue<?>> shardingValues = new ArrayList<ShardingValue<?>>(columns.size());
 			for (String column : columns) {
@@ -170,7 +170,7 @@ loop:	for(ConditionContext conditionContext : conditionContexts){
 	 * getCondition(ctx,"t_order","user_id") 可以获取到对应的条件值{column={tableName=t_order,columnName=user_id},operator="=",values=[4]}
 	 * getCondition(ctx,"t_item","user_id") 获取不到条件值，因为SQL语句中表t_item和列user_id没有关联关系
 	 * 
-	 * @param ConditionContext 条件上下文
+	 * @param conditionContext 条件上下文
 	 * @param tableName 表名
 	 * @param column 列表
 	 * @return Condition

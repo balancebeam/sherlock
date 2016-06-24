@@ -8,8 +8,8 @@ import java.util.List;
 
 /**
  * 平均值聚合单元.
- * 
- * @author gaohongtao
+ *
+ * @author xiong.j
  */
 @RequiredArgsConstructor
 @Slf4j
@@ -30,8 +30,8 @@ public final class AverageAggregationUnit implements AggregationUnit {
         if (null == sum) {
             sum = new BigDecimal("0");
         }
-        count = count.add(new BigDecimal(values.get(0).toString()));
-        sum = sum.add(new BigDecimal(values.get(1).toString()));
+        sum = sum.add(new BigDecimal(values.get(1).toString()).multiply(new BigDecimal(values.get(0).toString())));
+        count = count.add(new BigDecimal(values.get(1).toString()));
         log.trace("AVG result COUNT: {} SUM: {}", count, sum);
     }
     
