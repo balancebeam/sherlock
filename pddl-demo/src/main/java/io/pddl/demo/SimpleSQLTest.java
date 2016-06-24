@@ -24,8 +24,9 @@ public class SimpleSQLTest {
 //			groupSqlSum();
 //			groupSqlMin();
 //			groupSqlMax();
-			groupSqlAvg();
+//			groupSqlAvg();
 //			limitSql();
+			ortherSql();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -137,6 +138,20 @@ public class SimpleSQLTest {
 					+ ", status|" + rs.getString("status"));
 		}
 		System.out.println("=================LIMIT END==================");
+		rs.close();
+		statement.close();
+	}
+
+	private static void ortherSql() throws Exception {
+		SQL_STR = "select o.user_id, o.order_id,i.item_id from t_order o, t_item i where o.order_id=i.order_id and o.order_id in (38,29,40)";
+
+		Statement statement= conn.createStatement();
+		ResultSet rs= statement.executeQuery(SQL_STR);
+		System.out.println("=================ORTHER START==================");
+		while(rs.next()){
+			System.out.println("user_id="+rs.getLong("user_id")+",order_id="+rs.getLong("order_id")+",item_id="+rs.getLong("item_id"));
+		}
+		System.out.println("=================ORTHER END==================");
 		rs.close();
 		statement.close();
 	}
