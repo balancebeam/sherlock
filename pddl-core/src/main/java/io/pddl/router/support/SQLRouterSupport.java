@@ -14,8 +14,8 @@ import io.pddl.exception.ShardingDataSourceException;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 import io.pddl.executor.support.ExecuteContextSupport;
-import io.pddl.hint.TenantContext;
-import io.pddl.hint.TenantContextHolder;
+import io.pddl.hint.HintContext;
+import io.pddl.hint.HintContextHolder;
 import io.pddl.router.SQLRouter;
 import io.pddl.router.database.DatabaseRouter;
 import io.pddl.router.table.LogicTableRouter;
@@ -94,11 +94,11 @@ public class SQLRouterSupport implements SQLRouter{
 			}
 			Collection<String> databaseNames= Collections.emptyList();
 			//判断租户传递过来的数据库分片是否存在，优先级最高
-			TenantContext tenantContext= TenantContextHolder.getTenantContext();
-			if(tenantContext!= null){
-				databaseNames= Collections.singletonList(tenantContext.getPartitionName());
+			HintContext hintContext= HintContextHolder.getHintContext();
+			if(hintContext!= null){
+				databaseNames= Collections.singletonList(hintContext.getPartitionDBName());
 				if(logger.isInfoEnabled()){
-					logger.info("Tenant database name: " + tenantContext.getPartitionName());
+					logger.info("Tenant database name: " + hintContext.getPartitionDBName());
 				}
 			}
 			else{
