@@ -1,9 +1,9 @@
 package io.pddl.hint;
 
-public interface TenantContext {
+public interface HintContext {
 	/**
 	 * 获取租户的数据分片名称
 	 * @return
 	 */
-	String getPartitionName();
+	String getPartitionDBName();
 }

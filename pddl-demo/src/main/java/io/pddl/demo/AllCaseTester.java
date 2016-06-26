@@ -14,8 +14,8 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.pddl.hint.TenantContext;
-import io.pddl.hint.TenantContextHolder;
+import io.pddl.hint.HintContext;
+import io.pddl.hint.HintContextHolder;
 import io.pddl.sequence.SequenceGenerator;
 import junit.framework.TestCase;
 
@@ -31,9 +31,9 @@ public class AllCaseTester extends TestCase{
 	
 	@Test
 	public void testTenant() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -48,14 +48,14 @@ public class AllCaseTester extends TestCase{
 		rs.close();
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testOnlyAggregation() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -74,14 +74,14 @@ public class AllCaseTester extends TestCase{
 		rs.close();
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testOnlyGroupby() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -95,14 +95,14 @@ public class AllCaseTester extends TestCase{
 		rs.close();
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testGroupbyAndAggregation() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -122,14 +122,14 @@ public class AllCaseTester extends TestCase{
 		rs.close();
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testLimit() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -143,14 +143,14 @@ public class AllCaseTester extends TestCase{
 		rs.close();
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testERNoCondition() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -168,14 +168,14 @@ public class AllCaseTester extends TestCase{
 		}
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testERWithEqualCondition() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -193,14 +193,14 @@ public class AllCaseTester extends TestCase{
 		}
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test //TODO 如果第一个结果集没数据则跳过
 	public void testERWithInCondition() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -218,14 +218,14 @@ public class AllCaseTester extends TestCase{
 		}
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testERWithBetweenCondition() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -243,14 +243,14 @@ public class AllCaseTester extends TestCase{
 		}
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
 	public void testQuerySubtableCondition() throws Exception{
-		TenantContextHolder.setTenantContext(new TenantContext(){
+		HintContextHolder.setHintContext(new HintContext(){
 			@Override
-			public String getPartitionName() {
+			public String getPartitionDBName() {
 				return "p0";
 			}
 		});
@@ -268,7 +268,7 @@ public class AllCaseTester extends TestCase{
 		}
 		st.close();
 		conn.close();
-		TenantContextHolder.clear();
+		HintContextHolder.clear();
 	}
 	
 	@Test
