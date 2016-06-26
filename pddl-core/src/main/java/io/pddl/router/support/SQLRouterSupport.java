@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.CollectionUtils;
 
 import io.pddl.exception.SQLParserException;
-import io.pddl.exception.ShardingDataSourceException;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.ExecuteHolder;
 import io.pddl.executor.support.ExecuteContextSupport;
@@ -105,7 +104,12 @@ public class SQLRouterSupport implements SQLRouter{
 				//然后执行数据库路由
 				databaseNames= databaseRouter.doRoute(ctx);
 				if(CollectionUtils.isEmpty(databaseNames)){
-					throw new ShardingDataSourceException("dataSource is empty :"+logicSql);
+					//使用默认的数据源
+					String name= ctx.getShardingDataSourceRepository().getDefaultDataSource().getName();
+					databaseNames= Collections.<String>singletonList(name);
+					if(logger.isInfoEnabled()){
+						logger.info("will use default database");
+					}
 				}
 				if(logger.isInfoEnabled()){
 					logger.info("Sharding database Names: " + databaseNames);
