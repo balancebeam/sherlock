@@ -15,10 +15,10 @@
 	    <property name="username" value="${jdbc0.username}" />
 	    <property name="password" value="${jdbc0.password}" />
 	    <property name="filters" value="config" />
-	    <property name="maxActive" value="15" />
+	    <property name="maxActive" value="150" />
 	    <property name="initialSize" value="10" />
-	    <property name="maxWait" value="1" />
-	    <property name="minIdle" value="5" />
+	    <property name="maxWait" value="100" />
+	    <property name="minIdle" value="50" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
 	    <property name="minEvictableIdleTimeMillis" value="300000" />
 	    <property name="validationQuery" value="SELECT 'x'" />
@@ -35,10 +35,10 @@
 	    <property name="username" value="${jdbc1.username}" />
 	    <property name="password" value="${jdbc1.password}" />
 	    <property name="filters" value="config" />
-	    <property name="maxActive" value="5" />
-	    <property name="initialSize" value="5" />
-	    <property name="maxWait" value="1" />
-	    <property name="minIdle" value="5" />
+	    <property name="maxActive" value="50" />
+	    <property name="initialSize" value="50" />
+	    <property name="maxWait" value="100" />
+	    <property name="minIdle" value="50" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
 	    <property name="minEvictableIdleTimeMillis" value="300000" />
 	    <property name="validationQuery" value="SELECT 'x'" />
@@ -55,13 +55,33 @@
 	    <property name="username" value="${jdbc2.username}" />
 	    <property name="password" value="${jdbc2.password}" />
 	    <property name="filters" value="config" />
-	    <property name="maxActive" value="5" />
-	    <property name="initialSize" value="5" />
-	    <property name="maxWait" value="1" />
-	    <property name="minIdle" value="5" />
+	    <property name="maxActive" value="50" />
+	    <property name="initialSize" value="50" />
+	    <property name="maxWait" value="100" />
+	    <property name="minIdle" value="50" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
 	    <property name="minEvictableIdleTimeMillis" value="300000" />
 	    <property name="validationQuery" value="SELECT 'x'" />
+	    <property name="testWhileIdle" value="true" />
+	    <property name="testOnBorrow" value="false" />
+	    <property name="testOnReturn" value="false" />
+	    <property name="poolPreparedStatements" value="true" />
+	    <property name="maxPoolPreparedStatementPerConnectionSize" value="20" />
+	</bean>
+	
+	<bean id="ods0" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${jdbc6.driver}"/>
+	    <property name="url" value="${jdbc6.url}" />
+	    <property name="username" value="${jdbc6.username}" />
+	    <property name="password" value="${jdbc6.password}" />
+	    <property name="filters" value="config" />
+	    <property name="maxActive" value="150" />
+	    <property name="initialSize" value="100" />
+	    <property name="maxWait" value="100" />
+	    <property name="minIdle" value="50" />
+	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
+	    <property name="minEvictableIdleTimeMillis" value="300000" />
+	    <property name="validationQuery" value="SELECT 1 from dual" />
 	    <property name="testWhileIdle" value="true" />
 	    <property name="testOnBorrow" value="false" />
 	    <property name="testOnReturn" value="false" />

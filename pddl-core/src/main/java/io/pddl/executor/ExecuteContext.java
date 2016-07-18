@@ -1,13 +1,14 @@
 package io.pddl.executor;
 
-import java.util.List;
-
+import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.jdbc.ShardingConnection;
 import io.pddl.router.table.GlobalTableRepository;
 import io.pddl.router.table.LogicTableRepository;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.bean.SQLStatementType;
+
+import java.util.List;
 
 /**
  * SQL Sharding的上下文，在创建ShardingConnection时创建
@@ -75,5 +76,10 @@ public interface ExecuteContext{
 	 * @return LogicTableRepository
 	 */
 	LogicTableRepository getLogicTableRepository();
+	/**
+	 * 获取数据库类型
+	 * @return PG|Oracle|MySQL
+	 */
+	DatabaseType getDatabaseType();
 	
 }

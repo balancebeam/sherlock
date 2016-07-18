@@ -48,10 +48,6 @@ public class ShardingDataSource extends AbstractDataSourceAdapter{
     	this.logicTableRepository= logicTableRepository;
     }
     
-    public void setDatabaseType(DatabaseType databaseType){
-    	DatabaseType.setApplicationDatabaseType(databaseType);
-    }
-    
 	@Override
 	public Connection getConnection() throws SQLException {
 		return new ShardingConnection(this);

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import io.pddl.datasource.DatabaseType;
 import io.pddl.sqlparser.SQLParsedResult;
 import io.pddl.sqlparser.SQLParserFactory;
 import junit.framework.Assert;
@@ -88,7 +89,7 @@ public class SqlParserTester extends TestCase {
 	}
 	
 	private String print(String topic,String sql,List<Object> parameters){
-		SQLParsedResult result= SQLParserFactory.create(sql, parameters).parse();
+		SQLParsedResult result= SQLParserFactory.create(DatabaseType.PostgreSQL,sql, parameters).parse();
 		System.out.println("---------------"+topic+"---------------------");
 		System.out.println(sql);
 		System.out.println(result);

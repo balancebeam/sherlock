@@ -21,7 +21,6 @@ public abstract class AbstractDataSourceAdapter extends AbstractUnsupportedOpera
         this.logWriter = out;
     }
     
-    @Override
     public final Logger getParentLogger() throws SQLFeatureNotSupportedException {
         return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }

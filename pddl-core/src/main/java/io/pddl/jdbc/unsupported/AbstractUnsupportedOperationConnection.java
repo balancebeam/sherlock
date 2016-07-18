@@ -82,7 +82,7 @@ public abstract class AbstractUnsupportedOperationConnection extends WrapperAdap
         throw new SQLFeatureNotSupportedException("rollback savepoint");
     }
     
-    @Override
+
     public final void abort(final Executor executor) throws SQLException {
         throw new SQLFeatureNotSupportedException("abort");
     }
@@ -97,12 +97,12 @@ public abstract class AbstractUnsupportedOperationConnection extends WrapperAdap
         throw new SQLFeatureNotSupportedException("setCatalog");
     }
     
-    @Override
+
     public final String getSchema() throws SQLException {
         throw new SQLFeatureNotSupportedException("getSchema");
     }
     
-    @Override
+
     public final void setSchema(final String schema) throws SQLException {
         throw new SQLFeatureNotSupportedException("setSchema");
     }
@@ -117,12 +117,12 @@ public abstract class AbstractUnsupportedOperationConnection extends WrapperAdap
         throw new SQLFeatureNotSupportedException("setTypeMap");
     }
     
-    @Override
+
     public final int getNetworkTimeout() throws SQLException {
         throw new SQLFeatureNotSupportedException("getNetworkTimeout");
     }
     
-    @Override
+
     public final void setNetworkTimeout(final Executor executor, final int milliseconds) throws SQLException {
         throw new SQLFeatureNotSupportedException("setNetworkTimeout");
     }

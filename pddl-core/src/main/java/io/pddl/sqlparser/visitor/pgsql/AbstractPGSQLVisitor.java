@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.visitor;
+package io.pddl.sqlparser.visitor.pgsql;
 
 import java.util.Arrays;
 import java.util.Collections;
