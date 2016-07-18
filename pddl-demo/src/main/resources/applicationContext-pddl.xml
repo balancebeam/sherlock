@@ -38,5 +38,27 @@
 	<pddl:strategy id="orderDatabaseStrategy" sharding-columns="user_id" expression="p${user_id.intValue() % 3}"/>
 	
 	<pddl:strategy id="orderTableStrategy" sharding-columns="order_id" expression="_${order_id.intValue() % 3}"/>
+	
+	<pddl:data-source id="shardingOracleDataSource" database-type="Oracle" >
+		<pddl:data-source-partitions>
+			<pddl:data-source-partition name="oralcePartition0" read-strategy="weight">
+				<pddl:master-data-source ref="ods0" weight="200" />
+				<pddl:slave-data-source ref="ods0" weight="200" />
+				<pddl:slave-data-source ref="ods0" weight="400" />
+			</pddl:data-source-partition>
+		</pddl:data-source-partitions>
+		<pddl:tables>
+			<pddl:global-table name="stock"/>
+			<pddl:logic-table name="t_order" primary-key="order_id" table-postfixes="_0,_1,_2" database-strategy="orderOracleDatabaseStrategy" table-strategy="orderOracleTableStrategy">
+				<pddl:logic-child-table name="t_item" primary-key="item_id" foreign-key="order_id">
+					<pddl:logic-child-table name="t_item_ext" primary-key="ext_id" foreign-key="item_id"/>
+				</pddl:logic-child-table>
+			</pddl:logic-table>
+		</pddl:tables>
+	</pddl:data-source>
+	
+	<pddl:strategy id="orderOracleDatabaseStrategy" sharding-columns="user_id" expression="p${user_id.intValue() % 3}"/>
+	
+	<pddl:strategy id="orderOracleTableStrategy" sharding-columns="order_id" expression="_${order_id.intValue() % 3}"/>
 
 </beans>

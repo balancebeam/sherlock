@@ -54,7 +54,7 @@ public class SQLRouterSupport implements SQLRouter{
 			//把Prepared的值绑定到上下文中
 			((ExecuteContextSupport)ctx).setParameters(parameters);
 			//创建SQL解析引擎
-			SQLParseEngine sqlParseEngine= SQLParserFactory.create(logicSql, parameters);
+			SQLParseEngine sqlParseEngine= SQLParserFactory.create(ctx.getDatabaseType(),logicSql, parameters);
 			//把SQL操作类型绑定到上下文中
 			((ExecuteContextSupport)ctx).setStatementType(sqlParseEngine.getStatementType());
 			if(logger.isInfoEnabled()){

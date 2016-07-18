@@ -20,15 +20,13 @@ import io.pddl.exception.ShardingDataSourceException;
  */
 public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRepository,InitializingBean {
 	
+	private DatabaseType databaseType= DatabaseType.PostgreSQL;
+	
     private Set<PartitionDataSource> partitionDataSources;
     
     private LinkedHashMap<String,PartitionDataSource> partitionDataSourceMapping= new LinkedHashMap<String,PartitionDataSource>();
     
     private PartitionDataSource defaultPartitionDataSource;
-    
-    public void setDatabaseType(DatabaseType databaseType){
-    	DatabaseType.setApplicationDatabaseType(databaseType);
-    }
     
     @Override
 	public Set<String> getPartitionDataSourceNames(){
@@ -76,4 +74,14 @@ public class ShardingDataSourceRepositorySupport implements ShardingDataSourceRe
         	}
         }
     }
+
+	@Override
+	public DatabaseType getDatabaseType() {
+		return databaseType;
+	}
+	
+	public void setDatabaseType(DatabaseType databaseType){
+		 this.databaseType= databaseType;
+    }
+	
 }

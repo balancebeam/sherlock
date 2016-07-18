@@ -23,10 +23,10 @@ import junit.framework.TestCase;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:applicationContext.xml")
-public class AllCaseTester extends TestCase{
+public class OracleFunctionTestCases extends TestCase{
 
 	@Autowired
-	@Qualifier("shardingDataSource")
+	@Qualifier("shardingOracleDataSource")
 	private DataSource shardingDataSource;
 	
 	@Resource(name="testSequence")
@@ -37,7 +37,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -59,7 +59,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -85,7 +85,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -106,7 +106,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -129,32 +129,11 @@ public class AllCaseTester extends TestCase{
 	}
 	
 	@Test
-	public void testLimit() throws Exception{
-		HintContextHolder.setHintContext(new HintContext(){
-			@Override
-			public String getPartitionDBName() {
-				return "p0";
-			}
-		});
-		Connection conn= shardingDataSource.getConnection();
-		String sql= "select user_id,order_id from t_order order by order_id limit 5 offset 2";
-		Statement st= conn.createStatement();
-		ResultSet rs= st.executeQuery(sql);
-		while(rs.next()){
-			System.out.println("user_id="+rs.getLong("user_id")+",order_id="+rs.getLong("order_id"));
-		}
-		rs.close();
-		st.close();
-		conn.close();
-		HintContextHolder.clear();
-	}
-	
-	@Test
 	public void testERNoCondition() throws Exception{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -179,7 +158,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -204,7 +183,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -229,7 +208,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();
@@ -254,7 +233,7 @@ public class AllCaseTester extends TestCase{
 		HintContextHolder.setHintContext(new HintContext(){
 			@Override
 			public String getPartitionDBName() {
-				return "p0";
+				return "oralcePartition0";
 			}
 		});
 		Connection conn= shardingDataSource.getConnection();

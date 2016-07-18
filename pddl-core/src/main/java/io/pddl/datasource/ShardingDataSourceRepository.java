@@ -27,4 +27,9 @@ public interface ShardingDataSourceRepository {
 	 * @return
 	 */
 	PartitionDataSource getDefaultDataSource();
+	/**
+	 * 获取数据库类型
+	 * @return
+	 */
+	DatabaseType getDatabaseType();
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.springframework.util.CollectionUtils;
 
+import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.jdbc.ShardingConnection;
@@ -128,5 +129,10 @@ public class ExecuteContextSupport implements ExecuteContext{
 	@Override
 	public LogicTableRepository getLogicTableRepository() {
 		return logicTableRepository;
+	}
+
+	@Override
+	public DatabaseType getDatabaseType() {
+		return shardingDataSourceRepository.getDatabaseType();
 	}
 }

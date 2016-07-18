@@ -1,4 +1,4 @@
-package io.pddl.sqlparser.visitor;
+package io.pddl.sqlparser.visitor.pgsql;
 
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGUpdateStatement;
 

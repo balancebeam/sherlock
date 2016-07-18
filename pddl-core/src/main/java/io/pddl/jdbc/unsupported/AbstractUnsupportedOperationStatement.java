@@ -69,12 +69,10 @@ public abstract class AbstractUnsupportedOperationStatement extends WrapperAdapt
         throw new SQLFeatureNotSupportedException("executeBatch");
     }
     
-    @Override
     public final void closeOnCompletion() throws SQLException {
         throw new SQLFeatureNotSupportedException("closeOnCompletion");
     }
     
-    @Override
     public final boolean isCloseOnCompletion() throws SQLException {
         throw new SQLFeatureNotSupportedException("isCloseOnCompletion");
     }

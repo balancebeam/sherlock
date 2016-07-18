@@ -51,7 +51,7 @@ public abstract class AbstractRouterSupport{
 		@SuppressWarnings("unchecked")
 		//从ThreadLocal中获取已经解析过的逻辑表结果集
 		List<List<LogicTable>> result= (List<List<LogicTable>>)ExecuteHolder.getAttribute("tableRouter.parseLogicTables");
-		if(result!= null){
+		if(result != null && !result.isEmpty()){
 			if(logger.isInfoEnabled()){
 				logger.info("get logicTables from ThreadLocal: {tableRouter.parseLogicTables="+result+"}");
 			}
