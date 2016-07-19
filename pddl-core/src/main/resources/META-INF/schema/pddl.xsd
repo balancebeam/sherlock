@@ -50,11 +50,11 @@
     </xsd:simpleType>
     <xsd:simpleType name="readStrategyEnumType">
     	<xsd:restriction base="xsd:string">
-		  <xsd:enumeration value="only-write"/>
-		  <xsd:enumeration value="cycle"/>	
-		  <xsd:enumeration value="cycle-w"/>
+		  <xsd:enumeration value="master"/>
+		  <xsd:enumeration value="roundRobin"/>
+		  <xsd:enumeration value="roundRobin-m"/>
 		  <xsd:enumeration value="weight"/>
-		  <xsd:enumeration value="weight-w"/>
+		  <xsd:enumeration value="weight-m"/>
     	</xsd:restriction>
     </xsd:simpleType>
     <xsd:element name="master-data-source">

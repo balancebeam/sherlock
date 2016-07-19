@@ -11,11 +11,11 @@ public interface DataSourceReadStrategy {
 	
 	/**
 	 * 获取策略的名称
-	 * only-write 始终使用主数据库
-	 * cycle 轮询
-	 * cycle-w 主数据库参与轮询
+	 * master 始终使用主数据库
+	 * roundRobin 轮询
+	 * roundRobin-m 主数据库参与轮询
 	 * weight 权重
-	 * weight-w 主数据库参与权重
+	 * weight-m 主数据库参与权重
 	 * 
 	 * @return String
 	 */

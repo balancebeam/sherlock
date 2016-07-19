@@ -7,11 +7,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import io.pddl.datasource.DataSourceReadStrategy;
-import io.pddl.datasource.support.strategy.OnlyWriteReadStrategySupport;
-import io.pddl.datasource.support.strategy.CycleReadStrategySupport;
-import io.pddl.datasource.support.strategy.CycleReadStrategyWithWriteSupport;
-import io.pddl.datasource.support.strategy.WeightReadStrategySupport;
-import io.pddl.datasource.support.strategy.WeightReadStrategyWithWriteSupport;
+import io.pddl.datasource.support.strategy.MasterStrategySupport;
+import io.pddl.datasource.support.strategy.RoundRobinStrategySupport;
+import io.pddl.datasource.support.strategy.RoundRobinStrategyWithMasterSupport;
+import io.pddl.datasource.support.strategy.WeightStrategySupport;
+import io.pddl.datasource.support.strategy.WeightStrategyWithMasterSupport;
 
 final public class DatabaseReadStrategyRepository {
 	
@@ -21,11 +21,11 @@ final public class DatabaseReadStrategyRepository {
 	
 	static{
 		Class<?>[] strategyClasses= new Class<?>[]{
-			OnlyWriteReadStrategySupport.class,
-			CycleReadStrategySupport.class,
-			CycleReadStrategyWithWriteSupport.class,
-			WeightReadStrategySupport.class,
-			WeightReadStrategyWithWriteSupport.class
+			MasterStrategySupport.class,
+			RoundRobinStrategySupport.class,
+			RoundRobinStrategyWithMasterSupport.class,
+			WeightStrategySupport.class,
+			WeightStrategyWithMasterSupport.class
 		};
 		Log logger = LogFactory.getLog(DatabaseReadStrategyRepository.class);
 			for(Class<?> cls: strategyClasses){

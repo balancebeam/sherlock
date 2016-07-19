@@ -14,7 +14,7 @@ import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
 
-public class WeightReadStrategySupport implements DataSourceReadStrategy{
+public class WeightStrategySupport implements DataSourceReadStrategy{
 
 	private Log logger = LogFactory.getLog(getClass());
 

@@ -33,7 +33,7 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
      */
     private int poolSize = Runtime.getRuntime().availableProcessors() * 2;
     
-    private String readStrategy= "only-write";
+    private String readStrategy= "master";
     
     private boolean defaultDataSource= false;
     
