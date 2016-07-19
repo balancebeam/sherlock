@@ -5,7 +5,7 @@ import javax.sql.DataSource;
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.DataSourceReadStrategy;
 
-public class OnlyWriteReadStrategySupport implements DataSourceReadStrategy{
+public class MasterStrategySupport implements DataSourceReadStrategy{
 	
 	@Override
 	public DataSource getSlaveDataSource(PartitionDataSource pds) {
@@ -14,6 +14,6 @@ public class OnlyWriteReadStrategySupport implements DataSourceReadStrategy{
 	
 	@Override
 	public String getStrategyName(){
-		return "only-write";
+		return "master";
 	}
 }

@@ -14,7 +14,7 @@ import io.pddl.datasource.DataSourceReadStrategy;
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.support.PartitionDataSourceSupport;
 
-public class CycleReadStrategySupport implements DataSourceReadStrategy{
+public class RoundRobinStrategySupport implements DataSourceReadStrategy{
 	
 	private Log logger = LogFactory.getLog(getClass());
 	
@@ -50,7 +50,7 @@ public class CycleReadStrategySupport implements DataSourceReadStrategy{
 	
 	@Override
 	public String getStrategyName(){
-		return "cycle";
+		return "roundRobin";
 	}
 
 }

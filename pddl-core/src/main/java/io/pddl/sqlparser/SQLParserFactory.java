@@ -29,7 +29,6 @@ public final class SQLParserFactory {
      * @param databaseType 数据库类型
      * @param sql SQL语句
      * @param parameters SQL中参数的值
-     * @param shardingColumns 分片列名称集合
      * @return 解析器引擎对象
      * @throws SQLParserException SQL解析异常
      */
