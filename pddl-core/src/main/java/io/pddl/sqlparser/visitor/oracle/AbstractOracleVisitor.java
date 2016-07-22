@@ -66,13 +66,7 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 		getSQLBuilder().appendToken(SQLUtil.getExactlyValue(token));
 	}
 
-	/**
-	 * 鐖剁被浣跨敤<tt>@@</tt>浠ｆ浛<tt>?</tt>,姝ゅ鐩存帴杈撳嚭鍙傛暟鍗犱綅绗�tt>?</tt>
-	 * 
-	 * @param x
-	 *            鍙橀噺琛ㄨ揪寮�
-	 * @return false 缁堟閬嶅巻AST
-	 */
+
 	@Override
 	public final boolean visit(final SQLVariantRefExpr x) {
 		print(x.getName());
@@ -147,24 +141,23 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 	        return false;
 	}
 	/**
-	 * 灏嗚〃鍚嶆浛鎹㈡垚鍗犱綅绗�.
+	 * 将表名替换成占位符.
 	 * 
 	 * <p>
-	 * 1. 濡傛灉浜屽厓琛ㄨ揪寮忎娇鐢ㄥ埆鍚�, 濡� {@code FROM order o WHERE o.column_name = 't' },
-	 * 鍒機olumn涓殑tableName涓簅.
+	 * 1. 如果二元表达式使用别名, 如: {@code FROM order o WHERE o.column_name = 't' },
+	 * 则Column中的tableName为o.
 	 * </p>
 	 * 
 	 * <p>
-	 * 2. 濡傛灉浜屽厓琛ㄨ揪寮忎娇鐢ㄨ〃鍚�, 濡� {@code FROM order WHERE order.column_name = 't' },
-	 * 鍒機olumn涓殑tableName涓簅rder.
+	 * 2. 如果二元表达式使用表名, 如: {@code FROM order WHERE order.column_name = 't' },
+	 * 则Column中的tableName为order.
 	 * </p>
 	 * 
 	 * @param x
-	 *            SQL灞炴�ц〃杈惧紡
-	 * @return true琛ㄧず缁х画閬嶅巻AST, false琛ㄧず缁堟閬嶅巻AST
+	 *            SQL属性表达式
+	 * @return true表示继续遍历AST, false表示终止遍历AST
 	 */
 	@Override
-	// TODO SELECT [鍒悕.xxx]鐨勬儏鍐碉紝鐩墠閮芥槸鏇挎崲鎴恡oken锛岃В鏋愪箣鍚庡簲璇ユ浛鎹㈠洖鍘�
 	public final boolean visit(final SQLPropertyExpr x) {
 		if (!(x.getParent() instanceof SQLBinaryOpExpr) && !(x.getParent() instanceof SQLSelectItem)) {
 			return super.visit(x);
@@ -182,15 +175,6 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 		return false;
 	}
 
-	/**
-	 * 鍒ゆ柇SQL琛ㄨ揪寮忔槸鍚︿负浜屽厓鎿嶄綔涓斿甫鏈夊埆鍚�.
-	 * 
-	 * @param x
-	 *            寰呭垽鏂殑SQL琛ㄨ揪寮�
-	 * @param tableOrAliasName
-	 *            琛ㄥ悕绉版垨鍒悕
-	 * @return 鏄惁涓轰簩鍏冩搷浣滀笖甯︽湁鍒悕
-	 */
 	public boolean isBinaryOperateWithAlias(final SQLPropertyExpr x, final String tableOrAliasName) {
 		return x.getParent() instanceof SQLBinaryOpExpr
 				&& parseResult.findTableFromAlias(SQLUtil.getExactlyValue(tableOrAliasName)).isPresent();
