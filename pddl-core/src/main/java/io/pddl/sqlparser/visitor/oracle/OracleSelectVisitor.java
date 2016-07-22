@@ -30,7 +30,7 @@ import io.pddl.sqlparser.bean.OrderColumn;
 import io.pddl.sqlparser.bean.OrderColumn.OrderType;
 
 /**
- * Oralce鏌ヨ璁块棶鏀堕泦鍣紝涓昏鏀堕泦琛ㄥ悕銆佹潯浠堕」銆佸垪鍏冩暟鎹�乨istinct銆佽仛鍚堣〃杈惧紡銆乬roupby銆乷rderby鍜宭imit绛夊唴瀹�
+ * Oralce查询访问收集器，主要收集表名、条件项、列元数据、distinct、聚合表达式、groupby、orderby和limit等内容
  * @author liufeng
  *
  */
@@ -48,7 +48,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
 	
 	private List<String> missOrderbyColumns;
 	
-    //閬嶅巻琛ㄥ悕
     @Override
     public boolean visit(final OracleSelectQueryBlock x) {
     	selectLayer++;
@@ -56,7 +55,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
             SQLExprTableSource tableExpr = (SQLExprTableSource) x.getFrom();
             setCurrentTable(tableExpr.getExpr().toString(), Optional.fromNullable(tableExpr.getAlias()));
         }
-        //澶勭悊distinct
         if(isEnableCollectMetadata()){
         	if(SQLSetQuantifier.DISTINCT==x.getDistionOption()){
         		parseResult.markDistinct();
@@ -67,7 +65,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     
     @Override
     public void endVisit(final OracleSelectQueryBlock x) {
-    	//鎶婄己澶辩殑orderby鍒楄ˉ涓�,union澶鏉傛殏鏃朵笉鏀寔
     	if(isMasterSelect()){
 	    	if(!CollectionUtils.isEmpty(missOrderbyColumns)){
 	    		String orderby_columns="";
@@ -76,7 +73,7 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
 	    		}
 	    		parseResult.getSqlBuilder().buildSQL("select_missing_columns", orderby_columns);
 	    	}
-	    	//澧炲姞涓�涓猯imit涓滆タ闄愬埗鏌ヨ澶у皬
+
 	    	if(parseResult.getLimit()== null){
 	    		//print(" limit 9");
 	    	}
@@ -89,10 +86,10 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     }
     
     /*
-     * 涓昏灞忚斀宓屽瀛愭煡璇㈠拰UNIO鍚庤竟鏌ヨ鐨勪笢瑗�
+     * 主要屏蔽嵌套子查询和UNIO后边查询的东西
      * 
-     * 鍦烘櫙涓�锛歴elect a ,(select b from ...) from ... where xx= (select xx from ...); 涓嶅鐞嗗祵濂楀瓙鏌ヨ
-     * 鍦烘櫙浜岋細(select xxx from yyy) UNION [ALL] (select xxx from yyy2); 涓嶅鐞哢NION 鍚庤竟鐨勬煡璇�
+     * 场景一：select a ,(select b from ...) from ... where xx= (select xx from ...); 不处理嵌套子查询
+     * 场景二：(select xxx from yyy) UNION [ALL] (select xxx from yyy2); 不处理UNION 后边的查询
      */
     private boolean isEnableCollectMetadata(){
     	return !finishCollectMetadata && selectLayer == 1;
@@ -102,33 +99,25 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     	return selectLayer == 1;
     }
     
-    /*
-     * 鍙亶鍘嗙涓�绾ELECT閫夋嫨椤癸紝鏀堕泦Metadata淇℃伅锛屽悓鏃舵敹闆哅AX銆丮IN銆丆OUNT銆丼UM鍜孉VG鎿嶄綔锛涘缓璁瓙鏌ヨ鍜岃〃杈惧紡浣跨敤alias鍒悕
-     */
+
     @Override
     protected void printSelectList(List<SQLSelectItem> selectList) {
         super.printSelectList(selectList);
-        //濡傛灉鏄祵濂楀瓙鏌ヨ鐩存帴婊よ繃
         if(!isMasterSelect()){
         	return;
         }
         int columnIndex= 0;
-        //閬嶅巻绗竴绾ELECT閫夋嫨椤�
         for(SQLSelectItem each: selectList){
         	columnIndex++;
         	String alias= each.getAlias();
         	SQLExpr expr= each.getExpr();
-        	//濡傛灉鏄〃杈惧紡
         	if(expr instanceof SQLAggregateExpr){
         		SQLAggregateExpr x= (SQLAggregateExpr)expr;
         		StringBuilder expression = new StringBuilder();
         		x.accept(new OracleOutputVisitor(expression));
         		try{
-        			//濡傛灉涓嶆槸AggregationType鏋氫妇涓殑鍐呭锛屾姏寮傚父鐩存帴璺宠繃涓嶅仛澶勭悊
+
 	        		AggregationType aggregationType = AggregationType.valueOf(x.getMethodName().toUpperCase());
-	        		//瑙ｆ瀽杩囦竴閬嶅氨涓嶅湪瑙ｆ瀽锛屾娈甸�昏緫涓昏澶勭悊濡備笅鍦烘櫙
-	        		//(select avg(salary) from emp where userid<500) union (select avg(salary) from emp where userid>100)
-	        		//瑙ｆ瀽瀹岀涓�涓猻elect鐨勫厓鏁版嵁灏变笉鍦ㄨВ鏋愶紝浣嗘槸瀵逛簬union鍚庨潰鐨剆elect璇彞锛宎vg鑱氬悎瀛楁涔熻杩藉姞 count(1)鍒�
 	        		if(isEnableCollectMetadata()){
 		        		AggregationColumn aggregationColumn= new AggregationColumn(expression.toString(),columnIndex,aggregationType);
 		        		parseResult.addAggregationColumn(aggregationColumn);
@@ -136,9 +125,7 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
 		        			logger.info("AggregationColumn: "+aggregationColumn);
 		        		}
 	        		}
-	        		//鍦ㄦ湁琛ㄨ揪寮忕殑SQLSelectItem鍚庨潰鍔犱笂鍙拷鍔犱竴涓狢OUNT(1) 鍗冲彲锛岀劧鍚庨�氳繃(avg1*count1+avg2*count2)/(count1+count2)姹傛渶缁堝钩鍧囧��
-	        		//鍘熷SQL锛歴elect avg(salary) as avg_salary, (select avg(bonus) from user) from user  
-	        	    //杞崲SQL锛歴elect avg(salary) as avg_salary, (select avg(bonus) from user), count(1) as auto_gen_col_count from user
+
 	        		if(AggregationType.AVG.equals(aggregationType) && !attachCountExpression){
 	        			print(", COUNT(1) AS " + AUTO_GEN_COL_COUNT);
 	        			attachCountExpression= true;
@@ -153,14 +140,13 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
         		}
         	}
         	
-        	//鍙互鏀堕泦鍒楀厓鏁版嵁淇℃伅
+
         	if(isEnableCollectMetadata()){
-	        	//濡傛灉鍒悕涓嶄负绌猴紝鍒欏瓨鍌ㄥ埆鍚�
 	        	if(!StringUtils.isEmpty(alias)){
 	        		parseResult.addMetadataColumn(alias);
 	        		continue;
 	        	}
-	        	//濡傛灉鏄叾浠栧垪鍚�
+
 	        	if(expr instanceof SQLIdentifierExpr){
 	        		parseResult.addMetadataColumn(((SQLIdentifierExpr)expr).getName());
 	        	}
@@ -171,7 +157,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
 	        		throw new SQLParserException("not support select * for sql: "+sql+",please enumerate every column");
 	        	}
 	        	else{
-	        		//鍙兘杩樻槸瀛愭煡璇QLQueryExpr
 	        		String columnName= AUTO_GEN_COL + columnIndex;
 	        		parseResult.addMetadataColumn(columnName);
 	        		StringBuilder expression = new StringBuilder();
@@ -181,18 +166,11 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
         	}
         }
         
-        /*
-    	 * 棰勭暀涓�涓綅缃粰閭ｄ簺涓嶅湪select閫夐」閲岀殑oderby鍒楋紝鍚﹀垯缁撴灉闆嗘棤娉曟寜缁欏畾鐨刼rderby鍚堝苟鎺掑簭
-    	 * 濡� select name from emp order by deptno锛岄渶瑕佹妸deptno 杩藉姞鍒皊elect閫夐」涓�
-    	 * 鏈�缁坰ql锛歴elect name ,deptno from emp order by deptno
-    	 */
     	parseResult.getSqlBuilder().appendToken("select_missing_columns", false);
     }
     
-    //瑙ｆ瀽Groupby鑺傜偣
     @Override
     public boolean visit(SQLSelectGroupByClause x){
-    	//濡傛灉宓屽瀛愭煡璇㈡垨绗竴涓猄QL瑙ｆ瀽瀹屾瘯
     	if(!isEnableCollectMetadata()){
     		return super.visit(x); 
     	}
@@ -205,7 +183,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     		}
     		if(!StringUtils.isEmpty(columnName)){
 				int index= parseResult.getMetadataColumns().indexOf(columnName);
-				//涓嶅簲璇ュ瓨鍦╣roupby鍒椾笉鍦╯elect閫夐」閲岀殑鎯呭喌
 				if(index!= -1){
 					parseResult.addGroupColumn(new GroupColumn(columnName,++index));
 					if(logger.isInfoEnabled()){
@@ -220,18 +197,14 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     	return super.visit(x);
     }
     
-    /*
-     * 閬嶅巻orderby鍐呭
-     */
+
     @Override
     public boolean visit(SQLOrderBy x) {
-    	//濡傛灉宓屽瀛愭煡璇㈡垨绗竴涓猄QL瑙ｆ瀽瀹屾瘯
     	if(!isEnableCollectMetadata()){
     		return super.visit(x);
     	}
     	for (SQLSelectOrderByItem each : x.getItems()) {
             SQLExpr expr = each.getExpr();
-            //榛樿鏄崌搴�
             OrderType orderType= each.getType()== null? OrderType.ASC: ("DESC".equalsIgnoreCase(each.getType().toString())? OrderType.DESC : OrderType.ASC);
             if (expr instanceof SQLIntegerExpr) {
             	int index= ((SQLIntegerExpr)expr).getNumber().intValue();
@@ -257,7 +230,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
             }
             if(!StringUtils.isEmpty(columnName)){
             	int index= parseResult.getMetadataColumns().indexOf(columnName);
-            	//濡傛灉orderby鐨勫垪涓嶅湪select閫夐」閲岋紝鍒欓渶瑕佽拷鍔犲鐞�
             	if(index!= -1){
             		parseResult.addOrderColumn(new OrderColumn(columnName,orderType,++index));
             		if(logger.isInfoEnabled()){
@@ -265,7 +237,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
             		}
             	}
             	else{
-            		//鍙湁褰揼rouby涓虹┖鐨勬椂鍊欐墠鑳借拷鍔爋rderby鍚﹀垯sql鎵ц浼氬嚭绮�
             		if(CollectionUtils.isEmpty(parseResult.getGroupColumns())){
 	            		index= parseResult.getMetadataColumns().size() + (attachCountExpression?1:0);
 	            		if(StringUtils.isEmpty(missOrderbyColumns)){
