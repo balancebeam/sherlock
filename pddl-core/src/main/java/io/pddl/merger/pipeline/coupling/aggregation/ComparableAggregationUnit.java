@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * 比较聚合单元.
  * 
- * @author gaohongtao
  */
 @RequiredArgsConstructor
 @Slf4j

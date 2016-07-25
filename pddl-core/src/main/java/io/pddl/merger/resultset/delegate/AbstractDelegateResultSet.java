@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * 代理结果集抽象类.
  * 
- * @author zhangliang
+ * @author Liu Feng
  */
 @Slf4j
 public abstract class AbstractDelegateResultSet extends AbstractResultSetAdapter {
@@ -36,6 +36,9 @@ public abstract class AbstractDelegateResultSet extends AbstractResultSetAdapter
         delegate = resultSets.get(0);
     }
 
+    // 对多个sharding select集合的首元素进行合并，并根据升降序，找出第一个元素
+    // 选择合适的类处理sharding select集合。E.G, limit 相关的将使用LimitCouplingResultSet
+    // order by将使用StreamingOrderByReducerResultSet
     @Override
     public final boolean next() throws SQLException {
         boolean result = beforeFirst ? firstNext() : afterFirstNext();

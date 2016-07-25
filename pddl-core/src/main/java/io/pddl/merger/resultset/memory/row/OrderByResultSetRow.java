@@ -12,8 +12,6 @@ import java.util.List;
 /**
  * 具有排序功能的数据行对象.
  * 
- * @author gaohongtao
- * @author zhangliang
  */
 public final class OrderByResultSetRow extends AbstractResultSetRow implements Comparable<OrderByResultSetRow> {
     

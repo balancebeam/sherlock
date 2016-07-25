@@ -26,8 +26,6 @@ import java.sql.SQLException;
 /**
  * 迭代归并的聚集结果集.
  *
- * @author gaohongtao
- * @author zhangliang
  * @author xiong.j
  */
 public final class IteratorReducerResultSet extends AbstractDelegateResultSet {

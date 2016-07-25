@@ -14,7 +14,7 @@ import java.util.List;
 public class MergeUtils {
 
 	/**
-	 * Select集合归并
+	 * 为Select集合生成处理子元素的类，真正的merge操作不在这里处理
 	 *
 	 * @param resultSets
 	 * @param ctx

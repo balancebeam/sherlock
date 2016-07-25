@@ -17,9 +17,7 @@ import java.util.Map;
 
 /**
  * 具有分组功能的数据行对象.
- * 
- * @author gaohongtao
- * @author zhangliang
+ *
  * @author xiong.j
  */
 public final class GroupByResultSetRow extends AbstractResultSetRow {
