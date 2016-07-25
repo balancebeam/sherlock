@@ -25,7 +25,7 @@ public class SimpleSQLTest {
 //			groupSqlMin();
 //			groupSqlMax();
 //			groupSqlAvg();
-//			limitSql();
+			limitSql();
 			ortherSql();
 		} catch (Exception e) {
 			throw e;

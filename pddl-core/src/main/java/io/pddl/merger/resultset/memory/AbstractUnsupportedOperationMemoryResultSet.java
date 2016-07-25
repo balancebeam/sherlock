@@ -10,9 +10,6 @@ import java.util.Map;
 
 /**
  * 声明不支持操作的内存结果集抽象类.
- *
- * @author gaohongtao
- * @author zhagliang
  */
 public abstract class AbstractUnsupportedOperationMemoryResultSet extends AbstractResultSetAdapter {
     

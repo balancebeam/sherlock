@@ -5,7 +5,6 @@ import java.util.List;
 /**
  * 归并计算单元接口.
  * 
- * @author gaohongtao
  */
 public interface AggregationUnit {
     

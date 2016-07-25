@@ -13,9 +13,6 @@ import java.util.List;
 
 /**
  * 流式排序的聚集结果集.
- *
- * @author gaohongtao
- * @author zhangliang
  * @author xiong.j
  */
 @Slf4j

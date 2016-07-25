@@ -8,9 +8,6 @@ import java.sql.SQLException;
 
 /**
  * 结果集数据行抽象类.
- * 
- * @author gaohongtao
- * @author zhangliang
  */
 public abstract class AbstractResultSetRow implements ResultSetRow {
     

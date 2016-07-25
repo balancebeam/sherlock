@@ -15,8 +15,6 @@ import java.util.List;
 /**
  * 基于内存排序的结果集抽象类.
  * 
- * @author gaohongtao
- * @author zhangliang
  */
 public abstract class AbstractMemoryOrderByResultSet extends AbstractMemoryResultSet {
     

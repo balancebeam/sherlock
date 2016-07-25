@@ -10,8 +10,6 @@ import java.util.Collections;
 /**
  * 根据排序列内存排序的连接结果集.
  *
- * @author gaohongtao
- * @author zhangliang
  * @author xiong.j
  */
 public final class MemoryOrderByCouplingResultSet extends AbstractMemoryOrderByResultSet {
