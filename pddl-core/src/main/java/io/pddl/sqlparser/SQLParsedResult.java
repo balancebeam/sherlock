@@ -2,6 +2,7 @@ package io.pddl.sqlparser;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +49,8 @@ public class SQLParsedResult {
 	private List<GroupColumn> groupColumns= Collections.<GroupColumn>emptyList();
 	//多个条件上下文他们是or的关系ConditionContext or ConditionContext,里面的条件项是and关系 Condition and Condition
 	private List<ConditionContext> conditionContexts = new ArrayList<ConditionContext>();
+	//rownum alias recording
+	private HashSet<String> rownumAlias = new HashSet();
 	//查询大小
 	private Limit limit;
 	
@@ -80,6 +83,10 @@ public class SQLParsedResult {
 
 	public void setHasOrCondition(boolean hasOrCondition) {
 		this.hasOrCondition = hasOrCondition;
+	}
+	
+	public HashSet<String> getRownumAlias() {
+		return this.rownumAlias;
 	}
 	
 	public List<ConditionContext> getConditions(){

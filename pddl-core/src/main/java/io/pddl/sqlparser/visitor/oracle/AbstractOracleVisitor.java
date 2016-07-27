@@ -6,11 +6,14 @@ import java.util.Collections;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLHint;
 import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
+import com.alibaba.druid.sql.ast.expr.SQLBinaryOperator;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLInListExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLVariantRefExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
@@ -20,6 +23,7 @@ import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
 import com.google.common.base.Optional;
 
 import io.pddl.datasource.DatabaseType;
+import io.pddl.merger.Limit;
 import io.pddl.sqlparser.SQLAware;
 import io.pddl.sqlparser.SQLBuilder;
 import io.pddl.sqlparser.SQLParsedResult;
@@ -182,6 +186,32 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 
 	@Override
 	public boolean visit(final SQLBinaryOpExpr x) {
+		String sqlExpr = SQLUtil.getExactlyValue(x.getLeft().toString());
+		if(sqlExpr.toLowerCase().equals("rownum") || parseResult.getRownumAlias().contains(sqlExpr)) {
+			SQLExpr intExpr = new SQLIntegerExpr(0); 
+			switch(x.getOperator()) {
+			case LessThan:
+				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString()));
+				break;
+			case LessThanOrEqual:
+				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString()) + 1);
+				break;
+			case GreaterThan:
+				parseResult.getLimit().setOffset((Integer.parseInt(x.getRight().toString()) + 1));	
+				x.setRight(intExpr);
+				break;
+			case GreaterThanOrEqual:
+				parseResult.getLimit().setOffset(Integer.parseInt(x.getRight().toString()));
+				x.setRight(intExpr);
+				break;
+			case Equality:
+				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString())+1);
+				parseResult.getLimit().setOffset(Integer.parseInt(x.getRight().toString()));
+				x.setOperator(SQLBinaryOperator.LessThanOrEqual);
+			default:
+				break;
+			}
+        }
 
 		switch (x.getOperator()) {
 		case BooleanOr:
@@ -196,6 +226,39 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 		}
 		return super.visit(x);
 	}
+	
+	@Override
+	public boolean visit(SQLSelectItem x) {
+        if (x.isConnectByRoot()) {
+            print0(ucase ? "CONNECT_BY_ROOT " : "connect_by_root ");
+        }
+
+        x.getExpr().accept(this);
+        
+        String alias = x.getAlias();
+        if (alias != null && alias.length() > 0) {
+            print0(ucase ? " AS " : " as ");
+            if (alias.indexOf(' ') == -1 || alias.charAt(0) == '"' || alias.charAt(0) == '\'') {
+                print0(alias);
+            } else {
+                print('"');
+                print0(alias);
+                print('"');
+            }
+            
+        }
+        
+        String sqlExpr = SQLUtil.getExactlyValue(x.getExpr().toString());
+        if(sqlExpr.toLowerCase().equals("rownum")) {
+        	Limit limit =  new Limit(-1,-1);
+        	parseResult.setLimit(limit);
+        	if (alias != null && alias.length() > 0) {
+        		parseResult.getRownumAlias().add(alias);
+        	}
+        }
+        
+        return false;
+    }
 
 	@Override
 	public boolean visit(final SQLInListExpr x) {
