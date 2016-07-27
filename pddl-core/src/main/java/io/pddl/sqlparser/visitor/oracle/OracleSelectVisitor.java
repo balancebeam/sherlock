@@ -103,6 +103,7 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
     @Override
     protected void printSelectList(List<SQLSelectItem> selectList) {
         super.printSelectList(selectList);
+        
         if(!isMasterSelect()){
         	return;
         }
@@ -200,9 +201,6 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
 
     @Override
     public boolean visit(SQLOrderBy x) {
-    	if(!isEnableCollectMetadata()){
-    		return super.visit(x);
-    	}
     	for (SQLSelectOrderByItem each : x.getItems()) {
             SQLExpr expr = each.getExpr();
             OrderType orderType= each.getType()== null? OrderType.ASC: ("DESC".equalsIgnoreCase(each.getType().toString())? OrderType.DESC : OrderType.ASC);

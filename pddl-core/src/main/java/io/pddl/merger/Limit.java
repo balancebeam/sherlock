@@ -6,6 +6,8 @@ public class Limit {
 
 	private int rowCount;
 	
+	private int upperBound;
+	
 	public Limit(int offset,int rowCount){
 		this.offset= offset;
 		this.rowCount= rowCount;
@@ -16,7 +18,22 @@ public class Limit {
 	}
 	
 	public int getRowCount(){
-		return rowCount;
+		if (rowCount == -1)
+			return upperBound - offset;
+		else 
+		    return rowCount;
+	}
+	
+	public void setOffset(int offset) {
+		this.offset = offset;
+	}
+	
+	public void setRowCount(int rowCount) {
+		this.rowCount = rowCount;
+	}
+	
+	public void setUpperBound(int upBound) {
+		this.upperBound = upBound;
 	}
 	
 	@Override
