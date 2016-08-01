@@ -258,4 +258,20 @@ public class OracleSelectVisitor extends AbstractOracleVisitor {
         return super.visit(x);
     }
 
+
+@Override
+public void endVisit(SQLOrderBy x) {
+    	if(!CollectionUtils.isEmpty(missOrderbyColumns)){
+    		String orderby_columns="";
+    		for(String columnName: missOrderbyColumns){
+    			orderby_columns+= ", "+ columnName;
+    		}
+    		parseResult.getSqlBuilder().buildSQL("select_missing_columns", orderby_columns);
+    	}
+
+    	if(parseResult.getLimit()== null){
+    		//print(" limit 9");
+    	}
+}
+
 }

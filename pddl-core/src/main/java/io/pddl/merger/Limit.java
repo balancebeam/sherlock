@@ -11,6 +11,7 @@ public class Limit {
 	public Limit(int offset,int rowCount){
 		this.offset= offset;
 		this.rowCount= rowCount;
+		this.upperBound = -1;
 	}
 	
 	public int getOffset(){
@@ -34,6 +35,10 @@ public class Limit {
 	
 	public void setUpperBound(int upBound) {
 		this.upperBound = upBound;
+	}
+	
+	public int getUpperBound() {
+		return this.upperBound;
 	}
 	
 	@Override

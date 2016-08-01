@@ -34,6 +34,8 @@ import io.pddl.util.SQLUtil;
 
 public abstract class AbstractOracleVisitor extends OracleOutputVisitor implements SQLVisitor,SQLAware {
 	
+	private static final int MAX_UPPER_BOUND = 10000;
+
 	protected Log logger = LogFactory.getLog(getClass());
 
 	protected SQLParsedResult parseResult;
@@ -192,17 +194,30 @@ public abstract class AbstractOracleVisitor extends OracleOutputVisitor implemen
 			switch(x.getOperator()) {
 			case LessThan:
 				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString()));
+				if(parseResult.getLimit().getOffset() == -1) {
+				    parseResult.getLimit().setOffset(0);
+				}
 				break;
 			case LessThanOrEqual:
 				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString()) + 1);
+				parseResult.getLimit().setOffset(0);
+				if(parseResult.getLimit().getOffset() == -1) {
+				    parseResult.getLimit().setOffset(0);
+				}
 				break;
 			case GreaterThan:
 				parseResult.getLimit().setOffset((Integer.parseInt(x.getRight().toString()) + 1));	
 				x.setRight(intExpr);
+				if(parseResult.getLimit().getUpperBound() == -1) {
+					parseResult.getLimit().setUpperBound(MAX_UPPER_BOUND);
+				}
 				break;
 			case GreaterThanOrEqual:
 				parseResult.getLimit().setOffset(Integer.parseInt(x.getRight().toString()));
 				x.setRight(intExpr);
+				if(parseResult.getLimit().getUpperBound() == -1) {
+					parseResult.getLimit().setUpperBound(MAX_UPPER_BOUND);
+				}
 				break;
 			case Equality:
 				parseResult.getLimit().setUpperBound(Integer.parseInt(x.getRight().toString())+1);
