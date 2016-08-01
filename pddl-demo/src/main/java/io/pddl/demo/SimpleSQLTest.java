@@ -19,14 +19,14 @@ public class SimpleSQLTest {
 	public static void main(String[] args)throws Exception{
 		try {
 			init();
-//			orderSql();
+			orderSql();
 //			groupSqlCount();
 //			groupSqlSum();
 //			groupSqlMin();
 //			groupSqlMax();
 //			groupSqlAvg();
-			limitSql();
-			ortherSql();
+//			limitSql();
+//			ortherSql();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -35,7 +35,7 @@ public class SimpleSQLTest {
 	}
 
 	private static void orderSql() throws Exception {
-		SQL_STR = "select order_id, user_id, status from t_order where order_id > 19 order by order_id";
+		SQL_STR = "select order_id, user_id, status from t_order  order by order_id";
 
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery(SQL_STR);

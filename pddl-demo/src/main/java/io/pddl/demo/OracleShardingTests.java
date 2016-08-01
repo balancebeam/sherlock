@@ -19,12 +19,12 @@ public class OracleShardingTests {
 		try {
 			init();
 			orderSql();
-//			groupSqlCount();
-//			groupSqlSum();
-//			groupSqlMin();
-//			groupSqlMax();
-//			groupSqlAvg();
-//			ortherSql();
+			groupSqlCount();
+			groupSqlSum();
+			groupSqlMin();
+			groupSqlMax();
+			groupSqlAvg();
+			ortherSql();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -33,7 +33,7 @@ public class OracleShardingTests {
 	}
 
 	private static void orderSql() throws Exception {
-		SQL_STR = "select a.order_id, a.user_id, ROWNUM rnum from ( select order_id, user_id from t_order order by order_id ) a where ROWNUM <= 10 and ROWNUM >= 1";
+		SQL_STR = "select a.order_id, a.user_id, ROWNUM rnum from ( select order_id, user_id from t_order order by order_id ) a where ROWNUM = 1";
 
 		Statement statement= conn.createStatement();
 		ResultSet rs= statement.executeQuery(SQL_STR);
