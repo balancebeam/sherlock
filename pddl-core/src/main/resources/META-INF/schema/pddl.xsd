@@ -81,6 +81,7 @@
     <xsd:element name="global-table">
         <xsd:complexType>
             <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="data-sources" type="xsd:string" use="optional" />
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="logic-table">
@@ -89,6 +90,7 @@
                 <xsd:element ref="logic-child-table" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="data-sources" type="xsd:string" use="optional" />
             <xsd:attribute name="primary-key" type="xsd:string" use="required" />
             <xsd:attribute name="table-postfixes" type="xsd:string" use="required" />
             <xsd:attribute name="table-strategy" type="xsd:string" use="required" />

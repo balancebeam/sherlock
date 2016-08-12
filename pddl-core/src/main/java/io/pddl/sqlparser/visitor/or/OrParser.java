@@ -6,6 +6,7 @@ import com.alibaba.druid.util.JdbcConstants;
 import com.google.common.base.Optional;
 
 import io.pddl.sqlparser.SQLParsedResult;
+import io.pddl.sqlparser.visitor.or.mysql.OrMySQLVisitor;
 import io.pddl.sqlparser.visitor.or.oracle.OrOracleVisitor;
 import io.pddl.sqlparser.visitor.or.pgsql.OrPgsqlVisitor;
 
@@ -16,12 +17,17 @@ public class OrParser {
     
     public OrParser(final SQLStatement sqlStatement, final SQLASTOutputVisitor dependencyVisitor) {
         this.sqlStatement = sqlStatement;
-        if (JdbcConstants.ORACLE.equals(dependencyVisitor.getDbType()))
-        {
+        String dbType= dependencyVisitor.getDbType();
+        if (JdbcConstants.ORACLE.equals(dbType)){
         	orVisitor = new OrOracleVisitor(dependencyVisitor);
-        } else {
+        }
+        else if(JdbcConstants.POSTGRESQL.equals(dbType)){
         	orVisitor = new OrPgsqlVisitor(dependencyVisitor);
         }
+        else if(JdbcConstants.MYSQL.equals(dbType)){
+            orVisitor = new OrMySQLVisitor(dependencyVisitor);
+        }
+        throw new IllegalArgumentException("not support typeof "+dbType+" OrVisitor");
     }
     
     public SQLParsedResult parse() {

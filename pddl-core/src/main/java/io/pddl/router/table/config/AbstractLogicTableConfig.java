@@ -1,5 +1,7 @@
 package io.pddl.router.table.config;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import io.pddl.router.strategy.config.ShardingStrategyConfig;
@@ -8,7 +10,7 @@ import io.pddl.router.table.LogicTable;
 public abstract class AbstractLogicTableConfig implements LogicTable{
 
 	private String name;
-	
+
 	private String primaryKey;
 	
 	private List<? extends LogicTable> children;
@@ -81,7 +83,12 @@ public abstract class AbstractLogicTableConfig implements LogicTable{
 	public String getLayerIdx(){
 		return layerIdx;
 	}
-	
+
+	@Override
+	public List<String> getPartitionDataSourceNames(){
+		return parent.getPartitionDataSourceNames();
+	}
+
 	@Override
 	public String toString(){
 		StringBuilder builder= new StringBuilder();

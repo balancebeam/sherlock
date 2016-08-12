@@ -82,8 +82,18 @@ public class SQLRouterSupport implements SQLRouter{
 						logger.info(tableName+" is global table");
 					}
 					List<SQLExecutionUnit> result= new ArrayList<SQLExecutionUnit>();
-					for(String dataSourceName: ctx.getShardingDataSourceRepository().getPartitionDataSourceNames()){
-						result.add(new SQLExecutionUnit(dataSourceName,logicSql));
+					//获取全局表数据分片名称集合
+					Collection<String> partitionDataSourceNames= ctx.getGlobalTableRepository().getPartitionDataSourceNames(tableName);
+					//如果定义分片集合则使用全集
+					if(CollectionUtils.isEmpty(partitionDataSourceNames)){
+						partitionDataSourceNames= ctx.getShardingDataSourceRepository().getPartitionDataSourceNames();
+					}
+					else{
+						//过滤的合法数据分片集合
+						partitionDataSourceNames.retainAll(ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
+					}
+					for(String each: partitionDataSourceNames){
+						result.add(new SQLExecutionUnit(each,logicSql));
 					}
 					if(logger.isInfoEnabled()){
 						logger.info("Sharding global table result: " + result.toString());
