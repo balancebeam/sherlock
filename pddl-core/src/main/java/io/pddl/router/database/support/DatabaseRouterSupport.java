@@ -78,13 +78,19 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 	private Collection<String> doDatabaseSharding(ExecuteContext ctx,LogicTable logicTable) {
 		ShardingStrategyConfig strategyConfig = logicTable.getDataSourceStrategyConfig();
 		if(strategyConfig== null){
-			return Collections.emptyList();
+			return logicTable.getPartitionDataSourceNames();
 		}
 		List<List<ShardingValue<?>>> values = getShardingValues(ctx,logicTable.getName(),strategyConfig.getColumns());
 		//对于数据库应该是确定的
 		if(CollectionUtils.isEmpty(values)){
-			return Collections.emptyList();
+			return logicTable.getPartitionDataSourceNames();
 		}
-		return doSharding(strategyConfig.getStrategy(),ctx,ctx.getShardingDataSourceRepository().getPartitionDataSourceNames(), values);
+		Collection<String> result= doSharding(strategyConfig.getStrategy(),ctx,ctx.getShardingDataSourceRepository().getPartitionDataSourceNames(), values);
+		if(!CollectionUtils.isEmpty(logicTable.getPartitionDataSourceNames())){
+			List<String> sameNames= new ArrayList<String>(logicTable.getPartitionDataSourceNames());
+			sameNames.retainAll(result);
+			return sameNames;
+		}
+		return result;
 	}
 }

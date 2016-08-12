@@ -1,5 +1,6 @@
 package io.pddl.router.table.config;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.pddl.router.strategy.config.ShardingStrategyConfig;
@@ -7,6 +8,8 @@ import io.pddl.router.strategy.config.ShardingStrategyConfig;
 public class LogicTableConfig extends AbstractLogicTableConfig{
 
 	private List<String> tablePostfixies;
+
+	private List<String> partitionDataSourceNames= Collections.EMPTY_LIST;
 	
 	private ShardingStrategyConfig tableStrategyConfig;
 	
@@ -32,6 +35,15 @@ public class LogicTableConfig extends AbstractLogicTableConfig{
 	
 	public void setDatabaseStrategyConfig(ShardingStrategyConfig databaseStrategyConfig){
 		this.dataSourceStrategyConfig= databaseStrategyConfig;
+	}
+
+	@Override
+	public List<String> getPartitionDataSourceNames(){
+		return partitionDataSourceNames;
+	}
+
+	public void setPartitionDataSourceNames(List<String> partitionDataSourceNames){
+		this.partitionDataSourceNames= partitionDataSourceNames;
 	}
 	
 	@Override

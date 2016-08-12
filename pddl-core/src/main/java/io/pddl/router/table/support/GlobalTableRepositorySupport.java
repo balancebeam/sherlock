@@ -1,5 +1,7 @@
 package io.pddl.router.table.support;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.util.CollectionUtils;
@@ -13,14 +15,19 @@ import io.pddl.router.table.GlobalTableRepository;
  */
 public class GlobalTableRepositorySupport implements GlobalTableRepository{
 
-	private Set<String> globalTables;
+	private Map<String,List<String>> globalTables;
 	
 	@Override
     public boolean isGlobalTable(String name){
-    	return !CollectionUtils.isEmpty(globalTables)? globalTables.contains(name) : false;
+    	return !CollectionUtils.isEmpty(globalTables)? globalTables.containsKey(name) : false;
     }
-	
-	public void setGlobalTables(Set<String> globalTables){
+
+	@Override
+	public List<String> getPartitionDataSourceNames(String name) {
+		return globalTables.get(name);
+	}
+
+	public void setGlobalTables(Map<String,List<String>> globalTables){
     	this.globalTables= globalTables;
     }
 

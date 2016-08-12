@@ -7,6 +7,10 @@ import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 import io.pddl.datasource.DatabaseType;
 import io.pddl.exception.DatabaseTypeUnsupportedException;
+import io.pddl.sqlparser.visitor.mysql.MySQLDeleteVisitor;
+import io.pddl.sqlparser.visitor.mysql.MySQLInsertVisitor;
+import io.pddl.sqlparser.visitor.mysql.MySQLSelectVisitor;
+import io.pddl.sqlparser.visitor.mysql.MySQLUpdateVisitor;
 import io.pddl.sqlparser.visitor.oracle.OracleDeleteVisitor;
 import io.pddl.sqlparser.visitor.oracle.OracleInsertVisitor;
 import io.pddl.sqlparser.visitor.oracle.OracleSelectVisitor;
@@ -34,15 +38,15 @@ public final class SQLVisitorRegistry {
     }
     
     private static void registerSelectVistor() {
-        //SELECT_REGISTRY.put(DatabaseType.MySQL, MySQLSelectVisitor.class);
         // TODO 其他数据库
+        SELECT_REGISTRY.put(DatabaseType.MySQL, MySQLSelectVisitor.class);
         SELECT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLSelectVisitor.class);
         SELECT_REGISTRY.put(DatabaseType.Oracle, OracleSelectVisitor.class);
     }
     
     private static void registerInsertVistor() {
         
-        //INSERT_REGISTRY.put(DatabaseType.MySQL, MySQLInsertVisitor.class);
+        INSERT_REGISTRY.put(DatabaseType.MySQL, MySQLInsertVisitor.class);
     	INSERT_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLInsertVisitor.class);
     	INSERT_REGISTRY.put(DatabaseType.Oracle, OracleInsertVisitor.class);
         // TODO 其他数据库
@@ -50,16 +54,16 @@ public final class SQLVisitorRegistry {
     
     private static void registerUpdateVistor() {
       
-        //UPDATE_REGISTRY.put(DatabaseType.MySQL, MySQLUpdateVisitor.class);
         // TODO 其他数据库
+        UPDATE_REGISTRY.put(DatabaseType.MySQL, MySQLUpdateVisitor.class);
     	UPDATE_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLUpdateVisitor.class);
     	UPDATE_REGISTRY.put(DatabaseType.Oracle, OracleUpdateVisitor.class);
     }
     
     private static void registerDeleteVistor() {
         
-        //DELETE_REGISTRY.put(DatabaseType.MySQL, MySQLDeleteVisitor.class);
         // TODO 其他数据库
+        DELETE_REGISTRY.put(DatabaseType.MySQL, MySQLDeleteVisitor.class);
     	DELETE_REGISTRY.put(DatabaseType.PostgreSQL, PGSQLDeleteVisitor.class);
     	DELETE_REGISTRY.put(DatabaseType.Oracle, OracleDeleteVisitor.class);
 

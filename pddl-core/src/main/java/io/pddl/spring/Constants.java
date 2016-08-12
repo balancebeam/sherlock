@@ -21,6 +21,7 @@ public interface Constants {
 	final public static String LOGIC_TABLE= "logic-table";
 	final public static String LOGIC_CHILD_TABLE= "logic-child-table";
 	final public static String TABLE_NAME= "name";
+	final public static String PARTITION_DATA_SOURCE_NAMES= "data-sources";
 	final public static String PRIMARY_KEY= "primary-key";
 	final public static String FOREIGN_KEY= "foreign-key";
 	final public static String TABLE_STRATEGY= "table-strategy";

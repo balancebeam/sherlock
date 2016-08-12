@@ -23,11 +23,9 @@ import static io.pddl.spring.Constants.TABLE_NAME;
 import static io.pddl.spring.Constants.TABLE_POSTFIXES;
 import static io.pddl.spring.Constants.TABLE_STRATEGY;
 import static io.pddl.spring.Constants.TIME_OUT;
+import static io.pddl.spring.Constants.PARTITION_DATA_SOURCE_NAMES;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,8 +91,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		Element partitionsElement= DomUtils.getChildElementByTagName(element, DATA_SOURCE_PARTITIONS);
 		List<Element> partitions= DomUtils.getChildElementsByTagName(partitionsElement, DATA_SOURCE_PARTITION);
 		ManagedSet<BeanDefinition> partitionDataSources  = new ManagedSet<BeanDefinition>();
-		for(Element partition: partitions){
-			partitionDataSources.add(parseDataSourcePartition(partition,parserContext));
+		for(Element each: partitions){
+			partitionDataSources.add(parseDataSourcePartition(each,parserContext));
 		}
 		factory.addPropertyValue("partitionDataSources", partitionDataSources);
 		factory.addPropertyValue("databaseType", DatabaseType.valueOf(element.getAttribute(DATA_BASE_TYPE)));
@@ -148,10 +146,16 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		if(tablesElement!= null){
 			List<Element> globalElements= DomUtils.getChildElementsByTagName(tablesElement, GLOBAL_TABLE);
 			if(!CollectionUtils.isEmpty(globalElements)){
-				Set<String> globalTables= new HashSet<String>();
-				for(Element it: globalElements){
-					String name= it.getAttribute(TABLE_NAME);
-					globalTables.add(name);
+				Map<String,List<String>> globalTables= new HashMap<String,List<String>>();
+				for(Element each: globalElements){
+					String name= each.getAttribute(TABLE_NAME);
+					String partitionDataSourceNames= each.getAttribute(PARTITION_DATA_SOURCE_NAMES);
+					if(!StringUtils.isEmpty(partitionDataSourceNames)) {
+						globalTables.put(name, Arrays.asList(partitionDataSourceNames.split(",")));
+					}
+					else{
+						globalTables.put(name, Collections.<String>emptyList());
+					}
 				}
 				globalTableFactory.addPropertyValue("globalTables", globalTables);
 			}
@@ -173,6 +177,10 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	private BeanDefinition parseLogicTable(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableConfig.class);
 		factory.addPropertyValue("name", element.getAttribute(TABLE_NAME));
+		String partitionDataSourceNames= element.getAttribute(PARTITION_DATA_SOURCE_NAMES);
+		if(!StringUtils.isEmpty(partitionDataSourceNames)) {
+			factory.addPropertyValue("partitionDataSourceNames", Arrays.asList(partitionDataSourceNames.split(",")));
+		}
 		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
 		factory.addPropertyReference("tableStrategyConfig", element.getAttribute(TABLE_STRATEGY));
 		factory.addPropertyValue("tablePostfixes", Arrays.asList(element.getAttribute(TABLE_POSTFIXES).split(",")));
@@ -183,8 +191,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		List<Element> logicChildTableElements= DomUtils.getChildElementsByTagName(element, LOGIC_CHILD_TABLE);
 		if(!CollectionUtils.isEmpty(logicChildTableElements)){
 			ManagedList<BeanDefinition> children= new ManagedList<BeanDefinition>();
-			for(Element it: logicChildTableElements){
-				children.add(parseLogicChildTable(it,parserContext));
+			for(Element each: logicChildTableElements){
+				children.add(parseLogicChildTable(each,parserContext));
 			}
 			factory.addPropertyValue("children", children);
 		}
@@ -199,8 +207,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 		List<Element> logicChildTableElements= DomUtils.getChildElementsByTagName(element, LOGIC_CHILD_TABLE);
 		if(!CollectionUtils.isEmpty(logicChildTableElements)){
 			ManagedList<BeanDefinition> children= new ManagedList<BeanDefinition>();
-			for(Element it: logicChildTableElements){
-				children.add(parseLogicChildTable(it,parserContext));
+			for(Element each: logicChildTableElements){
+				children.add(parseLogicChildTable(each,parserContext));
 			}
 			factory.addPropertyValue("children", children);
 		}

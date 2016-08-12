@@ -15,6 +15,12 @@ public interface LogicTable {
 	 * @return String
 	 */
 	String getName();
+
+	/**
+	 * 获取逻辑表所属分片数据源名称集合
+	 * @return
+     */
+	List<String> getPartitionDataSourceNames();
 	
 	/**
 	 * 获取主键名称

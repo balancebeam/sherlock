@@ -1,5 +1,7 @@
 package io.pddl.router.table;
 
+import java.util.List;
+
 public interface GlobalTableRepository {
 
 	/**
@@ -10,10 +12,17 @@ public interface GlobalTableRepository {
 	 * 	...
 	 * </pddl:tables>
 	 * 
-	 * @param name 表明
+	 * @param name 表名
 	 * @return true | false
 	 */
 	boolean isGlobalTable(String name);
+
+	/**
+	 * 获取全局表的分片数据原名称集合
+	 * @param name 表名
+	 * @return List<String>
+     */
+	List<String> getPartitionDataSourceNames(String name);
 	
 	/**
 	 * 全局表定义是否为空
