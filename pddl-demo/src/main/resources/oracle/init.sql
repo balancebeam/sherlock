@@ -180,7 +180,7 @@ CREATE TABLE t_order_0
     ('45', '0', 'status752861562'
     );
   COMMIT;
-  
+
   DROP TABLE t_order_1;
   CREATE TABLE t_order_1
     (
@@ -224,7 +224,7 @@ CREATE TABLE t_order_0
       ('19', '3', 'new'
       );
     COMMIT;
-    
+
     DROP TABLE t_order_2;
     CREATE TABLE t_order_2
       (

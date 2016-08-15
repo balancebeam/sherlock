@@ -70,6 +70,8 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	
 	private BeanDefinition logicTableRepositoryDefinition;
 
+	private Set<String> partitionDSNames= new HashSet<String>();
+
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ShardingDataSource.class);
@@ -101,7 +103,9 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	
 	private BeanDefinition parseDataSourcePartition(Element element, ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(PartitionDataSourceSupport.class);
-		factory.addPropertyValue("name", element.getAttribute(DATA_SOURCE_NAME));
+		String name= element.getAttribute(DATA_SOURCE_NAME);
+		partitionDSNames.add(name);
+		factory.addPropertyValue("name", name);
 		String poolSize= element.getAttribute(POOL_SIZE);
 		if(!StringUtils.isEmpty(poolSize)){
 			factory.addPropertyValue("poolSize", Integer.parseInt(poolSize));
@@ -151,7 +155,16 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 					String name= each.getAttribute(TABLE_NAME);
 					String partitionDataSourceNames= each.getAttribute(PARTITION_DATA_SOURCE_NAMES);
 					if(!StringUtils.isEmpty(partitionDataSourceNames)) {
-						globalTables.put(name, Arrays.asList(partitionDataSourceNames.split(",")));
+						List<String> pdsNames= new LinkedList<String>();
+						for(String it: partitionDataSourceNames.split(",")){
+							if(partitionDSNames.contains(it)){
+								pdsNames.add(it);
+							}
+							else{
+								logger.error("Global table "+name+" invalid partition data source: "+it);
+							}
+						}
+						globalTables.put(name, pdsNames);
 					}
 					else{
 						globalTables.put(name, Collections.<String>emptyList());
@@ -176,10 +189,20 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	
 	private BeanDefinition parseLogicTable(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicTableConfig.class);
-		factory.addPropertyValue("name", element.getAttribute(TABLE_NAME));
+		String name= element.getAttribute(TABLE_NAME);
+		factory.addPropertyValue("name", name);
 		String partitionDataSourceNames= element.getAttribute(PARTITION_DATA_SOURCE_NAMES);
 		if(!StringUtils.isEmpty(partitionDataSourceNames)) {
-			factory.addPropertyValue("partitionDataSourceNames", Arrays.asList(partitionDataSourceNames.split(",")));
+			List<String> pdsNames= new LinkedList<String>();
+			for(String it: partitionDataSourceNames.split(",")){
+				if(partitionDSNames.contains(it)){
+					pdsNames.add(it);
+				}
+				else{
+					logger.error("Logic table "+name+" invalid partition data source: "+it);
+				}
+			}
+			factory.addPropertyValue("partitionDataSourceNames", pdsNames);
 		}
 		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
 		factory.addPropertyReference("tableStrategyConfig", element.getAttribute(TABLE_STRATEGY));

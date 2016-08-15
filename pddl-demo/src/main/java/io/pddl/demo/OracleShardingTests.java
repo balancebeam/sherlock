@@ -137,7 +137,7 @@ public class OracleShardingTests {
 	}
 
 	private static void init() throws Exception {
-		final ApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
+		final ApplicationContext context = new ClassPathXmlApplicationContext("classpath:oracle/applicationContext.xml");
 		DataSource ds= context.getBean("shardingOracleDataSource", DataSource.class);
 		conn= ds.getConnection();
 	}

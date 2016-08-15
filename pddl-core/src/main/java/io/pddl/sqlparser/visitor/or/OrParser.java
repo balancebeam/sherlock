@@ -27,7 +27,9 @@ public class OrParser {
         else if(JdbcConstants.MYSQL.equals(dbType)){
             orVisitor = new OrMySQLVisitor(dependencyVisitor);
         }
-        throw new IllegalArgumentException("not support typeof "+dbType+" OrVisitor");
+        else {
+            throw new IllegalArgumentException("not support typeof " + dbType + " OrVisitor");
+        }
     }
     
     public SQLParsedResult parse() {

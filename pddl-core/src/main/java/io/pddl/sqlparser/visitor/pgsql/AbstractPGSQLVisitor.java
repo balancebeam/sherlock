@@ -3,6 +3,7 @@ package io.pddl.sqlparser.visitor.pgsql;
 import java.util.Arrays;
 import java.util.Collections;
 
+import com.alibaba.druid.util.JdbcConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,6 +31,10 @@ import io.pddl.util.SQLUtil;
 public abstract class AbstractPGSQLVisitor extends PGOutputVisitor implements SQLVisitor,SQLAware {
 	
 	protected Log logger = LogFactory.getLog(getClass());
+
+	{
+		this.dbType = JdbcConstants.POSTGRESQL;
+	}
 
 	protected SQLParsedResult parseResult;
 	
