@@ -62,7 +62,7 @@ public class LogicTableRouterSupport extends AbstractRouterSupport implements Lo
 		List<Set<String>> postfixes = new ArrayList<Set<String>>();
 		for (List<LogicTable> tables : logicTables) {
 			Set<String> pfixes = new HashSet<String>();
-tables: 	for (int i = 0; i < tables.size(); i++) {
+loop: 	for (int i = 0; i < tables.size(); i++) {
 				LogicTable logicTable = tables.get(i);
 				String layerIdx = logicTable.getLayerIdx();
 				for (int j = 0; j < i; j++) {
@@ -70,7 +70,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						if(logger.isInfoEnabled()){
 							logger.info("table ["+ logicTable.getName()+"] will use table ["+tables.get(j).getName() +"] sharding strategy");
 						}
-						continue tables;
+						continue loop;
 					}
 				}
 				Collection<String> ps= doLogicTableSharding(ctx,dataSourceName,logicTable);

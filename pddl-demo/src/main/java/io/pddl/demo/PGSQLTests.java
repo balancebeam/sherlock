@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SimpleSQLTest {
+public class PGSQLTests {
 
 	private static String SQL_STR = "select order_id, user_id, status from t_order where order_id=19 and user_id=3";
 
@@ -157,7 +157,7 @@ public class SimpleSQLTest {
 	}
 
 	private static void init() throws Exception {
-		final ApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
+		final ApplicationContext context = new ClassPathXmlApplicationContext("classpath:pgsql/applicationContext.xml");
 		DataSource ds= context.getBean("shardingDataSource", DataSource.class);
 		conn= ds.getConnection();
 	}

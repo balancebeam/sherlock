@@ -1,14 +1,9 @@
 package io.pddl.demo;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Date;
-
-import javax.annotation.Resource;
-import javax.sql.DataSource;
-
+import io.pddl.hint.HintContext;
+import io.pddl.hint.HintContextHolder;
+import io.pddl.sequence.SequenceGenerator;
+import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,14 +11,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.pddl.hint.HintContext;
-import io.pddl.hint.HintContextHolder;
-import io.pddl.sequence.SequenceGenerator;
-import junit.framework.TestCase;
+import javax.annotation.Resource;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Date;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:applicationContext.xml")
-public class AllCaseTester extends TestCase{
+@ContextConfiguration("classpath:mysql/applicationContext.xml")
+public class MySQLTestCase extends TestCase{
 
 	@Autowired
 	@Qualifier("shardingDataSource")

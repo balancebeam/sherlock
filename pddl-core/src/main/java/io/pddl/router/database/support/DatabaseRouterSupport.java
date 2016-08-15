@@ -32,7 +32,7 @@ public class DatabaseRouterSupport extends AbstractRouterSupport implements Data
 	private Collection<String> doMultiDatabaseSharding(ExecuteContext ctx,List<List<LogicTable>> logicTables) {
 		List<Collection<String>> databaseNames = new ArrayList<Collection<String>>();
 		for (List<LogicTable> tables : logicTables) {
-tables: 	for (int i = 0; i < tables.size(); i++) {
+loop: 	for (int i = 0; i < tables.size(); i++) {
 				LogicTable logicTable = tables.get(i);
 				String layerIdx = logicTable.getLayerIdx();
 				for (int j = 0; j < i; j++) {
@@ -40,7 +40,7 @@ tables: 	for (int i = 0; i < tables.size(); i++) {
 						if(logger.isInfoEnabled()){
 							logger.info("table ["+ logicTable.getName()+"] will use table ["+tables.get(j).getName() +"] sharding strategy");
 						}
-						continue tables;
+						continue loop;
 					}
 				}
 				Collection<String> candidateNames= doDatabaseSharding(ctx,logicTable);

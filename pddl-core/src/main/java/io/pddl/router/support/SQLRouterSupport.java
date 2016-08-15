@@ -63,7 +63,7 @@ public class SQLRouterSupport implements SQLRouter{
 			//全局表和逻辑表为空时，可以只作为读写分离操作
 			if(ctx.getGlobalTableRepository().isEmpty() && ctx.getLogicTableRepository().isEmpty()){
 				//使用默认的数据源
-				return Collections.<SQLExecutionUnit>singletonList(new SQLExecutionUnit(ctx.getShardingDataSourceRepository().getDefaultDataSource().getName(),logicSql));
+				return Collections.singletonList(new SQLExecutionUnit(ctx.getShardingDataSourceRepository().getDefaultDataSource().getName(),logicSql));
 			}
 			//解析SQL语句，包括所有的表Table、字段Condition和实际SQL构建器
 			SQLParsedResult sqlParsedResult = sqlParseEngine.parse();
@@ -88,10 +88,6 @@ public class SQLRouterSupport implements SQLRouter{
 					if(CollectionUtils.isEmpty(partitionDataSourceNames)){
 						partitionDataSourceNames= ctx.getShardingDataSourceRepository().getPartitionDataSourceNames();
 					}
-					else{
-						//过滤的合法数据分片集合
-						partitionDataSourceNames.retainAll(ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
-					}
 					for(String each: partitionDataSourceNames){
 						result.add(new SQLExecutionUnit(each,logicSql));
 					}
@@ -101,7 +97,7 @@ public class SQLRouterSupport implements SQLRouter{
 					return result;
 				}
 			}
-			Collection<String> databaseNames= Collections.emptyList();
+			Collection<String> databaseNames;
 			//判断租户传递过来的数据库分片是否存在，优先级最高
 			HintContext hintContext= HintContextHolder.getHintContext();
 			if(hintContext!= null){
@@ -116,7 +112,7 @@ public class SQLRouterSupport implements SQLRouter{
 				if(CollectionUtils.isEmpty(databaseNames)){
 					//使用默认的数据源
 					String name= ctx.getShardingDataSourceRepository().getDefaultDataSource().getName();
-					databaseNames= Collections.<String>singletonList(name);
+					databaseNames= Collections.singletonList(name);
 					if(logger.isInfoEnabled()){
 						logger.info("will use default database");
 					}

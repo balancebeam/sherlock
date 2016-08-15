@@ -291,17 +291,18 @@ public class MySQLSelectVisitor extends AbstractMySQLVisitor {
     	if(!isEnableCollectMetadata()){
     		return super.visit(x); 
     	}
+		print("LIMIT ");
     	//第一次解析
         int offset = 0;
         String offsetFragment= "";
         if (null != x.getOffset()) {
             if (x.getOffset() instanceof SQLNumericLiteralExpr) {
                 offset = ((SQLNumericLiteralExpr) x.getOffset()).getNumber().intValue();
-                offsetFragment= " OFFSET 0";
+                print("0, ");
             } else {
                 offset = ((Number) getParameters().get(((SQLVariantRefExpr) x.getOffset()).getIndex())).intValue();
                 getParameters().set(((SQLVariantRefExpr) x.getOffset()).getIndex(), 0);
-                offsetFragment=" OFFSET ?";
+                print("?, ");
             }
         }
         int rowCount;
@@ -313,9 +314,7 @@ public class MySQLSelectVisitor extends AbstractMySQLVisitor {
             getParameters().set(((SQLVariantRefExpr) x.getRowCount()).getIndex(), rowCount + offset);
             print("?");
         }
-        //最后在再打印offset字段
-        print(offsetFragment);
-        
+
         parseResult.setLimit(new Limit(offset, rowCount));
         if(logger.isInfoEnabled()){
 			logger.info("Limit [offset: "+offset+",rowCount: "+rowCount+"]");
