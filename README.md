@@ -6,6 +6,8 @@
 ## 支持范围
 * JDK6+
 * PostgreSQL
+* MySQL
+* Oracle
 * 所有持久层框架
 
 ## 功能简介
@@ -17,13 +19,18 @@
 	* 权重策略
 * 全局序列号
 * 全局表复制
+* 多租户
+* 垂直划分表
+* 逻辑表ER关系
 * 分库
 * 分表
-* 结果归并处理 
+* 数据聚合
+* 结果集归并 
+* 路由规则缓存（开发中）
 * SQL限流（开发中）
 * SQL监控（开发中）
-* 分布式事务（开发中）
-* 支持的数据库（PostgreSQL、Oracle开发中、MySQL开发中）
+* 分布式事务（见galaxy）
+* 支持的数据库（PostgreSQL、Oracle和MySQL）
 
 ## 架构图
 ![PDDL Architecture](pddl-doc/images/architecture.png)
