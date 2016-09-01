@@ -15,7 +15,7 @@
 	    <property name="minIdle" value="50" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
 	    <property name="minEvictableIdleTimeMillis" value="300000" />
-	    <property name="validationQuery" value="SELECT 'x'" />
+	    <property name="validationQuery" value="select 1 from dual" />
 	    <property name="testWhileIdle" value="true" />
 	    <property name="testOnBorrow" value="false" />
 	    <property name="testOnReturn" value="false" />
@@ -35,7 +35,7 @@
 	    <property name="minIdle" value="50" />
 	    <property name="timeBetweenEvictionRunsMillis" value="3000" />
 	    <property name="minEvictableIdleTimeMillis" value="300000" />
-	    <property name="validationQuery" value="SELECT 'x'" />
+	    <property name="validationQuery" value="select 1 from dual" />
 	    <property name="testWhileIdle" value="true" />
 	    <property name="testOnBorrow" value="false" />
 	    <property name="testOnReturn" value="false" />
@@ -55,7 +55,7 @@
 		<property name="minIdle" value="50" />
 		<property name="timeBetweenEvictionRunsMillis" value="3000" />
 		<property name="minEvictableIdleTimeMillis" value="300000" />
-		<property name="validationQuery" value="SELECT 'x'" />
+		<property name="validationQuery" value="select 1 from dual" />
 		<property name="testWhileIdle" value="true" />
 		<property name="testOnBorrow" value="false" />
 		<property name="testOnReturn" value="false" />

@@ -105,13 +105,13 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
 				return connection;
 			}
 			connection= pds.getMasterDataSource().getConnection();
-			connection.setAutoCommit(getAutoCommit());
 			ctx.setTranOrUpdateConnection(dataSourceName,connection);
 		}
 		else{
 			connection= pds.getSlaveDataSource().getConnection();
 		}
-		//TODO setReadOnly and setTransactionIsolation;
+        connection.setAutoCommit(getAutoCommit());
+        connection.setReadOnly(isReadOnly());
 		connections.add(connection);
 		return connection;
 	}

@@ -9,9 +9,9 @@
 	<pddl:data-source id="shardingOracleDataSource" database-type="Oracle" >
 		<pddl:data-source-partitions>
 			<pddl:data-source-partition name="oralcePartition0" read-strategy="weight">
-				<pddl:master-data-source ref="ods0" weight="200" />
-				<pddl:slave-data-source ref="ods0" weight="200" />
-				<pddl:slave-data-source ref="ods0" weight="400" />
+				<pddl:master-data-source ref="ds0" weight="200" />
+				<pddl:slave-data-source ref="ds0" weight="200" />
+				<pddl:slave-data-source ref="ds0" weight="400" />
 			</pddl:data-source-partition>
 		</pddl:data-source-partitions>
 		<pddl:tables>

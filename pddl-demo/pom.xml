@@ -33,6 +33,10 @@
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>jdbc6</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.ibatis</groupId>
 			<artifactId>ibatis-sqlmap</artifactId>
 		</dependency>

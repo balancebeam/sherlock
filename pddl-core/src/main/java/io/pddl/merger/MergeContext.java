@@ -71,7 +71,7 @@ public final class MergeContext {
     }
 
     public Limit getLimit() {
-        return ctx.getSQLParsedResult().getLimit();
+        return ctx.getSQLParsedResult()!=null?ctx.getSQLParsedResult().getLimit(): null;
     }
 
     /**

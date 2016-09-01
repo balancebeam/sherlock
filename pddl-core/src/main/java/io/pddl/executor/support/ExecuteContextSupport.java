@@ -51,7 +51,9 @@ public class ExecuteContextSupport implements ExecuteContext{
 	@Override
 	public boolean isSimplyDQLOperation() {
 		try {
-			return shardingConnection.getAutoCommit() && SQLStatementType.SELECT == statementType;
+			return SQLStatementType.SELECT == statementType &&
+					(shardingConnection.getAutoCommit() ||
+							(!shardingConnection.getAutoCommit() && shardingConnection.isReadOnly()));
 		} catch (SQLException e) {
 			return false;
 		}

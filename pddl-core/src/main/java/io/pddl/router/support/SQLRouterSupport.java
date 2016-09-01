@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import io.pddl.sqlparser.bean.SQLStatementType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.CollectionUtils;
@@ -44,26 +47,28 @@ public class SQLRouterSupport implements SQLRouter{
 	}
 	
 	@Override
-	public List<SQLExecutionUnit> doRoute(ExecuteContext ctx,String logicSql, List<Object> parameters) throws SQLParserException {
+	public List<SQLExecutionUnit> doRoute(final ExecuteContext ctx,final String logicSql,final List<Object> parameters) throws SQLParserException {
 		try{
-			if(logger.isInfoEnabled()){
-				logger.info("begin to route logicSql: "+logicSql);
+			if(logger.isDebugEnabled()){
+				logger.debug("begin to route logicSql: "+logicSql);
 			}
 			//把逻辑SQL绑定到上下文中
 			((ExecuteContextSupport)ctx).setLogicSql(logicSql);
 			//把Prepared的值绑定到上下文中
 			((ExecuteContextSupport)ctx).setParameters(parameters);
+			//全局表和逻辑表为空时，可以只作为读写分离操作
+			if(ctx.getGlobalTableRepository().isEmpty() && ctx.getLogicTableRepository().isEmpty()){
+				SQLStatementType sqlStatementType= parseStatementType4RW(logicSql);
+				((ExecuteContextSupport)ctx).setStatementType(sqlStatementType);
+				//使用默认的数据源
+				return Collections.singletonList(new SQLExecutionUnit(ctx.getShardingDataSourceRepository().getDefaultDataSource().getName(),logicSql));
+			}
 			//创建SQL解析引擎
 			SQLParseEngine sqlParseEngine= SQLParserFactory.create(ctx.getDatabaseType(),logicSql, parameters);
 			//把SQL操作类型绑定到上下文中
 			((ExecuteContextSupport)ctx).setStatementType(sqlParseEngine.getStatementType());
-			if(logger.isInfoEnabled()){
-				logger.info("SQLStatementType: "+sqlParseEngine.getStatementType());
-			}
-			//全局表和逻辑表为空时，可以只作为读写分离操作
-			if(ctx.getGlobalTableRepository().isEmpty() && ctx.getLogicTableRepository().isEmpty()){
-				//使用默认的数据源
-				return Collections.singletonList(new SQLExecutionUnit(ctx.getShardingDataSourceRepository().getDefaultDataSource().getName(),logicSql));
+			if(logger.isDebugEnabled()){
+				logger.debug("SQLStatementType: "+sqlParseEngine.getStatementType());
 			}
 			//解析SQL语句，包括所有的表Table、字段Condition和实际SQL构建器
 			SQLParsedResult sqlParsedResult = sqlParseEngine.parse();
@@ -144,5 +149,14 @@ public class SQLRouterSupport implements SQLRouter{
 		}finally{
 			ExecuteHolder.clear();
 		}
+	}
+
+	private SQLStatementType parseStatementType4RW(final String sql){
+		Pattern pattern= Pattern.compile("(?i)[a-z]+");
+		Matcher matcher= pattern.matcher(sql);
+		if(matcher.find()){
+			return SQLStatementType.valueOf(matcher.group().toUpperCase());
+		}
+		throw new SQLParserException("parse Statement Type error, sql: "+sql);
 	}
 }
