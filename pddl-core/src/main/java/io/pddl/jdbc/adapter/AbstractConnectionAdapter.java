@@ -12,7 +12,7 @@ public abstract class AbstractConnectionAdapter extends AbstractUnsupportedOpera
     
     private boolean autoCommit = true;
     
-    private boolean readOnly = true;
+    private boolean readOnly = false;
     
     private boolean closed;
     
