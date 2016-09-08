@@ -37,7 +37,9 @@ public class SQLRouterSupport implements SQLRouter{
 	private DatabaseRouter databaseRouter;
 	
 	private LogicTableRouter tableRouter;
-	
+
+	final Pattern pattern= Pattern.compile("(?i)[a-z]+");
+
 	public void setTableRouter(LogicTableRouter tableRouter){
 		this.tableRouter= tableRouter;
 	}
@@ -152,7 +154,6 @@ public class SQLRouterSupport implements SQLRouter{
 	}
 
 	private SQLStatementType parseStatementType4RW(final String sql){
-		Pattern pattern= Pattern.compile("(?i)[a-z]+");
 		Matcher matcher= pattern.matcher(sql);
 		if(matcher.find()){
 			return SQLStatementType.valueOf(matcher.group().toUpperCase());
