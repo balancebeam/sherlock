@@ -34,27 +34,12 @@ import io.pddl.executor.ExecuteStatementProcessor;
  * @author yangzz
  *
  */
-public class ExecuteProcessorSupport implements ExecuteStatementProcessor, DisposableBean {
+public class ExecuteProcessorSupport implements ExecuteStatementProcessor {
 
 	private Log logger = LogFactory.getLog(ExecuteProcessorSupport.class);
 
-	private ConcurrentHashMap<String, ExecutorService> executorServiceMapping = new ConcurrentHashMap<String, ExecutorService>();
-
 	private long timeout= 30;
 	
-	public ExecuteProcessorSupport(){
-		//JVM在停止时需要清空线程池对象
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				try {
-					ExecuteProcessorSupport.this.destroy();
-				} catch (Exception e) {
-					logger.error(e.getMessage(),e);
-				}
-			}
-		});
-	}
 	/**
 	 * 设置执行Statement操作的超时时间，默认是30秒
 	 * @param timeout
@@ -88,7 +73,7 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 			}
 			List<Future<List<OUT>>> futures = new ArrayList<Future<List<OUT>>>(hash.size());
 			for(final Entry<String,List<ExecuteStatementWrapper<IN>>> each: hash.entrySet()){
-				ExecutorService executorService = getExecutorService(ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getKey()));
+				ExecutorService executorService = ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getKey()).getExecutorService();
 				futures.add(executorService.submit(new Callable<List<OUT>>(){
 					@Override
 					public List<OUT> call() throws Exception {
@@ -121,7 +106,7 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 		List<Future<OUT>> futures = new ArrayList<Future<OUT>>(wrappers.size());
 		for (final ExecuteStatementWrapper<IN> each : wrappers) {
 			//根据不同的数据源获取不同的线程池对象
-			ExecutorService executorService = getExecutorService(ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getSQLExecutionUnit().getDataSourceName()));
+			ExecutorService executorService = ctx.getShardingDataSourceRepository().getPartitionDataSource(each.getSQLExecutionUnit().getDataSourceName()).getExecutorService();
 			futures.add(executorService.submit(new Callable<OUT>() {
 				@Override
 				public OUT call() throws Exception {
@@ -144,67 +129,6 @@ public class ExecuteProcessorSupport implements ExecuteStatementProcessor, Dispo
 				}
 			}
 			throw new SQLException(e.getMessage(),e);
-		}
-	}
-		
-	private ExecutorService getExecutorService(PartitionDataSource pds) {
-		ExecutorService executorService = executorServiceMapping.get(pds.getName());
-		if (executorService == null) {
-			executorServiceMapping.putIfAbsent(pds.getName(), createExecutorForParitionDataSource(pds));
-			if (null == (executorService = executorServiceMapping.get(pds.getName()))) {
-				return getExecutorService(pds);
-			}
-		}
-		return executorService;
-	}
-	
-	/*
-	 * 根据数据的名称创建对应的线程池对象，各数据源的多并发执行互不影响
-	 */
-	private ExecutorService createExecutorForParitionDataSource(PartitionDataSource pds) {
-		final String method= "createExecutorForDataSource-" + pds.getName() + " data source";
-		int poolSize= pds.getPoolSize();
-		int timeout= pds.getTimeout();
-		int coreSize = Runtime.getRuntime().availableProcessors();
-		if (poolSize < coreSize) {
-			coreSize = poolSize;
-		}
-		ThreadFactory tf = new ThreadFactory() {
-			public Thread newThread(Runnable r) {
-				Thread t = new Thread(r, "thread created at pddl method [" + method + "]");
-				t.setDaemon(true);
-				return t;
-			}
-		};
-		BlockingQueue<Runnable> queueToUse = new LinkedBlockingQueue<Runnable>(coreSize);
-		final ThreadPoolExecutor executor = new ThreadPoolExecutor(coreSize, poolSize, timeout, TimeUnit.SECONDS, queueToUse,
-				tf, new ThreadPoolExecutor.CallerRunsPolicy());
-		if(logger.isInfoEnabled()){
-			logger.info("create executorService(poolSize="+poolSize+",timeout="+timeout+") for partition dataSource: "+pds.getName());
-		}
-		return executor;
-	}
-
-	@Override
-	public void destroy() throws Exception {
-		if (!CollectionUtils.isEmpty(executorServiceMapping)) {
-			if(logger.isInfoEnabled()){
-				logger.info("shutdown executors of pddl...");
-			}
-			for (ExecutorService executor : executorServiceMapping.values()) {
-				if (executor != null) {
-					try {
-						executor.shutdown();
-						executor.awaitTermination(5, TimeUnit.MINUTES);
-					} catch (InterruptedException e) {
-						logger.warn("interrupted when shuting down the query executor:\n{}", e);
-					}
-				}
-			}
-			executorServiceMapping.clear();
-			if(logger.isInfoEnabled()){
-				logger.info("all of the executor services in pddl are disposed.");
-			}
 		}
 	}
 }

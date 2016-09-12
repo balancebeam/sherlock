@@ -1,6 +1,8 @@
 package io.pddl.datasource;
 
 import javax.sql.DataSource;
+import java.util.concurrent.ExecutorService;
+
 /**
  * 
  * 分片数据源定义
@@ -38,4 +40,10 @@ public interface PartitionDataSource{
 	 * @return
 	 */
 	int getTimeout();
+
+	/**
+	 * 获取线程池对象
+	 * @return
+     */
+	ExecutorService getExecutorService();
 }

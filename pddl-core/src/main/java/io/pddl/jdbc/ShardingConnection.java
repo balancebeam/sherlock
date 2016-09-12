@@ -15,8 +15,12 @@ import io.pddl.datasource.PartitionDataSource;
 import io.pddl.executor.ExecuteContext;
 import io.pddl.executor.support.ExecuteContextSupport;
 import io.pddl.jdbc.adapter.AbstractConnectionAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public final class ShardingConnection extends AbstractConnectionAdapter {
+
+    private static Log logger= LogFactory.getLog(ShardingConnection.class);
 	
 	private ExecuteContext ctx;
 	
@@ -109,6 +113,9 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
 		}
 		else{
 			connection= pds.getSlaveDataSource().getConnection();
+            if(logger.isDebugEnabled()) {
+                logger.debug("sql: "+ctx.getLogicSql() + " use slave connection: " + connection);
+            }
 		}
         connection.setAutoCommit(getAutoCommit());
         connection.setReadOnly(isReadOnly());

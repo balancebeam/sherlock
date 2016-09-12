@@ -2,16 +2,27 @@ package io.pddl.datasource.support;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 
 import io.pddl.datasource.PartitionDataSource;
 import io.pddl.datasource.DataSourceReadStrategy;
 
-public class PartitionDataSourceSupport implements PartitionDataSource{
-	/**
+public class PartitionDataSourceSupport implements PartitionDataSource,ApplicationContextAware,InitializingBean{
+
+    private ApplicationContext applicationContext;
+    /**
      * the name of to-be-exposed DataSource.
      */
     private String name;
@@ -31,7 +42,7 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
      * attributes. In case you forget it, we set a default value with
      * "number of CPU" * 5.
      */
-    private int poolSize = Runtime.getRuntime().availableProcessors() * 2;
+    private int poolSize = Runtime.getRuntime().availableProcessors() * 4;
     
     private String readStrategy= "master";
     
@@ -94,24 +105,21 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
     	return slaveDataSources;
     }
 
-    public void setPoolSize(int poolSize) {
-        this.poolSize = poolSize;
-    }
-
     @Override
     public int getPoolSize() {
         return poolSize;
-    }
-    
-    public void setTimeout(int timeout){
-    	this.timeout= timeout;
     }
     
     @Override
     public int getTimeout(){
     	return timeout;
     }
-    
+
+    @Override
+    public ExecutorService getExecutorService() {
+        return ((ThreadPoolTaskExecutor)applicationContext.getBean(name+"-"+"threadPool")).getThreadPoolExecutor();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -142,5 +150,21 @@ public class PartitionDataSourceSupport implements PartitionDataSource{
         return "DataSource [name=" + name + ", poolSize=" + poolSize
                 + ", masterDataSource=" + masterDataSource
                 + ", slaveDataSources=" + slaveDataSources + "]";
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext= applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        BeanDefinitionBuilder beanDefinitionBuilder= BeanDefinitionBuilder.genericBeanDefinition(ThreadPoolTaskExecutor.class);
+        beanDefinitionBuilder.addPropertyValue("maxPoolSize",poolSize);
+        beanDefinitionBuilder.addPropertyValue("keepAliveSeconds",timeout);
+
+        ConfigurableApplicationContext configurableApplicationContext= (ConfigurableApplicationContext)applicationContext;
+        BeanDefinitionRegistry beanDefinitionRegistry= (BeanDefinitionRegistry)configurableApplicationContext.getBeanFactory();
+        beanDefinitionRegistry.registerBeanDefinition(name+"-"+"threadPool",beanDefinitionBuilder.getRawBeanDefinition());
     }
 }
