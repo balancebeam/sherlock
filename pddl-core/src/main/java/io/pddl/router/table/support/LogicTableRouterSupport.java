@@ -40,6 +40,12 @@ public class LogicTableRouterSupport extends AbstractRouterSupport implements Lo
 	@Override
 	public Collection<String> doRoute(ExecuteContext ctx,String dataSourceName) {
 		List<List<LogicTable>> logicTables= parseLogicTables(ctx);
+		//检查逻辑表的分表规则是否为空
+		for(int i= logicTables.size()-1;i>=0;i--){
+			if(logicTables.get(0).get(0).getTableStrategyConfig()== null){
+				logicTables.remove(i);
+			}
+		}
 		if(CollectionUtils.isEmpty(logicTables)){
 			if(logger.isInfoEnabled()){
 				logger.info("no logic table for sql :"+ ctx.getLogicSql());

@@ -1,14 +1,15 @@
 package io.pddl.merger.util;
 
-import io.pddl.exception.ShardingException;
-import io.pddl.sqlparser.bean.OrderColumn;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
+
+import io.pddl.exception.ShardingException;
+import io.pddl.sqlparser.bean.OrderColumn;
+import io.pddl.sqlparser.bean.OrderColumn.OrderType;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 结果集工具类.
@@ -111,6 +112,6 @@ public final class ResultSetUtil {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static int compareTo(final Comparable thisValue, final Comparable otherValue, final OrderColumn.OrderType orderType) {
-        return orderType.ASC == orderType ? thisValue.compareTo(otherValue) : -thisValue.compareTo(otherValue);
+        return OrderType.ASC == orderType ? thisValue.compareTo(otherValue) : -thisValue.compareTo(otherValue);
     }
 }

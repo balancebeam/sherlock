@@ -28,7 +28,8 @@ public final class ComparableAggregationUnit implements AggregationUnit {
             log.trace("Comparable result: {}", result);
             return;
         }
-        int comparedValue = ((Comparable) values.get(0)).compareTo(result);
+        @SuppressWarnings("rawtypes")
+		int comparedValue = ((Comparable) values.get(0)).compareTo(result);
         if (asc && comparedValue < 0 || !asc && comparedValue > 0) {
             result = values.get(0);
             log.trace("Comparable result: {}", result);

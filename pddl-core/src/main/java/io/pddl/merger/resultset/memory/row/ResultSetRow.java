@@ -5,7 +5,6 @@ package io.pddl.merger.resultset.memory.row;
  * 
  * <p>每个数据行表示结果集的一行数据.</p>
  * 
- * @author zhangliang
  */
 public interface ResultSetRow {
     

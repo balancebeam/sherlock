@@ -3,7 +3,6 @@ package io.pddl.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import io.pddl.datasource.DatabaseType;
 import io.pddl.datasource.ShardingDataSourceRepository;
 import io.pddl.executor.ExecuteStatementProcessor;
 import io.pddl.jdbc.adapter.AbstractDataSourceAdapter;

@@ -9,7 +9,6 @@ import java.util.List;
 /**
  * 累加聚合单元.
  * 
- * @author zhangliang
  */
 @RequiredArgsConstructor
 @Slf4j

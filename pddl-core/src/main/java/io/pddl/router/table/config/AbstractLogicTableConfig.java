@@ -1,7 +1,5 @@
 package io.pddl.router.table.config;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import io.pddl.router.strategy.config.ShardingStrategyConfig;

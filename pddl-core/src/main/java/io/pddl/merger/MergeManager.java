@@ -119,11 +119,11 @@ public class MergeManager {
 			Collections.sort(mergeResult,new Comparator<Row>(){
 				@Override
 				public int compare(Row o1, Row o2) {
-					for(OrderColumn c: orderbys){
-						Object x1= o1.getObject(c.getColumnIndex());
-						Object x2= o2.getObject(c.getColumnIndex());
-						//TODO 字符串和数字的比较
-					}
+//					for(OrderColumn c: orderbys){
+//						Object x1= o1.getObject(c.getColumnIndex());
+//						Object x2= o2.getObject(c.getColumnIndex());
+//						
+//					}
 					
 					return 0;
 				}

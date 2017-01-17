@@ -294,7 +294,6 @@ public class MySQLSelectVisitor extends AbstractMySQLVisitor {
 		print("LIMIT ");
     	//第一次解析
         int offset = 0;
-        String offsetFragment= "";
         if (null != x.getOffset()) {
             if (x.getOffset() instanceof SQLNumericLiteralExpr) {
                 offset = ((SQLNumericLiteralExpr) x.getOffset()).getNumber().intValue();

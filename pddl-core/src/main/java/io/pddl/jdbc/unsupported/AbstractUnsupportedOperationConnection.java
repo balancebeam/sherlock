@@ -38,7 +38,6 @@ import com.alibaba.druid.pool.WrapperAdapter;
 /**
  * 声明不支持操作的数据库连接对象.
  * 
- * @author zhangliang
  */
 public abstract class AbstractUnsupportedOperationConnection extends WrapperAdapter implements Connection {
     

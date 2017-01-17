@@ -204,9 +204,18 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 			}
 			factory.addPropertyValue("partitionDataSourceNames", pdsNames);
 		}
-		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
-		factory.addPropertyReference("tableStrategyConfig", element.getAttribute(TABLE_STRATEGY));
-		factory.addPropertyValue("tablePostfixes", Arrays.asList(element.getAttribute(TABLE_POSTFIXES).split(",")));
+		String primaryKey= element.getAttribute(PRIMARY_KEY);
+		if(!StringUtils.isEmpty(primaryKey)){
+			factory.addPropertyValue("primaryKey", primaryKey);
+		}
+		String tableStrategy= element.getAttribute(TABLE_STRATEGY);
+		if(!StringUtils.isEmpty(tableStrategy)){
+			factory.addPropertyReference("tableStrategyConfig", tableStrategy);
+		}
+		String tablePostfixes= element.getAttribute(TABLE_POSTFIXES);
+		if(!StringUtils.isEmpty(tablePostfixes)){
+			factory.addPropertyValue("tablePostfixes", Arrays.asList(tablePostfixes.split(",")));
+		}
 		String databaseStrategy= element.getAttribute(DATA_BASE_STRATEGY);
 		if(!StringUtils.isEmpty(databaseStrategy)){
 			factory.addPropertyReference("databaseStrategyConfig", databaseStrategy);
@@ -225,8 +234,14 @@ public class ShardingDataSourceBeanDefinitionParser extends AbstractBeanDefiniti
 	private BeanDefinition parseLogicChildTable(Element element,ParserContext parserContext){
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(LogicChildTableConfig.class);
 		factory.addPropertyValue("name", element.getAttribute(TABLE_NAME));
-		factory.addPropertyValue("primaryKey", element.getAttribute(PRIMARY_KEY));
-		factory.addPropertyValue("foreignKey", element.getAttribute(FOREIGN_KEY));
+		String primaryKey= element.getAttribute(PRIMARY_KEY);
+		if(!StringUtils.isEmpty(primaryKey)){
+			factory.addPropertyValue("primaryKey", primaryKey);
+		}
+		String foreignKey= element.getAttribute(FOREIGN_KEY);
+		if(!StringUtils.isEmpty(foreignKey)){
+			factory.addPropertyValue("foreignKey", foreignKey);
+		}
 		List<Element> logicChildTableElements= DomUtils.getChildElementsByTagName(element, LOGIC_CHILD_TABLE);
 		if(!CollectionUtils.isEmpty(logicChildTableElements)){
 			ManagedList<BeanDefinition> children= new ManagedList<BeanDefinition>();

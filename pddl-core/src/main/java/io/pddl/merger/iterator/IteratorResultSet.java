@@ -17,17 +17,9 @@
 
 package io.pddl.merger.iterator;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-
-import io.pddl.executor.ExecuteContext;
-import io.pddl.jdbc.AbstractShardingResultSet;
-
 /**
  * 迭代结果集.
  * 
- * @author zhangliang
  */
 public final class IteratorResultSet /*extends AbstractShardingResultSet*/ {
     

@@ -11,9 +11,10 @@ import java.util.List;
  */
 public class ShardingRangeValue<T extends Comparable<?>> extends ShardingValue<T>{
 	
+	@SuppressWarnings("unchecked")
 	public ShardingRangeValue(String column,T lower,T upper){
 		super(column);
-		setValue(Arrays.asList(lower,upper));
+		setValue(Arrays.<T>asList(lower,upper));
 	}
 	
 	public ShardingRangeValue(String column,List<T> value){

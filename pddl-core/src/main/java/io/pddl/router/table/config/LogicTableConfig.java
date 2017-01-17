@@ -3,13 +3,16 @@ package io.pddl.router.table.config;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
+
+import io.pddl.exception.ShardingTableException;
 import io.pddl.router.strategy.config.ShardingStrategyConfig;
 
-public class LogicTableConfig extends AbstractLogicTableConfig{
+public class LogicTableConfig extends AbstractLogicTableConfig implements InitializingBean{
 
-	private List<String> tablePostfixies;
+	private List<String> tablePostfixies= Collections.emptyList();
 
-	private List<String> partitionDataSourceNames= Collections.EMPTY_LIST;
+	private List<String> partitionDataSourceNames= Collections.emptyList();
 	
 	private ShardingStrategyConfig tableStrategyConfig;
 	
@@ -49,5 +52,13 @@ public class LogicTableConfig extends AbstractLogicTableConfig{
 	@Override
 	public ShardingStrategyConfig getDataSourceStrategyConfig(){
 		return dataSourceStrategyConfig;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		//check database and table strategy
+		if(getDataSourceStrategyConfig()== null && getTableStrategyConfig()== null){
+			throw new ShardingTableException("Logic table "+getName()+" must config database or table strategy.");
+		}
 	}
 }

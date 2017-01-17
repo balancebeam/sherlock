@@ -1,23 +1,18 @@
 package io.pddl.merger;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.util.CollectionUtils;
+
 import io.pddl.executor.ExecuteContext;
-import io.pddl.jdbc.adapter.AbstractResultSetAdapter;
 import io.pddl.sqlparser.bean.AggregationColumn;
 import io.pddl.sqlparser.bean.GroupColumn;
 import io.pddl.sqlparser.bean.OrderColumn;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.util.CollectionUtils;
 
 /**
  * 结果集归并上下文.

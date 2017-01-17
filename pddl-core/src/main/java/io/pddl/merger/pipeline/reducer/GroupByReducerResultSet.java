@@ -1,15 +1,21 @@
 package io.pddl.merger.pipeline.reducer;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Optional;
+
 import io.pddl.merger.MergeContext;
 import io.pddl.merger.resultset.memory.AbstractMemoryResultSet;
 import io.pddl.merger.resultset.memory.row.AbstractResultSetRow;
 import io.pddl.merger.resultset.memory.row.ResultSetRow;
 import io.pddl.sqlparser.bean.GroupColumn;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
 
 /**
  * 根据GroupBy字段分组结果集.
@@ -74,13 +80,6 @@ public final class GroupByReducerResultSet extends AbstractMemoryResultSet {
             if (listRowIterator.hasNext()) {
                 return Optional.of(listRowIterator.next());
             }
-        }
-        return Optional.absent();
-    }
-
-    private Optional<? extends ResultSetRow> innerNext() throws SQLException {
-        if (listRowIterator.hasNext()) {
-            return Optional.of(listRowIterator.next());
         }
         return Optional.absent();
     }

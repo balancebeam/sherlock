@@ -1,5 +1,9 @@
 package io.pddl.merger;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
 import io.pddl.merger.pipeline.coupling.GroupByCouplingResultSet;
 import io.pddl.merger.pipeline.coupling.LimitCouplingResultSet;
 import io.pddl.merger.pipeline.coupling.MemoryOrderByCouplingResultSet;
@@ -8,11 +12,6 @@ import io.pddl.merger.pipeline.reducer.IteratorReducerResultSet;
 import io.pddl.merger.pipeline.reducer.StreamingOrderByReducerResultSet;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
 
 /**
  * 分片结果集归并工厂.
@@ -20,7 +19,6 @@ import java.util.List;
  * @author xiong.j
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@Slf4j
 public final class ResultSetFactory {
     
     /**

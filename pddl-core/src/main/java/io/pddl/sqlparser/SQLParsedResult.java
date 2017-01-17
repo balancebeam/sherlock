@@ -50,7 +50,7 @@ public class SQLParsedResult {
 	//多个条件上下文他们是or的关系ConditionContext or ConditionContext,里面的条件项是and关系 Condition and Condition
 	private List<ConditionContext> conditionContexts = new ArrayList<ConditionContext>();
 	//rownum alias recording
-	private HashSet<String> rownumAlias = new HashSet();
+	private HashSet<String> rownumAlias = new HashSet<String>();
 	//查询大小
 	private Limit limit;
 	
