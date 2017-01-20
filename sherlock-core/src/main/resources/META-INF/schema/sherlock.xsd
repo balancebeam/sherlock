@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://sherlock.anyway.io/schema/sherlock"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://sherlock.anyway.io/schema/sherlock"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+    <xsd:import namespace="http://www.springframework.org/schema/beans" schemaLocation="http://www.springframework.org/schema/beans/spring-beans.xsd"/>
+    <!-- SHARDING DATASOURCE XSD DESCRIPTOR -->
+    <xsd:element name="data-source">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="data-source-partitions" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tables" minOccurs="0" maxOccurs="1"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="xsd:string" use="required" />
+            <xsd:attribute name="database-type" type="dbTypeEnumType" use="required" />
+            <xsd:attribute name="database-router" type="xsd:string" use="optional" />
+            <xsd:attribute name="sharding-cache" type="xsd:string" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="data-source-partitions">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="data-source-partition" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="data-source-partition">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="master-data-source" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="slave-data-source" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="poo-size" type="xsd:int" use="optional"/>
+            <xsd:attribute name="timeout" type="xsd:int" use="optional"/>
+            <xsd:attribute name="read-strategy" type="readStrategyEnumType" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:simpleType name="dbTypeEnumType">
+    	<xsd:restriction base="xsd:string">
+		  <xsd:enumeration value="PostgreSQL"/>
+		  <xsd:enumeration value="MySQL"/>	
+		  <xsd:enumeration value="Oracle"/>
+		  <xsd:enumeration value="DB2"/>
+		  <xsd:enumeration value="SQLServer"/>
+		  <xsd:enumeration value="H2"/>
+    	</xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="readStrategyEnumType">
+    	<xsd:restriction base="xsd:string">
+		  <xsd:enumeration value="master"/>
+		  <xsd:enumeration value="roundRobin"/>
+		  <xsd:enumeration value="roundRobin-m"/>
+		  <xsd:enumeration value="weight"/>
+		  <xsd:enumeration value="weight-m"/>
+    	</xsd:restriction>
+    </xsd:simpleType>
+    <xsd:element name="master-data-source">
+        <xsd:complexType>
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="weight" type="xsd:int" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="slave-data-source">
+        <xsd:complexType>
+            <xsd:attribute name="ref" type="xsd:string" use="required" />
+            <xsd:attribute name="weight" type="xsd:int" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <!-- SHARDING TABLE XSD DESCRIPTOR -->
+    <xsd:element name="tables">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="global-table" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="logic-table" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="global-table">
+        <xsd:complexType>
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="data-sources" type="xsd:string" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="logic-table">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="logic-child-table" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="data-sources" type="xsd:string" use="optional" />
+            <xsd:attribute name="primary-key" type="xsd:string" use="optional" />
+            <xsd:attribute name="table-postfixes" type="xsd:string" use="optional" />
+            <xsd:attribute name="table-strategy" type="xsd:string" use="optional" />
+            <xsd:attribute name="database-strategy" type="xsd:string" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="logic-child-table">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="logic-child-table" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="primary-key" type="xsd:string" use="optional" />
+            <xsd:attribute name="foreign-key" type="xsd:string" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    <!-- SHARDING TABLE STRAGERY XSD DESCRIPTOR -->
+     <xsd:element name="strategy">
+        <xsd:complexType>
+        	<xsd:attribute name="id" type="xsd:string" use="required" />
+            <xsd:attribute name="sharding-columns" type="xsd:string" use="required" />
+            <xsd:attribute name="expression" type="xsd:string" use="optional" />
+            <xsd:attribute name="strategy" type="xsd:string" use="optional" />
+        </xsd:complexType>
+    </xsd:element>
+    
+</xsd:schema>
