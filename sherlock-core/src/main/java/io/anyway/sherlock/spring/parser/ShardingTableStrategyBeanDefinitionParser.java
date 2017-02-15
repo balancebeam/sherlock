@@ -19,19 +19,19 @@ public class ShardingTableStrategyBeanDefinitionParser extends AbstractBeanDefin
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder factory = BeanDefinitionBuilder.rootBeanDefinition(ShardingStrategyConfig.class);
 		factory.addPropertyValue("columns", Arrays.asList(element.getAttribute("sharding-columns").split(",")));
-		String strategy= element.getAttribute("strategy");
+		String strategy= element.getAttribute("strategy-ref");
 		if(!StringUtils.isEmpty(strategy)){
-			factory.addPropertyReference("strategy", strategy);
+			factory.addPropertyReference("strategy-ref", strategy);
 			return factory.getBeanDefinition();
 		}
 		String expression= element.getAttribute("expression");
 		if(!StringUtils.isEmpty(expression)){
 			BeanDefinitionBuilder strategyBuilder = BeanDefinitionBuilder.rootBeanDefinition(ExpressionShardingStrategySupport.class);
 			strategyBuilder.addPropertyValue("expression", expression);
-			factory.addPropertyValue("strategy", strategyBuilder.getBeanDefinition());
+			factory.addPropertyValue("strategy-ref", strategyBuilder.getBeanDefinition());
 			return factory.getBeanDefinition();
 		}
-		throw new ShardingTableException("miss expression or strategy");
+		throw new ShardingTableException("miss expression or strategy-ref");
 	}
 	
 }

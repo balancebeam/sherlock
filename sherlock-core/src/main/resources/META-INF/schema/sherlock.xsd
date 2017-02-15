@@ -112,7 +112,7 @@
         	<xsd:attribute name="id" type="xsd:string" use="required" />
             <xsd:attribute name="sharding-columns" type="xsd:string" use="required" />
             <xsd:attribute name="expression" type="xsd:string" use="optional" />
-            <xsd:attribute name="strategy" type="xsd:string" use="optional" />
+            <xsd:attribute name="strategy-ref" type="xsd:string" use="optional" />
         </xsd:complexType>
     </xsd:element>
     

@@ -116,14 +116,6 @@ public class SQLRouterSupport implements SQLRouter {
 			else{
 				//然后执行数据库路由
 				databaseNames= databaseRouter.doRoute(ctx);
-				if(CollectionUtils.isEmpty(databaseNames)){
-					//使用默认的数据源
-					String name= ctx.getShardingDataSourceRepository().getDefaultDataSource().getName();
-					databaseNames= Collections.singletonList(name);
-					if(logger.isInfoEnabled()){
-						logger.info("will use default database");
-					}
-				}
 				if(logger.isInfoEnabled()){
 					logger.info("Sharding database Names: " + databaseNames);
 				}

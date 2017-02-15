@@ -2,6 +2,7 @@ package io.anyway.sherlock.router.database.support;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import io.anyway.sherlock.exception.ShardingDataSourceException;
@@ -25,6 +26,10 @@ public class DatabaseRouterSupport extends AbstractRouterSupport implements Data
 	@Override
 	public Collection<String> doRoute(ExecuteContext ctx) {
 		List<List<LogicTable>> logicTables= parseLogicTables(ctx);
+		//如果解析出来的不是逻辑表,返回默认数据源
+		if(CollectionUtils.isEmpty(logicTables)){
+			return Collections.singleton(ctx.getShardingDataSourceRepository().getDefaultDataSource().getName());
+		}
 		return doMultiDatabaseSharding(ctx,logicTables);
 	}
 	
@@ -53,13 +58,13 @@ public class DatabaseRouterSupport extends AbstractRouterSupport implements Data
 			}
 		}
 		if(CollectionUtils.isEmpty(result)){
-			if(ctx.getStatementType()== SQLStatementType.INSERT){
-				throw new ShardingDataSourceException("can not shard database for sql: " +ctx.getLogicSql());
-			}
 			if(logger.isDebugEnabled()){
 				logger.debug("no suitable database, will use all available database: "+ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
 			}
-			return ctx.getShardingDataSourceRepository().getPartitionDataSourceNames();
+			result = new ArrayList<String>(ctx.getShardingDataSourceRepository().getPartitionDataSourceNames());
+		}
+		if(ctx.getStatementType()== SQLStatementType.INSERT && result.size()!= 1){
+			throw new ShardingDataSourceException("can not shard database for sql: " +ctx.getLogicSql());
 		}
 		return result;
 	}
