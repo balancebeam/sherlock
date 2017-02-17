@@ -36,7 +36,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     @Getter(AccessLevel.PROTECTED)
     private ResultSetRow currentRow;
     
-    private boolean wasNull;
+    private boolean wasNullFlag = false;
     
     public AbstractMemoryResultSet(final List<ResultSet> resultSets) throws SQLException {
         super(resultSets);
@@ -63,7 +63,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public boolean wasNull() throws SQLException {
-        return wasNull;
+        return wasNullFlag;
     }
     
     @Override
@@ -82,9 +82,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
         Preconditions.checkState(null != currentRow, "After end of result set");
         Preconditions.checkArgument(currentRow.inRange(columnIndex), String.format("Column Index %d out of range", columnIndex));
         Object result = currentRow.getCell(columnIndex);
-        if (null == result) {
-            wasNull = true;
-        }
+        wasNullFlag = null == result;
         return result;
     }
     
@@ -106,8 +104,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     @Override
     public boolean getBoolean(final int columnIndex) throws SQLException {
         Object cell = getObject(columnIndex);
-        if (null == cell) {
-            wasNull = true;
+        if (wasNullFlag) {
             return false;
         }
         return (cell instanceof Boolean) ? (Boolean) cell : Boolean.valueOf(cell.toString());
@@ -120,7 +117,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public byte getByte(final int columnIndex) throws SQLException {
-        return (Byte) ResultSetUtil.convertValue(getObject(columnIndex), byte.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Byte) ResultSetUtil.convertValue(cell, byte.class);
     }
     
     @Override
@@ -130,7 +131,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public short getShort(final int columnIndex) throws SQLException {
-        return (Short) ResultSetUtil.convertValue(getObject(columnIndex), short.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Short) ResultSetUtil.convertValue(cell, short.class);
     }
     
     @Override
@@ -140,7 +145,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public int getInt(final int columnIndex) throws SQLException {
-        return (Integer) ResultSetUtil.convertValue(getObject(columnIndex), int.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Integer) ResultSetUtil.convertValue(cell, int.class);
     }
     
     @Override
@@ -150,7 +159,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public long getLong(final int columnIndex) throws SQLException {
-        return (Long) ResultSetUtil.convertValue(getObject(columnIndex), long.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Long) ResultSetUtil.convertValue(cell, long.class);
     }
     
     @Override
@@ -160,7 +173,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public float getFloat(final int columnIndex) throws SQLException {
-        return (Float) ResultSetUtil.convertValue(getObject(columnIndex), float.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Float) ResultSetUtil.convertValue(cell, float.class);
     }
     
     @Override
@@ -170,7 +187,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public double getDouble(final int columnIndex) throws SQLException {
-        return (Double) ResultSetUtil.convertValue(getObject(columnIndex), double.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return 0;
+        }
+        return (Double) ResultSetUtil.convertValue(cell, double.class);
     }
     
     @Override
@@ -180,7 +201,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public BigDecimal getBigDecimal(final int columnIndex, final int scale) throws SQLException {
-        BigDecimal result = (BigDecimal) ResultSetUtil.convertValue(getObject(columnIndex), BigDecimal.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return null;
+        }
+        BigDecimal result = (BigDecimal) ResultSetUtil.convertValue(cell, BigDecimal.class);
         return result.setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
     
@@ -191,7 +216,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public BigDecimal getBigDecimal(final int columnIndex) throws SQLException {
-        return (BigDecimal) ResultSetUtil.convertValue(getObject(columnIndex), BigDecimal.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return null;
+        }
+        return (BigDecimal) ResultSetUtil.convertValue(cell, BigDecimal.class);
     }
     
     @Override
@@ -202,8 +231,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     @Override
     public byte[] getBytes(final int columnIndex) throws SQLException {
         String value = getString(columnIndex);
-        if (null == value) {
-            wasNull = true;
+        if (wasNullFlag) {
             return null;
         }
         return value.getBytes();
@@ -227,7 +255,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     @Override
     public Date getDate(final int columnIndex, final Calendar cal) throws SQLException {
         // TODO 时间相关取值未实现calendar模式
-        return (Date) ResultSetUtil.convertValue(getObject(columnIndex), Date.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return null;
+        }
+        return (Date) ResultSetUtil.convertValue(cell, Date.class);
     }
     
     @Override
@@ -247,7 +279,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public Time getTime(final int columnIndex, final Calendar cal) throws SQLException {
-        return (Time) ResultSetUtil.convertValue(getObject(columnIndex), Time.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return null;
+        }
+        return (Time) ResultSetUtil.convertValue(cell, Time.class);
     }
     
     @Override
@@ -267,7 +303,11 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     
     @Override
     public Timestamp getTimestamp(final int columnIndex, final Calendar cal) throws SQLException {
-        return (Timestamp) ResultSetUtil.convertValue(getObject(columnIndex), Timestamp.class);
+        Object cell = getObject(columnIndex);
+        if (wasNullFlag) {
+            return null;
+        }
+        return (Timestamp) ResultSetUtil.convertValue(cell, Timestamp.class);
     }
     
     @Override
@@ -278,8 +318,7 @@ public abstract class AbstractMemoryResultSet extends AbstractUnsupportedOperati
     @Override
     public URL getURL(final int columnIndex) throws SQLException {
         String value = getString(columnIndex);
-        if (null == value) {
-            wasNull = true;
+        if (wasNullFlag) {
             return null;
         }
         try {

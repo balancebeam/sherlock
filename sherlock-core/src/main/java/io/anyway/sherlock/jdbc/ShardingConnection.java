@@ -114,7 +114,7 @@ public final class ShardingConnection extends AbstractConnectionAdapter {
 		else{
 			connection= pds.getSlaveDataSource().getConnection();
             if(logger.isDebugEnabled()) {
-                logger.debug("sql: "+ctx.getLogicSql() + " use slave connection: " + connection);
+                logger.debug("sql: "+ctx.getLogicSql() + " use partition ["+dataSourceName+"] slave datasource connection");
             }
 		}
         connection.setAutoCommit(getAutoCommit());
